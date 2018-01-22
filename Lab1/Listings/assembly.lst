@@ -1,0 +1,62 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000                 AREA             text, CODE, READONLY
+    2 00000000                 EXPORT           Example_asm
+    3 00000000         
+    4 00000000         ; function Example_asm
+    5 00000000         ; inputs:
+    6 00000000         ; -------
+    7 00000000         ; R0: input
+    8 00000000         
+    9 00000000         
+   10 00000000         Example_asm
+   11 00000000         
+   12 00000000 4606            MOV              R6, R0
+   13 00000002 4770            BX               LR
+   14 00000004         
+   15 00000004         END
+                       
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
+erwork --depend=.\objects\assembly.d -o.\objects\assembly.o -I"D:\OneDrive\McGi
+ll\TAing\ECSE426\Winter 2018\BaseProjects\LAB1\RTE" -IC:\Keil_v5\ARM\PACK\ARM\C
+MSIS\5.0.0-Beta4\CMSIS\Include -IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.7.0\D
+rivers\CMSIS\Device\ST\STM32F4xx\Include -IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_D
+FP\2.10.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include --predefine="__EVAL SETA 1"
+ --predefine="__UVISION_VERSION SETA 517" --predefine="_RTE_ SETA 1" --predefin
+e="STM32F407xx SETA 1" --list=.\listings\assembly.lst Assembly.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+END 00000004
+
+Symbol: END
+   Definitions
+      At line 15 in file Assembly.s
+   Uses
+      None
+Comment: END unused
+Example_asm 00000000
+
+Symbol: Example_asm
+   Definitions
+      At line 10 in file Assembly.s
+   Uses
+      At line 2 in file Assembly.s
+Comment: Example_asm used once
+text 00000000
+
+Symbol: text
+   Definitions
+      At line 1 in file Assembly.s
+   Uses
+      None
+Comment: text unused
+3 symbols
+338 symbols in table
