@@ -882,13 +882,11 @@ ARM Macro Assembler    Page 14
               00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
 erwork --depend=.\objects\startup_stm32f407xx.d -o.\objects\startup_stm32f407xx
-.o -I"D:\OneDrive\McGill\TAing\ECSE426\Winter 2018\BaseProjects\LAB1\RTE" -IC:\
-Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta4\CMSIS\Include -IC:\Keil_v5\ARM\PACK\Keil
-\STM32F4xx_DFP\2.7.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include -IC:\Keil_v5\ARM
-\PACK\Keil\STM32F4xx_DFP\2.10.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include --pre
-define="__EVAL SETA 1" --predefine="__UVISION_VERSION SETA 517" --predefine="_R
-TE_ SETA 1" --predefine="STM32F407xx SETA 1" --list=.\listings\startup_stm32f40
-7xx.lst RTE\Device\STM32F407VGTx\startup_stm32f407xx.s
+.o -I.\RTE\_Target_1 -IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.2.0\CMSIS\Include -IC:\K
+eil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.7.0\Drivers\CMSIS\Device\ST\STM32F4xx\Incl
+ude --predefine="__EVAL SETA 1" --predefine="__UVISION_VERSION SETA 524" --pred
+efine="_RTE_ SETA 1" --predefine="STM32F407xx SETA 1" --list=.\listings\startup
+_stm32f407xx.lst RTE\Device\STM32F407VGTx\startup_stm32f407xx.s
 
 
 
