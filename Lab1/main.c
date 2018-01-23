@@ -60,10 +60,9 @@ void FIR_C(int Input, float* Output){
 		tail = (tail + 1) % 5; 
 	}
 	buffer[head] = Input; // write the new value in.
-		
 	for(i=0; i<5; i++){
 		// move backward from 'head' to 'tail', adding up the values.
-		result = result + weights[i] * buffer[(head - i + 5) % 5];
+		result += weights[i] * buffer[(head - i + 5) % 5];
 	}
 	*Output = result; // place the result at the given location.
 }
