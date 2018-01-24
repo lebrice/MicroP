@@ -26,12 +26,12 @@ float filtered_input[INPUT_SIZE];
 
 
 
-
+//using these testVals: C_math: 0.00020583s, CMSIS_math: 0.00002408s, asm_math: ?
 float testVals[5] = {5.0, 2.0, 5.0, 7.0, 6.0};
 
 
 float C_mathOutput[5]; //RMS, MaxVal, MinVal, MaxIndex, MinIndex
-float32_t CMSIS_Output[5]; //RMS, MaxVal, MinVal, MaxIndex, MinIndex
+float CMSIS_Output[5]; //RMS, MaxVal, MinVal, MaxIndex, MinIndex
 
 
 int main()
@@ -39,10 +39,6 @@ int main()
 	int i, j;
 	int Input = 10;
 	float* placer = &filtered_input[0];
-	printf("Begins Asm\n");	
-	Example_asm(Input);
-	
-	
 	
 	// Print out the input array;
 	printf("Input Array: [");
@@ -59,17 +55,24 @@ int main()
 	}
 	printf("]\n");
 	
-	printf("The end!\n");
+	printf("Begins Asm\n");	
 	
-	
+	Example_asm(Input);
 	C_math(testVals, 5, C_mathOutput);
 	CMSIS_math(testVals, 5, CMSIS_Output);
 	
+	printf("\nC_math output:\n");
 	printf("RMS: %f\n", C_mathOutput[0]);
 	printf("Max Value: %f", C_mathOutput[1]);
 	printf("  at index: %f\n", C_mathOutput[3]);
 	printf("Min Value: %f", C_mathOutput[2]);
-	printf("  at index: %f\n", C_mathOutput[4]);
+	printf("  at index: %f\n\n", C_mathOutput[4]);
+	printf("CMSIS_math output:\n");
+	printf("RMS: %f\n", CMSIS_Output[0]);
+	printf("Max Value: %f", CMSIS_Output[1]);
+	printf("  at index: %f\n", CMSIS_Output[3]);
+	printf("Min Value: %f", CMSIS_Output[2]);
+	printf("  at index: %f\n", CMSIS_Output[4]);
 	return 0;
 }
 
@@ -81,8 +84,14 @@ void CMSIS_math(float inputValues[], int size, float results[]){
 	uint32_t minIndex;
 	
 	arm_max_f32(inputValues, size, &maxVal, &maxIndex);
+	arm_min_f32(inputValues, size, &minVal, &minIndex);
+	arm_rms_f32(inputValues, size, &RMS);
+	CMSIS_Output[0] = RMS;
+	CMSIS_Output[1] = maxVal;
+	CMSIS_Output[2] = minVal;
+	CMSIS_Output[3] = maxIndex;
+	CMSIS_Output[4] = minIndex;
 	
-	printf("CMSIS MAXval: %f\n", maxVal);
 	
 }
 void C_math(float inputValues[], int size, float results[]){
