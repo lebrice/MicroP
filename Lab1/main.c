@@ -56,7 +56,7 @@ int main()
 	
 	
 	C_math(testVals, 5, OutputArray);
-	printf("The end!\n");
+
 	
 	printf("RMS: %f\n", OutputArray[0]);
 	printf("Max Value: %f", OutputArray[1]);
@@ -68,27 +68,32 @@ int main()
 
 void C_math(float inputValues[], int size, float results[]){
 		int i = 0;
-		
-		OutputArray[1] = inputValues[0]; //Max val
-		OutputArray[2] = inputValues[0]; //Min val
-		
+		float RMS;
+		float tempMax = inputValues[0]; //Max val
+		float maxIndex;
+		float tempMin = inputValues[0]; //Min val
+		float minIndex;
 		
 		
 		for(; i < size; i++){
-			OutputArray[0] += pow(inputValues[i],2);
+			RMS += pow(inputValues[i],2);
 			
 			if (inputValues[i] > OutputArray[1]){
-				OutputArray[1]  = inputValues[i];
-				OutputArray[3] = i;
+				tempMax  = inputValues[i];
+				maxIndex = i;
 			}				
 			if (inputValues[i] < OutputArray[2]){
-				OutputArray[2]  = inputValues[i];
-				OutputArray[4] = i;
+				tempMin  = inputValues[i];
+				minIndex = i;
 			}
 		}
-		OutputArray[0] /= size;
-		OutputArray[0] = sqrt(OutputArray[0]);
-
+		RMS /= size;
+		RMS = sqrt(RMS);
+		OutputArray[0] = RMS;
+		OutputArray[1] = tempMax;
+		OutputArray[2] = maxIndex;
+		OutputArray[3] = tempMin;
+		OutputArray[4] = minIndex;
 	
 }
 	
