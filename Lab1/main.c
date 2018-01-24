@@ -107,11 +107,10 @@ void C_math(float inputValues[], int size, float results[]){
 			}
 		}
 		RMS /= size;
-		RMS = sqrt(RMS);
-		C_mathOutput[0] = RMS;
+		C_mathOutput[0] = sqrt(RMS);
 		C_mathOutput[1] = maxVal;
-		C_mathOutput[2] = maxIndex;
-		C_mathOutput[3] = minVal;
+		C_mathOutput[2] = minVal;
+		C_mathOutput[3] = maxIndex;
 		C_mathOutput[4] = minIndex;
 	
 }
