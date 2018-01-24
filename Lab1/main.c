@@ -2,10 +2,16 @@
 #include <math.h>
 #include "arm_math.h"
 
+
 static const int INPUT_SIZE = 10;
 
+//function declarations
 int Example_asm(int Input);
+void C_math(float inputValues[], int size, float results[]);
+void CMSIS_math(float inputValues[], int size, float results[]);
 void FIR_C(int Input, float* Output);
+
+
 // Array of weights
 float weights[5] = {0.1, 0.15, 0.5, 0.15, 0.1};
 // Buffer that will hold the values as they come in.
@@ -19,12 +25,13 @@ float input_array[INPUT_SIZE] = {
 float filtered_input[INPUT_SIZE];
 
 
-void C_math(float inputValues[], int size, float results[]);
+
 
 float testVals[5] = {5.0, 2.0, 5.0, 7.0, 6.0};
 
-float OutputArray[5]; //RMS, MaxVal, MinVal, MaxIndex, MinIndex
 
+float C_mathOutput[5]; //RMS, MaxVal, MinVal, MaxIndex, MinIndex
+float32_t CMSIS_Output[5]; //RMS, MaxVal, MinVal, MaxIndex, MinIndex
 
 
 int main()
@@ -55,45 +62,57 @@ int main()
 	printf("The end!\n");
 	
 	
-	C_math(testVals, 5, OutputArray);
-
+	C_math(testVals, 5, C_mathOutput);
+	CMSIS_math(testVals, 5, CMSIS_Output);
 	
-	printf("RMS: %f\n", OutputArray[0]);
-	printf("Max Value: %f", OutputArray[1]);
-	printf("  at index: %f\n", OutputArray[3]);
-	printf("Min Value: %f", OutputArray[2]);
-	printf("  at index: %f\n", OutputArray[4]);
+	printf("RMS: %f\n", C_mathOutput[0]);
+	printf("Max Value: %f", C_mathOutput[1]);
+	printf("  at index: %f\n", C_mathOutput[3]);
+	printf("Min Value: %f", C_mathOutput[2]);
+	printf("  at index: %f\n", C_mathOutput[4]);
 	return 0;
 }
 
+void CMSIS_math(float inputValues[], int size, float results[]){
+	float RMS;
+	float maxVal; //Max val
+	uint32_t maxIndex;
+	float minVal; //Min val
+	uint32_t minIndex;
+	
+	arm_max_f32(inputValues, size, &maxVal, &maxIndex);
+	
+	printf("CMSIS MAXval: %f\n", maxVal);
+	
+}
 void C_math(float inputValues[], int size, float results[]){
 		int i = 0;
 		float RMS;
-		float tempMax = inputValues[0]; //Max val
+		float maxVal = inputValues[0]; //Max val
 		float maxIndex;
-		float tempMin = inputValues[0]; //Min val
+		float minVal = inputValues[0]; //Min val
 		float minIndex;
 		
 		
 		for(; i < size; i++){
 			RMS += pow(inputValues[i],2);
 			
-			if (inputValues[i] > OutputArray[1]){
-				tempMax  = inputValues[i];
+			if (inputValues[i] > maxVal){
+				maxVal  = inputValues[i];
 				maxIndex = i;
 			}				
-			if (inputValues[i] < OutputArray[2]){
-				tempMin  = inputValues[i];
+			if (inputValues[i] < minVal){
+				minVal  = inputValues[i];
 				minIndex = i;
 			}
 		}
 		RMS /= size;
 		RMS = sqrt(RMS);
-		OutputArray[0] = RMS;
-		OutputArray[1] = tempMax;
-		OutputArray[2] = maxIndex;
-		OutputArray[3] = tempMin;
-		OutputArray[4] = minIndex;
+		C_mathOutput[0] = RMS;
+		C_mathOutput[1] = maxVal;
+		C_mathOutput[2] = maxIndex;
+		C_mathOutput[3] = minVal;
+		C_mathOutput[4] = minIndex;
 	
 }
 	
