@@ -1,0 +1,59 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000                 AREA             text, CODE, READONLY
+    2 00000000                 EXPORT           asm_math
+    3 00000000         
+    4 00000000         ; function asm_math
+    5 00000000         ; inputs:
+    6 00000000         ; -------
+    7 00000000         ; R0: testValues pointer
+    8 00000000         ; R1: size
+    9 00000000         ; R3: asm_output pointer
+   10 00000000         
+   11 00000000         
+   12 00000000         
+   13 00000000         
+   14 00000000         asm_math
+   15 00000000         
+   16 00000000 4606            MOV              R6, R0
+   17 00000002 460F            MOV              R7, R1
+   18 00000004         
+   19 00000004         
+   20 00000004         
+   21 00000004 4770            BX               LR
+   22 00000006         
+   23 00000006                 END
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
+erwork --depend=.\objects\asm_math.d -o.\objects\asm_math.o -I.\RTE\_Target_1 -
+IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include -IC:\Keil_v5\ARM\PACK\Keil\S
+TM32F4xx_DFP\2.7.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include --predefine="__EVA
+L SETA 1" --predefine="__UVISION_VERSION SETA 524" --predefine="_RTE_ SETA 1" -
+-predefine="STM32F407xx SETA 1" --list=.\listings\asm_math.lst asm_math.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+asm_math 00000000
+
+Symbol: asm_math
+   Definitions
+      At line 14 in file asm_math.s
+   Uses
+      At line 2 in file asm_math.s
+Comment: asm_math used once
+text 00000000
+
+Symbol: text
+   Definitions
+      At line 1 in file asm_math.s
+   Uses
+      None
+Comment: text unused
+2 symbols
+337 symbols in table

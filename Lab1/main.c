@@ -9,6 +9,7 @@ static const int INPUT_SIZE = 10;
 int Example_asm(int Input);
 void C_math(float inputValues[], int size, float results[]);
 void CMSIS_math(float inputValues[], int size, float results[]);
+void asm_math(float *inputValues, int size, float *results);
 void FIR_C(int Input, float* Output);
 
 
@@ -32,11 +33,13 @@ float testVals[5] = {5.0, 2.0, 5.0, 7.0, 6.0};
 
 float C_mathOutput[5]; //RMS, MaxVal, MinVal, MaxIndex, MinIndex
 float CMSIS_Output[5]; //RMS, MaxVal, MinVal, MaxIndex, MinIndex
+float asm_Output[5]; //RMS, MaxVal, MinVal, MaxIndex, MinIndex
 
 
 int main()
 {
 	int i, j;
+	int asmReturn;
 	int Input = 10;
 	float* placer = &filtered_input[0];
 	
@@ -57,7 +60,10 @@ int main()
 	
 	printf("Begins Asm\n");	
 	
-	Example_asm(Input);
+	asm_math(testVals, 5, asm_Output);
+	asmReturn = Example_asm(Input);
+	printf("asmReturn Val: %d\n",asmReturn);
+	
 	C_math(testVals, 5, C_mathOutput);
 	CMSIS_math(testVals, 5, CMSIS_Output);
 	

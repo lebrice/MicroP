@@ -18,8 +18,7 @@ ARM Macro Assembler    Page 1
    12 00000000 4606            MOV              R6, R0
    13 00000002 4770            BX               LR
    14 00000004         
-   15 00000004         END
-                       
+   15 00000004                 END
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
 erwork --depend=.\objects\assembly.d -o.\objects\assembly.o -I.\RTE\_Target_1 -
 IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include -IC:\Keil_v5\ARM\PACK\Keil\S
@@ -32,14 +31,6 @@ L SETA 1" --predefine="__UVISION_VERSION SETA 524" --predefine="_RTE_ SETA 1" -
 ARM Macro Assembler    Page 1 Alphabetic symbol ordering
 Relocatable symbols
 
-END 00000004
-
-Symbol: END
-   Definitions
-      At line 15 in file Assembly.s
-   Uses
-      None
-Comment: END unused
 Example_asm 00000000
 
 Symbol: Example_asm
@@ -56,5 +47,5 @@ Symbol: text
    Uses
       None
 Comment: text unused
-3 symbols
-338 symbols in table
+2 symbols
+337 symbols in table
