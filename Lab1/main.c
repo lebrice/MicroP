@@ -5,11 +5,20 @@
 
 static const int INPUT_SIZE = 10;
 
+
+typedef struct {
+	float rms;
+	float max_value;
+	float min_value;
+	int max_index;
+	int min_index;	
+} asm_output;
+
 //function declarations
 int Example_asm(int Input);
 void C_math(float inputValues[], int size, float results[]);
 void CMSIS_math(float inputValues[], int size, float results[]);
-void asm_math(float *inputValues, int size, float *results);
+void asm_math(float *inputValues, int size, asm_output *results);
 void FIR_C(int Input, float* Output);
 
 
@@ -33,9 +42,10 @@ float testVals[5] = {5.0, 2.0, 5.0, 7.0, 6.0};
 
 float C_mathOutput[5]; //RMS, MaxVal, MinVal, MaxIndex, MinIndex
 float CMSIS_Output[5]; //RMS, MaxVal, MinVal, MaxIndex, MinIndex
-float asm_Output[5]; //RMS, MaxVal, MinVal, MaxIndex, MinIndex
+//float asm_Output[5]; //RMS, MaxVal, MinVal, MaxIndex, MinIndex
+asm_output assembly_output;
 
-
+int array_size = 5;
 int main()
 {
 	int i, j;
@@ -59,8 +69,16 @@ int main()
 	printf("]\n");
 	
 	printf("Begins Asm\n");	
+	asm_math(testVals, array_size, &assembly_output);
+	printf("RMS: %f", assembly_output.rms);
+	printf("MAX: %f", assembly_output.max_value);
+	printf("MIN: %f", assembly_output.min_value);
+	printf("max_index: %d", assembly_output.max_index);
+	printf("min_index: %d", assembly_output.min_index);
 	
-	asm_math(testVals, 5, asm_Output);
+	
+	
+	
 	asmReturn = Example_asm(Input);
 	printf("asmReturn Val: %d\n",asmReturn);
 	
