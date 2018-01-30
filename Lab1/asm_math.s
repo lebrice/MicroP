@@ -43,14 +43,14 @@ loop
 	VMLA.f32 S0, S3, S3 	; S0 = S0 + S3 * S3
 	
 	; MAX calculation.
-	VCMP.f32 S3, S1 	;Compare S3 (the latest value) and S1 (the current max) (" if(S3 > S1){ (...) }")
-	VMRSGT APSR_nzcv, FPSCR ; move the conditions from the floating-point unit to the core so we can use conditional operations on non-vector instructions.
+	VCMP.f32 S3, S1 	; Compare S3 (the latest value) and S1 (the current max) (" if(S3 > S1){ (...) }")
+	VMRS APSR_nzcv, FPSCR ; move the conditions from the floating-point unit to the core so we can use conditional operations on non-vector instructions.
 	VMOVGT.f32 S1, S3 	;Move S3 into S1 if the 'GT' (Greater-Than) condition is met, as set in the previous VCMP operation
 	MOVGT R3, R5
 	
 	; MIN Calculation
 	VCMP.f32 S3, S2 	;Compare S3 (the latest value) and S1 (the current max) (" if(S3 > S1){ (...) }")
-	VMRSLT APSR_nzcv, FPSCR ; move the conditions from the floating-point unit to the core so we can use conditional operations on non-vector instructions.
+	VMRS APSR_nzcv, FPSCR ; move the conditions from the floating-point unit to the core so we can use conditional operations on non-vector instructions.
 	VMOVLT.f32 S2, S3 	;Move S3 into S2 if the 'LT' (Less-Than) condition is met, as set in the previous VCMP operation
 	MOVLT R4, R5
 		
