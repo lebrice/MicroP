@@ -66,9 +66,9 @@ loop
 	BNE loop
 	
 	; Divide RMS by the size (as a float), then take its square root.
-	
-	;VCVT.f32.s32 S4, R1		;put  a float copy of 'size'
-	;VDIV.f32 S0, S0, S4 ; (RMS = RMS / float(SIZE)
+	VMOV.f32 S4, R1 ; Put the 'int' bits of size into S4.
+	VCVT.f32.s32 S4, S4		; convert S4 to a float version of S4 (the size)
+	VDIV.f32 S0, S0, S4 ; (RMS = RMS / float(SIZE)
 	VSQRT.f32 S0, S0
 	
 	; Save all the required values.
