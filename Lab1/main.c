@@ -2,9 +2,7 @@
 #include <math.h>
 #include "arm_math.h"
 
-
 static const int INPUT_SIZE = 10;
-
 
 typedef struct {
 	float rms;
@@ -21,7 +19,6 @@ void CMSIS_math(float inputValues[], int size, float results[]);
 void asm_math(float *inputValues, int size, asm_output *results);
 void FIR_C(int Input, float* Output);
 
-
 // Array of weights
 float weights[5] = {0.1, 0.15, 0.5, 0.15, 0.1};
 // Buffer that will hold the values as they come in.
@@ -30,13 +27,11 @@ int buffer[5];
 int head, tail = 0;
 
 float input_array[INPUT_SIZE] = {
-	1,1,1,1,1,1,1,1,1,1
+	5, 2, 5, 7, 6, 9, 1, 8, 2, 7
 };
 float filtered_input[INPUT_SIZE];
 
 
-
-//using these testVals: C_math: 0.00020583s, CMSIS_math: 0.00002408s, asm_math: ?
 float testVals[5] = {5.0, 2.0, 5.0, 7.0, 6.0};
 
 
@@ -45,7 +40,7 @@ float CMSIS_Output[5]; //RMS, MaxVal, MinVal, MaxIndex, MinIndex
 //float asm_Output[5]; //RMS, MaxVal, MinVal, MaxIndex, MinIndex
 asm_output assembly_output;
 
-int array_size = 5;
+
 int main()
 {
 	int i, j;
@@ -68,22 +63,17 @@ int main()
 	}
 	printf("]\n");
 	
-	printf("Begins Asm\n");	
-	asm_math(testVals, array_size, &assembly_output);
-	printf("RMS: %f ", assembly_output.rms);
-	printf("MAX: %f ", assembly_output.max_value);
-	printf("MIN: %f ", assembly_output.min_value);
-	printf("max_index: %d ", assembly_output.max_index);
-	printf("min_index: %d ", assembly_output.min_index);
 	
+	asm_math(filtered_input, INPUT_SIZE, &assembly_output); //0.00000692
+	C_math(filtered_input, INPUT_SIZE, C_mathOutput);//0.00009880
+	CMSIS_math(filtered_input, INPUT_SIZE, CMSIS_Output);//0.00001156
 	
-	
-	
-	asmReturn = Example_asm(Input);
-	printf("asmReturn Val: %d\n",asmReturn);
-	
-	C_math(testVals, 5, C_mathOutput);
-	CMSIS_math(testVals, 5, CMSIS_Output);
+	printf("\nasm_math output:\n");
+	printf("RMS: %f\n", assembly_output.rms);
+	printf("Max Value: %f", assembly_output.max_value);
+	printf("  at index: %d\n", assembly_output.max_index);
+	printf("Min Value: %f", assembly_output.min_value);
+	printf("  at index: %d\n\n", assembly_output.min_index);
 	
 	printf("\nC_math output:\n");
 	printf("RMS: %f\n", C_mathOutput[0]);
@@ -91,12 +81,14 @@ int main()
 	printf("  at index: %f\n", C_mathOutput[3]);
 	printf("Min Value: %f", C_mathOutput[2]);
 	printf("  at index: %f\n\n", C_mathOutput[4]);
+	
 	printf("CMSIS_math output:\n");
 	printf("RMS: %f\n", CMSIS_Output[0]);
 	printf("Max Value: %f", CMSIS_Output[1]);
 	printf("  at index: %f\n", CMSIS_Output[3]);
 	printf("Min Value: %f", CMSIS_Output[2]);
 	printf("  at index: %f\n", CMSIS_Output[4]);
+	
 	return 0;
 }
 
