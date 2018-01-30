@@ -22,9 +22,7 @@ asm_math
 	; R5 : Loop counter (goes from size to 0, decremented at each loop iteration)
 	; S4 : float value of the 'size' (R1), used for the division at the end of the RMS calculation.
 	
-	; TODO: Since we use registers greater than R3, we need to save them onto the stack, and reset them after, in order not to lose data.
-	
-	
+	; Since we use registers greater than R3, we need to save them onto the stack, and reset them after, in order not to lose data.	
 	STMDB SP!, { R4, R5}
 	VPUSH S4
 	
@@ -46,14 +44,14 @@ loop
 	
 	; MAX calculation.
 	VCMP.f32 S3, S1 	;Compare S3 (the latest value) and S1 (the current max) (" if(S3 > S1){ (...) }")
-	VMOVGT.f32 S1, S3 	;Move S3 into S1 if the 'GT' (Greater-Than) condition is met, as set in the previous VCMP operation
 	VMRSGT APSR_nzcv, FPSCR ; move the conditions from the floating-point unit to the core so we can use conditional operations on non-vector instructions.
+	VMOVGT.f32 S1, S3 	;Move S3 into S1 if the 'GT' (Greater-Than) condition is met, as set in the previous VCMP operation
 	MOVGT R3, R5
 	
 	; MIN Calculation
 	VCMP.f32 S3, S2 	;Compare S3 (the latest value) and S1 (the current max) (" if(S3 > S1){ (...) }")
-	VMOVLT.f32 S2, S3 	;Move S3 into S1 if the 'GT' (Greater-Than) condition is met, as set in the previous VCMP operation
 	VMRSLT APSR_nzcv, FPSCR ; move the conditions from the floating-point unit to the core so we can use conditional operations on non-vector instructions.
+	VMOVLT.f32 S2, S3 	;Move S3 into S2 if the 'LT' (Less-Than) condition is met, as set in the previous VCMP operation
 	MOVLT R4, R5
 		
 	; Increment the array pointer.
