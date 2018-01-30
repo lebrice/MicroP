@@ -25,7 +25,8 @@ asm_math
 	; TODO: Since we use registers greater than R3, we need to save them onto the stack, and reset them after, in order not to lose data.
 	
 	
-	
+	STMDB SP!, { R4, R5}
+	VPUSH S4
 	
 	
 	; set initial values
@@ -73,6 +74,11 @@ loop
 	; Save all the required values.
 	VSTM R2!, {S0, S1, S2}
 	STM R2, {R3, R4}
+	
+	; Restore the original values of registers we used.
+	LDMIA SP!, {R4, R5}
+	VPOP S4
+	
 	
 	BX		LR
 	END

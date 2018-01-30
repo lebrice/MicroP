@@ -70,11 +70,11 @@ int main()
 	
 	printf("Begins Asm\n");	
 	asm_math(testVals, array_size, &assembly_output);
-	printf("RMS: %f", assembly_output.rms);
-	printf("MAX: %f", assembly_output.max_value);
-	printf("MIN: %f", assembly_output.min_value);
-	printf("max_index: %d", assembly_output.max_index);
-	printf("min_index: %d", assembly_output.min_index);
+	printf("RMS: %f ", assembly_output.rms);
+	printf("MAX: %f ", assembly_output.max_value);
+	printf("MIN: %f ", assembly_output.min_value);
+	printf("max_index: %d ", assembly_output.max_index);
+	printf("min_index: %d ", assembly_output.min_index);
 	
 	
 	
