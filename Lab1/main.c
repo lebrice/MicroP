@@ -13,7 +13,6 @@ typedef struct {
 } asm_output;
 
 //function declarations
-int Example_asm(int Input);
 void C_math(float inputValues[], int size, float results[]);
 void CMSIS_math(float inputValues[], int size, float results[]);
 void asm_math(float *inputValues, int size, asm_output *results);
@@ -44,8 +43,6 @@ asm_output assembly_output;
 int main()
 {
 	int i, j;
-	int asmReturn;
-	int Input = 10;
 	float* placer = &filtered_input[0];
 	
 	// Print out the input array;
@@ -117,17 +114,19 @@ void C_math(float inputValues[], int size, float results[]){
 		float maxIndex;
 		float minVal = inputValues[0]; //Min val
 		float minIndex;
+		int input_value;
 		
 		
 		for(; i < size; i++){
-			RMS += pow(inputValues[i],2);
+			input_value = inputValues[i];
+			RMS += pow(input_value, 2);
 			
-			if (inputValues[i] > maxVal){
-				maxVal  = inputValues[i];
+			if (input_value > maxVal){
+				maxVal  = input_value;
 				maxIndex = i;
 			}				
-			if (inputValues[i] < minVal){
-				minVal  = inputValues[i];
+			if (input_value < minVal){
+				minVal  = input_value;
 				minIndex = i;
 			}
 		}
