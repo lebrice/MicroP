@@ -386,11 +386,6 @@
               <FilePath>.\main.c</FilePath>
             </File>
             <File>
-              <FileName>Assembly.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>.\Assembly.s</FilePath>
-            </File>
-            <File>
               <FileName>fput_debug.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\fput_debug.c</FilePath>

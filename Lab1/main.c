@@ -2,7 +2,7 @@
 #include <math.h>
 #include "arm_math.h"
 
-static const int INPUT_SIZE = 10;
+static const int INPUT_SIZE = 100;
 
 typedef struct {
 	float rms;
@@ -13,22 +13,19 @@ typedef struct {
 } asm_output;
 
 //function declarations
-int Example_asm(int Input);
 void C_math(float inputValues[], int size, float results[]);
 void CMSIS_math(float inputValues[], int size, float results[]);
 void asm_math(float *inputValues, int size, asm_output *results);
 void FIR_C(int Input, float* Output);
 
 // Array of weights
-float weights[5] = {0.1, 0.15, 0.5, 0.15, 0.1};
+float weights[5] = {0.2, 0.2, 0.2, 0.2, 0.2};
 // Buffer that will hold the values as they come in.
 int buffer[5];
 
 int head, tail = 0;
 
-float input_array[INPUT_SIZE] = {
-	5, 2, 5, 7, 6, 9, 1, 8, 2, 7
-};
+float input_array[INPUT_SIZE] = {12,21,19,45,34,39,50,52,63,66,83,87,74,92,86,93,99,109,101,115,103,112,117,111,114,113,103,101,117,99,94,102,105,98,85,84,82,88,67,76,67,56,46,45,41,27,31,27,14,12,-1,-7,-6,-20,-14,-17,-28,-41,-42,-57,-46,-51,-56,-72,-69,-84,-79,-84,-90,-92,-88,-96,-87,-90,-86,-86,-86,-98,-96,-98,-82,-77,-80,-68,-67,-58,-62,-62,-62,-47,-38,-40,-41,-32,-28,-19,-10,-2,3,18};
 float filtered_input[INPUT_SIZE];
 
 
@@ -44,29 +41,27 @@ asm_output assembly_output;
 int main()
 {
 	int i, j;
-	int asmReturn;
-	int Input = 10;
 	float* placer = &filtered_input[0];
 	
 	// Print out the input array;
 	printf("Input Array: [");
-	for(i=0; i<10; i++){
+	for(i=0; i<INPUT_SIZE; i++){
 		printf("%f,", input_array[i]);
 	}
 	printf("]\n");
 	
 	// Print out the filtered array;
 	printf("Filtered Array: [");
-	for(j=0; j< 10; j++){
+	for(j=0; j< INPUT_SIZE; j++){
 		FIR_C(input_array[j],placer++);
-		printf("%f,",filtered_input[j]);
+		printf("(%d)%f,",j,filtered_input[j]);
 	}
 	printf("]\n");
 	
 	
-	asm_math(filtered_input, INPUT_SIZE, &assembly_output); //0.00000692
-	C_math(filtered_input, INPUT_SIZE, C_mathOutput);//0.00009880
-	CMSIS_math(filtered_input, INPUT_SIZE, CMSIS_Output);//0.00001156
+	asm_math(filtered_input, INPUT_SIZE, &assembly_output); //0.000011
+	C_math(filtered_input, INPUT_SIZE, C_mathOutput);//0.0001954
+	CMSIS_math(filtered_input, INPUT_SIZE, CMSIS_Output);//0.00001692
 	
 	printf("\nasm_math output:\n");
 	printf("RMS: %f\n", assembly_output.rms);
