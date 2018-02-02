@@ -18,12 +18,7 @@ void CMSIS_math(float inputValues[], int size, float results[]);
 void asm_math(float *inputValues, int size, asm_output *results);
 void FIR_C(int Input, float* Output);
 
-// Array of weights
-float weights[5] = {0.2, 0.2, 0.2, 0.2, 0.2};
-// Buffer that will hold the values as they come in.
-int buffer[5];
 
-int head, tail = 0;
 
 float input_array[INPUT_SIZE] = {12,21,19,45,34,39,50,52,63,66,83,87,74,92,86,93,99,109,101,115,103,112,117,111,114,113,103,101,117,99,94,102,105,98,85,84,82,88,67,76,67,56,46,45,41,27,31,27,14,12,-1,-7,-6,-20,-14,-17,-28,-41,-42,-57,-46,-51,-56,-72,-69,-84,-79,-84,-90,-92,-88,-96,-87,-90,-86,-86,-86,-98,-96,-98,-82,-77,-80,-68,-67,-58,-62,-62,-62,-47,-38,-40,-41,-32,-28,-19,-10,-2,3,18};
 float filtered_input[INPUT_SIZE];
@@ -40,6 +35,7 @@ asm_output assembly_output;
 
 int main()
 {
+	
 	int i, j;
 	float* placer = &filtered_input[0];
 	
@@ -146,6 +142,13 @@ void FIR_C(int Input, float* Output){
 	- Update tail accordingly
 	- iterate in the buffer, going from head to tail, and add up the results
 	*/
+	
+	// Array of weights
+	static float weights[5] = {0.2, 0.2, 0.2, 0.2, 0.2};
+	// Buffer that will hold the values as they come in.
+	static int buffer[5];
+	static int head, tail = 0;
+	
 	int i;
 	float result = 0.f;
 	head = (head + 1) % 5; // Update the head.
