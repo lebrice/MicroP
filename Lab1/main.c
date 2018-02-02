@@ -112,17 +112,19 @@ void C_math(float inputValues[], int size, float results[]){
 		float maxIndex;
 		float minVal = inputValues[0]; //Min val
 		float minIndex;
+		int input_value;
 		
 		
 		for(; i < size; i++){
-			RMS += pow(inputValues[i],2);
+			input_value = inputValues[i];
+			RMS += pow(input_value, 2);
 			
-			if (inputValues[i] > maxVal){
-				maxVal  = inputValues[i];
+			if (input_value > maxVal){
+				maxVal  = input_value;
 				maxIndex = i;
 			}				
-			if (inputValues[i] < minVal){
-				minVal  = inputValues[i];
+			if (input_value < minVal){
+				minVal  = input_value;
 				minIndex = i;
 			}
 		}
