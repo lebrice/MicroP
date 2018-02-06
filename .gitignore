@@ -3,3 +3,5 @@
 **/*.uvoptx*
 **/*.uvgui*
 **/Listings
+**/*.o
+**/*.crf

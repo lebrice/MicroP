@@ -198,11 +198,17 @@ void SysTick_Handler(void)
 void ADC_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC_IRQn 0 */
-	
+	uint32_t ADC_raw;
   /* USER CODE END ADC_IRQn 0 */
   HAL_ADC_IRQHandler(&hadc1);
   /* USER CODE BEGIN ADC_IRQn 1 */
-	printf("ADC Interrupt raised!\n");
+	
+	
+	ADC_raw = HAL_ADC_GetValue(&hadc1);
+	printf("ADC Interrupt raised: %u", ADC_raw);
+  
+	
+	
   /* USER CODE END ADC_IRQn 1 */
 }
 

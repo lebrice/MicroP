@@ -39,6 +39,10 @@
 #include "main.h"
 #include "stm32f4xx_hal.h"
 
+/* USER CODE BEGIN Includes */
+
+/* USER CODE END Includes */
+
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 
@@ -71,14 +75,22 @@ static void MX_DAC_Init(void);
   */
 int main(void)
 {
+  /* USER CODE BEGIN 1 */
+
+  /* USER CODE END 1 */
+
   /* MCU Configuration----------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-	/*User init functions here */
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
+
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
@@ -87,16 +99,23 @@ int main(void)
   MX_GPIO_Init();
   MX_ADC1_Init();
   MX_DAC_Init();
+  /* USER CODE BEGIN 2 */
 
-	
-	HAL_ADC_Start_IT(&hadc1); //Starting ADC in interrupt mode
+  /* USER CODE END 2 */
 
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
   while (1)
   {
-	printf("in main loop...\n");
-	HAL_Delay(1000);
+
+  /* USER CODE END WHILE */
+
+  /* USER CODE BEGIN 3 */
+		printf("In main loop");
+		HAL_Delay(1000);
 
   }
+  /* USER CODE END 3 */
 
 }
 
