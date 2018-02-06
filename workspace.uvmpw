@@ -9,11 +9,11 @@
 
   <project>
     <PathAndName>.\Lab1\LAB1.uvprojx</PathAndName>
-    <NodeIsActive>1</NodeIsActive>
   </project>
 
   <project>
-    <PathAndName>.\Lab2\Lab2.uvprojx</PathAndName>
+    <PathAndName>.\Lab2\MDK-ARM\Lab2.uvprojx</PathAndName>
+    <NodeIsActive>1</NodeIsActive>
   </project>
 
 </ProjectWorkspace>
