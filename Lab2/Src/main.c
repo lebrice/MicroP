@@ -100,7 +100,13 @@ int main(void)
   MX_ADC1_Init();
   MX_DAC_Init();
   /* USER CODE BEGIN 2 */
-
+	
+	/* Turn on 4 LEDs on board */
+	HAL_GPIO_TogglePin(GPIOD, LED3_Pin);
+	HAL_GPIO_TogglePin(GPIOD, LED4_Pin);
+	HAL_GPIO_TogglePin(GPIOD, LD5_Pin);
+	HAL_GPIO_TogglePin(GPIOD, LD6_Pin);
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
