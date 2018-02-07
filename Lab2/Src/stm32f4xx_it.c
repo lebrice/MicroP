@@ -193,6 +193,23 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
+* @brief This function handles EXTI line0 interrupt.
+*/
+void EXTI0_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI0_IRQn 0 */
+
+  /* USER CODE END EXTI0_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
+  /* USER CODE BEGIN EXTI0_IRQn 1 */
+	HAL_GPIO_TogglePin(GPIOD, LED3_Pin);
+	HAL_GPIO_TogglePin(GPIOD, LED4_Pin);
+	HAL_GPIO_TogglePin(GPIOD, LD5_Pin);
+	HAL_GPIO_TogglePin(GPIOD, LD6_Pin);
+  /* USER CODE END EXTI0_IRQn 1 */
+}
+
+/**
 * @brief This function handles ADC1, ADC2 and ADC3 global interrupts.
 */
 void ADC_IRQHandler(void)
@@ -205,7 +222,7 @@ void ADC_IRQHandler(void)
 	
 	
 	ADC_raw = HAL_ADC_GetValue(&hadc1);
-	printf("ADC Interrupt raised: %u", ADC_raw);
+	printf("ADC Interrupt raised: %u\n", ADC_raw);
   
 	
 	
