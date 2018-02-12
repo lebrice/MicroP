@@ -117,6 +117,9 @@ int main(void)
 	HAL_GPIO_TogglePin(GPIOD, LD5_Pin);
 	HAL_GPIO_TogglePin(GPIOD, LD6_Pin);
 	
+	HAL_DAC_Start(&hdac, DAC_CHANNEL_1); 
+	HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 2048);
+	
 	HAL_ADC_Start_IT(&hadc1);
   /* USER CODE END 2 */
 
