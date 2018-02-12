@@ -38,7 +38,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_hal.h"
-
+#include <stdbool.h>
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
@@ -49,9 +49,15 @@ ADC_HandleTypeDef hadc1;
 DAC_HandleTypeDef hdac;
 
 /* USER CODE BEGIN PV */
-/* Private variables ---------------------------------------------------------*/
-uint32_t ADCBuffer[10];
-int ADCindex = 0;
+
+
+const int ADC_BUFFER_SIZE = 50;
+
+uint32_t ADCBuffer[ADC_BUFFER_SIZE];
+float filtered_ADCBuffer[ADC_BUFFER_SIZE];
+
+static bool ADC_BUFFER_FULL;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -66,16 +72,84 @@ static void MX_ADC1_Init(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
-    {
-			if(AdcHandle ->Instance == ADC1){
-					ADCindex = ADCindex%10;
-					ADCBuffer[ADCindex] = HAL_ADC_GetValue(AdcHandle);
-					printf("ADC value: %u", ADCBuffer[ADCindex]);
-					ADCindex++;
-					printf("\n");
-			}
-    }
+
+typedef struct {
+	float last_RMS;
+	float past_mins[10];
+	float past_maxs[10];	
+} PastResultsVector;
+
+typedef struct {
+	float rms;
+	float max_value;
+	float min_value;
+	int max_index;
+	int min_index;	
+} asm_output;
+
+
+
+float convert_digital_to_analog_voltage_value(int digital_value);
+void FIR_C(int Input, float* Output);
+void asm_math(float *inputValues, int size, asm_output *results);
+
+void FIR_C(int Input, float* Output){
+	
+	//Idea: use the buffer like a circular queue.
+	//- Add the element to the buffer, using the head pointer.
+	//- Update tail accordingly
+	//- iterate in the buffer, going from head to tail, and add up the results
+	
+	
+	// Array of weights
+	static float weights[5] = {0.2, 0.2, 0.2, 0.2, 0.2};
+	// Buffer that will hold the values as they come in.
+	static int buffer[5];
+	static int head, tail = 0;
+	
+	int i;
+	float result = 0.f;
+	head = (head + 1) % 5; // Update the head.
+	if(head == tail){ // Update the tail, if necessary.
+		tail = (tail + 1) % 5; 
+	}
+	buffer[head] = Input; // write the new value in.
+	for(i=0; i<5; i++){
+		// move backward from 'head' to 'tail', adding up the values.
+		result += weights[i] * buffer[(head - i + 5) % 5];
+	}
+	*Output = result; // place the result at the given location.
+}
+	
+
+
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle){
+	// TODO: call the filter when all values have been placed.
+	static int ADCindex;
+	int new_value;
+	if(AdcHandle->Instance == ADC1){
+		
+			ADCindex = ADCindex % ADC_BUFFER_SIZE;
+			ADCBuffer[ADCindex] = HAL_ADC_GetValue(AdcHandle);
+			new_value = ADCBuffer[ADCindex];
+			printf("ADC value: %u\n", new_value);
+			FIR_C(new_value, &filtered_ADCBuffer[ADCindex]);
+			ADCindex++;
+		
+		if(ADCindex == ADC_BUFFER_SIZE){
+			printf("Buffer is full.");
+			ADC_BUFFER_FULL = true;
+		}else{
+			ADC_BUFFER_FULL = false;
+		}
+		
+		// TODO: if its' full, call the max_min stuff.
+		
+	}
+}
+
+	
 /* USER CODE END 0 */
 
 /**
