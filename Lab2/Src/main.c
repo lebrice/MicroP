@@ -127,11 +127,11 @@ void adc_buffer_full_callback()
 	past_ten_seconds_results.past_maxs[head] = max;
 	past_ten_seconds_results.last_RMS = rms;
 	
-	// TODO: We have to calculate the min and max of the last 10 seconds.
-	current = head;
+	//We have to calculate the min and max of the last 10 seconds.
+	current = tail;
 	min_last_10_secs = min;
 	max_last_10_secs = max;
-	while(current != tail){
+	while(current != head){
 		// Update the Min.
 		temp_min = past_ten_seconds_results.past_mins[current];
 		min_last_10_secs = (temp_min < min_last_10_secs)? temp_min : min_last_10_secs;
@@ -142,7 +142,7 @@ void adc_buffer_full_callback()
 		current = (current + 1) % 10;
 	}
 	
-	// TODO:  Update the display with the newly found values.
+	// TODO:  Update the display with the newly found values:	min_last_10_secs & max_last_10_secs & past_ten_seconds_results.last_RMS
 }
 
 void FIR_C(int Input, float* Output){
