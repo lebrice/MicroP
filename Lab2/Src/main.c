@@ -53,7 +53,6 @@ DAC_HandleTypeDef hdac;
 
 const int ADC_BUFFER_SIZE = 50;
 
-uint32_t ADCBuffer[ADC_BUFFER_SIZE];
 float filtered_ADCBuffer[ADC_BUFFER_SIZE];
 
 static bool ADC_BUFFER_FULL;
@@ -88,10 +87,63 @@ typedef struct {
 } asm_output;
 
 
-
+// TODO
 float convert_digital_to_analog_voltage_value(int digital_value);
+void adc_buffer_full_callback(void);
+
+// From previous Lab.
 void FIR_C(int Input, float* Output);
 void asm_math(float *inputValues, int size, asm_output *results);
+
+static PastResultsVector past_ten_seconds_results;
+static int head;
+static int tail;
+
+/*
+This function is called once per second, when the buffer is full.
+It should calculate what values should be displayed
+*/
+void adc_buffer_full_callback()
+{
+	asm_output last_second_results;
+	float min, max, rms;
+	
+	int current;
+	float temp_max;
+	float temp_min;
+	float min_last_10_secs;
+	float max_last_10_secs;
+	
+	asm_math(filtered_ADCBuffer, ADC_BUFFER_SIZE, &last_second_results);
+	min = last_second_results.min_value;
+	max = last_second_results.max_value;
+	rms = last_second_results.rms;
+	
+	head = (head + 1) % 10; // Update the head.
+	if(head == tail){ // Update the tail, if necessary.
+		tail = (tail + 1) % 10; 
+	}
+	past_ten_seconds_results.past_mins[head] = min; // write the new value in.
+	past_ten_seconds_results.past_maxs[head] = max;
+	past_ten_seconds_results.last_RMS = rms;
+	
+	// TODO: We have to calculate the min and max of the last 10 seconds.
+	current = head;
+	min_last_10_secs = min;
+	max_last_10_secs = max;
+	while(current != tail){
+		// Update the Min.
+		temp_min = past_ten_seconds_results.past_mins[current];
+		min_last_10_secs = (temp_min < min_last_10_secs)? temp_min : min_last_10_secs;
+		
+		// Update the Max.
+		temp_max = past_ten_seconds_results.past_maxs[current];
+		max_last_10_secs = (temp_max > max_last_10_secs)? temp_max : max_last_10_secs;
+		current = (current + 1) % 10;
+	}
+	
+	// TODO:  Update the display with the newly found values.
+}
 
 void FIR_C(int Input, float* Output){
 	
@@ -124,7 +176,9 @@ void FIR_C(int Input, float* Output){
 
 
 
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle){
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
+{
+	static uint32_t ADCBuffer[ADC_BUFFER_SIZE];
 	// TODO: call the filter when all values have been placed.
 	static int ADCindex;
 	int new_value;
@@ -145,11 +199,21 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle){
 		}
 		
 		// TODO: if its' full, call the max_min stuff.
-		
+		if (ADC_BUFFER_FULL){
+			adc_buffer_full_callback();
+		}
 	}
 }
 
 	
+
+
+
+
+
+
+
+
 /* USER CODE END 0 */
 
 /**
