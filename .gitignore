@@ -7,3 +7,4 @@
 **/*.crf
 **/MDK-ARM/*._*
 **/*.d
+**/Drivers

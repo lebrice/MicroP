@@ -49,6 +49,12 @@
 
 /* Private define ------------------------------------------------------------*/
 
+#define DIGITS_2_Pin GPIO_PIN_2
+#define DIGITS_2_GPIO_Port GPIOE
+#define DIGITS_3_Pin GPIO_PIN_3
+#define DIGITS_3_GPIO_Port GPIOE
+#define DIGITS_4_Pin GPIO_PIN_4
+#define DIGITS_4_GPIO_Port GPIOE
 #define LED3_Pin GPIO_PIN_12
 #define LED3_GPIO_Port GPIOD
 #define LED4_Pin GPIO_PIN_13
@@ -57,6 +63,26 @@
 #define LD5_GPIO_Port GPIOD
 #define LD6_Pin GPIO_PIN_15
 #define LD6_GPIO_Port GPIOD
+#define SEG_0_Pin GPIO_PIN_0
+#define SEG_0_GPIO_Port GPIOD
+#define SEG_1_Pin GPIO_PIN_1
+#define SEG_1_GPIO_Port GPIOD
+#define SEG_2_Pin GPIO_PIN_2
+#define SEG_2_GPIO_Port GPIOD
+#define SEG_3_Pin GPIO_PIN_3
+#define SEG_3_GPIO_Port GPIOD
+#define SEG_4_Pin GPIO_PIN_4
+#define SEG_4_GPIO_Port GPIOD
+#define SEG_5_Pin GPIO_PIN_5
+#define SEG_5_GPIO_Port GPIOD
+#define SEG_6_Pin GPIO_PIN_6
+#define SEG_6_GPIO_Port GPIOD
+#define SEG_7_Pin GPIO_PIN_7
+#define SEG_7_GPIO_Port GPIOD
+#define DIGITS_0_Pin GPIO_PIN_0
+#define DIGITS_0_GPIO_Port GPIOE
+#define DIGITS_1_Pin GPIO_PIN_1
+#define DIGITS_1_GPIO_Port GPIOE
 
 /* ########################## Assert Selection ############################## */
 /**

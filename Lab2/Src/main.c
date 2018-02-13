@@ -74,11 +74,6 @@ static void MX_ADC1_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
-/* USER CODE END PFP */
-
-/* USER CODE BEGIN 0 */
-
 typedef struct {
 	float last_RMS;
 	float past_mins[10];
@@ -93,13 +88,16 @@ typedef struct {
 	int min_index;	
 } asm_output;
 
-
-// TODO
 void adc_buffer_full_callback(void);
-
-// From previous Lab.
 void FIR_C(int Input, float* Output);
 void asm_math(float *inputValues, int size, asm_output *results);
+
+/* USER CODE END PFP */
+
+/* USER CODE BEGIN 0 */
+
+
+
 
 static PastResultsVector past_ten_seconds_results;
 
@@ -113,6 +111,8 @@ It should calculate what values should be displayed
 */
 void adc_buffer_full_callback()
 {
+	extern float displayed_value;
+	
 	static int head;
 	static int tail;
 	
@@ -158,23 +158,26 @@ void adc_buffer_full_callback()
 		current = (current + 1) % 10;
 	}
 	
-	// TODO:  Update the display with the newly found values.
+	// Update the display with the newly found values.
 	switch(display_mode){
 		case DISPLAY_RMS:
 			// TODO:
 			printf("Showing RMS: %.3f\n", rms);
 			printf("Showing RMS: %.3f\n", DigitalToAnalogValue(rms));
+			displayed_value = DigitalToAnalogValue(rms);
 			break;
 		case DISPLAY_MIN:
 			// TODO:
 			printf("Showing MIN: %.3f\n", min_last_10_secs);
 		  printf("Showing MIN: %.3f\n", DigitalToAnalogValue(min_last_10_secs));
+			displayed_value = DigitalToAnalogValue(min_last_10_secs);
 		
 			break;
 		case DISPLAY_MAX:
 			// TODO:
 			printf("Showing MAX: %.3f\n", max_last_10_secs);
 		  printf("Showing MAX: %.3f\n", DigitalToAnalogValue(max_last_10_secs));
+			displayed_value = DigitalToAnalogValue(max_last_10_secs);
 			break;
 
 		
@@ -328,7 +331,7 @@ void SystemClock_Config(void)
 
     /**Configure the Systick interrupt time 
     */
-  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/50);
+  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
     /**Configure the Systick 
     */
@@ -356,7 +359,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DMAContinuousRequests = ENABLE;
+  hadc1.Init.DMAContinuousRequests = DISABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
@@ -428,12 +431,28 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct;
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, LED3_Pin|LED4_Pin|LD5_Pin|LD6_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, DIGITS_2_Pin|DIGITS_3_Pin|DIGITS_4_Pin|DIGITS_0_Pin 
+                          |DIGITS_1_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOD, LED3_Pin|LED4_Pin|LD5_Pin|LD6_Pin 
+                          |SEG_0_Pin|SEG_1_Pin|SEG_2_Pin|SEG_3_Pin 
+                          |SEG_4_Pin|SEG_5_Pin|SEG_6_Pin|SEG_7_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : DIGITS_2_Pin DIGITS_3_Pin DIGITS_4_Pin DIGITS_0_Pin 
+                           DIGITS_1_Pin */
+  GPIO_InitStruct.Pin = DIGITS_2_Pin|DIGITS_3_Pin|DIGITS_4_Pin|DIGITS_0_Pin 
+                          |DIGITS_1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PA0 */
   GPIO_InitStruct.Pin = GPIO_PIN_0;
@@ -441,8 +460,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LED3_Pin LED4_Pin LD5_Pin LD6_Pin */
-  GPIO_InitStruct.Pin = LED3_Pin|LED4_Pin|LD5_Pin|LD6_Pin;
+  /*Configure GPIO pins : LED3_Pin LED4_Pin LD5_Pin LD6_Pin 
+                           SEG_0_Pin SEG_1_Pin SEG_2_Pin SEG_3_Pin 
+                           SEG_4_Pin SEG_5_Pin SEG_6_Pin SEG_7_Pin */
+  GPIO_InitStruct.Pin = LED3_Pin|LED4_Pin|LD5_Pin|LD6_Pin 
+                          |SEG_0_Pin|SEG_1_Pin|SEG_2_Pin|SEG_3_Pin 
+                          |SEG_4_Pin|SEG_5_Pin|SEG_6_Pin|SEG_7_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

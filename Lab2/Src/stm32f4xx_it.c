@@ -207,7 +207,7 @@ void SysTick_Handler(void)
 	static int sample_ADC_counter;
 	
 
-	/* USER CODE END SysTick_IRQn 0 */
+  /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
   /* USER CODE BEGIN SysTick_IRQn 1 */
@@ -308,7 +308,16 @@ void DMA2_Stream0_IRQHandler(void)
 // Function created for refreshing the display.
 void refresh_display(void){
 	// TODO: refresh the display.
+	extern float displayed_value;
+	uint8_t segments[3];
+	get_segments_for_float(displayed_value, segments);
+	HAL_GPIO_WritePin(GPIOD, SEG_0_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOD, DIGITS_0_Pin, GPIO_PIN_SET);
 	
+	// TODO:
+	for(int digit = 0; digit < 3; digit++){
+		
+	}
 }
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

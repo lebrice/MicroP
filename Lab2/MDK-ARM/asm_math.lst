@@ -161,7 +161,7 @@ ARM Macro Assembler    Page 3
               00 00 00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
 erwork --depend=lab2\asm_math.d -olab2\asm_math.o -I.\RTE\_Lab2 -IC:\Keil_v5\AR
-M\PACK\ARM\CMSIS\5.0.1\CMSIS\Include -IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2
+M\PACK\ARM\CMSIS\5.2.0\CMSIS\Include -IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2
 .11.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include --predefine="__EVAL SETA 1" --p
 redefine="__MICROLIB SETA 1" --predefine="__UVISION_VERSION SETA 524" --predefi
 ne="_RTE_ SETA 1" --predefine="STM32F407xx SETA 1" --list=asm_math.lst ..\Src\a
