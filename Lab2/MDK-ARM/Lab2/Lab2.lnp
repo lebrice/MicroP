@@ -5,6 +5,7 @@
 "lab2\stm32f4xx_hal_msp.o"
 "lab2\fput_debug.o"
 "lab2\asm_math.o"
+"lab2\heads_up_display.o"
 "lab2\stm32f4xx_hal_rcc.o"
 "lab2\stm32f4xx_hal_tim.o"
 "lab2\stm32f4xx_hal_flash_ramfunc.o"

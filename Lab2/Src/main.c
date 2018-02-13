@@ -38,6 +38,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_hal.h"
+
 /* USER CODE BEGIN Includes */
 #include <stdbool.h>
 #ifndef DISPLAY_RMS
@@ -47,13 +48,19 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
 
 DAC_HandleTypeDef hdac;
 
 /* USER CODE BEGIN PV */
+
 const int ADC_BUFFER_SIZE = 50;
 
 float filtered_ADCBuffer[ADC_BUFFER_SIZE];
+
+// Buffer that holds Unfiltered data populated with DMA. 
+static uint32_t ADCBufferDMA[ADC_BUFFER_SIZE];
+
 
 static bool ADC_BUFFER_FULL;
 
@@ -62,6 +69,7 @@ static bool ADC_BUFFER_FULL;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_DAC_Init(void);
 static void MX_ADC1_Init(void);
 
@@ -88,7 +96,6 @@ typedef struct {
 
 
 // TODO
-float convert_digital_to_analog_voltage_value(int digital_value);
 void adc_buffer_full_callback(void);
 
 // From previous Lab.
@@ -97,6 +104,10 @@ void asm_math(float *inputValues, int size, asm_output *results);
 
 static PastResultsVector past_ten_seconds_results;
 
+float DigitalToAnalogValue(int digital_value){
+	float AnalogVal = 3.3*(digital_value)/4095;
+	return AnalogVal;
+}
 /*
 This function is called once per second, when the buffer is full.
 It should calculate what values should be displayed
@@ -152,10 +163,13 @@ void adc_buffer_full_callback()
 		case DISPLAY_MIN:
 			// TODO:
 			printf("Showing MIN: %.3f\n", min_last_10_secs);
+		  
+		
 			break;
 		case DISPLAY_MAX:
 			// TODO:
 			printf("Showing MAX: %.3f\n", max_last_10_secs);
+		  printf("Showing MAX: %.3f\n", DigitalToAnalogValue(max_last_10_secs));
 			break;
 	}
 }
@@ -193,45 +207,15 @@ void FIR_C(int Input, float* Output){
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 {
-	static uint32_t ADCBuffer[ADC_BUFFER_SIZE];
-	//Call the filter when all values have been placed.
-	static int ADCindex;
-	int new_value;
 	if(AdcHandle->Instance == ADC1){
-		
-			
-			ADCBuffer[ADCindex] = HAL_ADC_GetValue(AdcHandle);
-			new_value = ADCBuffer[ADCindex];
-			//printf("ADC value: %u\n", new_value);
-			FIR_C(new_value, &filtered_ADCBuffer[ADCindex]);
-			ADCindex++;
-	
-		if(ADCindex == ADC_BUFFER_SIZE){
-			printf("Buffer is full.");
-			ADC_BUFFER_FULL = true;
-		}else{
-			ADC_BUFFER_FULL = false;
+		// use the filter on each value in the raw buffer.
+		for(int i=0; i < ADC_BUFFER_SIZE; i++){
+			FIR_C(ADCBufferDMA[i], &filtered_ADCBuffer[i]); 
 		}
-		ADCindex %= ADC_BUFFER_SIZE;
-		
-		// TODO: if its' full, call the max_min stuff.
-		if (ADC_BUFFER_FULL){
-			adc_buffer_full_callback();
-		}
+		adc_buffer_full_callback();
+		HAL_ADC_Start_DMA(&hadc1,ADCBufferDMA,ADC_BUFFER_SIZE);
 	}
 }
-
-	
-
-
-
-
-
-
-
-
-
-
 
 /* USER CODE END 0 */
 
@@ -264,6 +248,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_DAC_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
@@ -272,7 +257,7 @@ int main(void)
 	HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 2048);
 	HAL_DAC_Start(&hdac, DAC_CHANNEL_1); 
 
-	
+	HAL_ADC_Start_DMA(&hadc1,ADCBufferDMA,ADC_BUFFER_SIZE);
 
   /* USER CODE END 2 */
 
@@ -337,7 +322,7 @@ void SystemClock_Config(void)
 
     /**Configure the Systick interrupt time 
     */
-  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/50);
+  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
     /**Configure the Systick 
     */
@@ -366,7 +351,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.NbrOfConversion = 1;
   hadc1.Init.DMAContinuousRequests = DISABLE;
-  hadc1.Init.EOCSelection = EOC_SEQ_CONV;
+  hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -381,10 +366,6 @@ static void MX_ADC1_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-	
-	//Why doesn't Cube MX initilize this here...?
-	HAL_NVIC_SetPriority(ADC_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(ADC_IRQn);
 
 }
 
@@ -410,6 +391,21 @@ static void MX_DAC_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
+
+}
+
+/** 
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void) 
+{
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA2_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA2_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
 
 }
 
