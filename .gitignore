@@ -5,4 +5,5 @@
 **/Listings
 **/*.o
 **/*.crf
-**/MDK-ARM
+**/MDK-ARM/*._*
+**/*.d
