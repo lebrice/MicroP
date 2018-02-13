@@ -38,9 +38,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_hal.h"
-#include <stdbool.h>
 /* USER CODE BEGIN Includes */
-
+#include <stdbool.h>
+#include "heads_up_display.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -96,8 +96,6 @@ void FIR_C(int Input, float* Output);
 void asm_math(float *inputValues, int size, asm_output *results);
 
 static PastResultsVector past_ten_seconds_results;
-static int head;
-static int tail;
 
 /*
 This function is called once per second, when the buffer is full.
@@ -105,6 +103,9 @@ It should calculate what values should be displayed
 */
 void adc_buffer_full_callback()
 {
+	static int head;
+	static int tail;
+	
 	asm_output last_second_results;
 	float min, max, rms;
 	
