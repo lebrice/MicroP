@@ -32,7 +32,4 @@ When 0, the RMS is displayed.
 When 1, the MIN is displayed.
 Whwn 2, the MAX is displayed.
 */
-extern short display_mode;	
-
-short get_display_mode(void);
-void set_display_mode(short new_display_mode);
+extern short display_mode;
