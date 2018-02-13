@@ -196,19 +196,17 @@ void SysTick_Handler(void)
 	static const int target_ADC_sampling_freq = 50;
 	static const int target_ADC_sampling_period = (1000 / target_ADC_sampling_freq);
 	
+	// Threshold for the display counter. When reached, the display is refreshed.
+	static const int systicks_per_display_refresh = DISPLAY_REFRESH_INTERVAL_MS / ms_per_systick;
 	// Counter for refreshing the display.
 	static int refresh_display_counter;
+	
+	// Threshold for the ADC counter. When reached, the ADC is sampled.
+	static const int systicks_per_ADC_sample = target_ADC_sampling_period / ms_per_systick;
 	// Counter for sampling the ADC.
 	static int sample_ADC_counter;
 	
-	
-	// Threshold for the display counter. When reached, the display is refreshed.
-	static const int systicks_per_display_refresh = DISPLAY_REFRESH_INTERVAL_MS / ms_per_systick;
-	// Threshold for the ADC counter. When reached, the ADC is sampled.
-	static const int systicks_per_ADC_sample = target_ADC_sampling_period / ms_per_systick;
-	
-	
-	
+
 	/* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
@@ -230,6 +228,7 @@ void SysTick_Handler(void)
 	// Sample the ADC when appropriate.
 	sample_ADC_counter++;
 	if (sample_ADC_counter == systicks_per_ADC_sample){
+		// Start the ADC Interrupt Routine.		
 		HAL_ADC_Start_IT(&hadc1);
 		sample_ADC_counter = 0;
 	}
