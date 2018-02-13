@@ -148,12 +148,15 @@ void adc_buffer_full_callback()
 		case DISPLAY_RMS:
 			// TODO:
 			printf("Showing RMS: %.3f\n", rms);
+			break;
 		case DISPLAY_MIN:
 			// TODO:
 			printf("Showing MIN: %.3f\n", min_last_10_secs);
+			break;
 		case DISPLAY_MAX:
 			// TODO:
 			printf("Showing MAX: %.3f\n", max_last_10_secs);
+			break;
 	}
 }
 
@@ -191,7 +194,7 @@ void FIR_C(int Input, float* Output){
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 {
 	static uint32_t ADCBuffer[ADC_BUFFER_SIZE];
-	// TODO: call the filter when all values have been placed.
+	//Call the filter when all values have been placed.
 	static int ADCindex;
 	int new_value;
 	if(AdcHandle->Instance == ADC1){
@@ -199,7 +202,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 			
 			ADCBuffer[ADCindex] = HAL_ADC_GetValue(AdcHandle);
 			new_value = ADCBuffer[ADCindex];
-			printf("ADC value: %u\n", new_value);
+			//printf("ADC value: %u\n", new_value);
 			FIR_C(new_value, &filtered_ADCBuffer[ADCindex]);
 			ADCindex++;
 	
@@ -265,17 +268,12 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 	
-	/* Turn on 4 LEDs on board */
-	HAL_GPIO_TogglePin(GPIOD, LED3_Pin);
-	HAL_GPIO_TogglePin(GPIOD, LED4_Pin);
-	HAL_GPIO_TogglePin(GPIOD, LD5_Pin);
-	HAL_GPIO_TogglePin(GPIOD, LD6_Pin);
 	
 	HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 2048);
 	HAL_DAC_Start(&hdac, DAC_CHANNEL_1); 
 
 	
-	HAL_ADC_Start_IT(&hadc1);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -361,7 +359,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.ScanConvMode = DISABLE;
-  hadc1.Init.ContinuousConvMode = ENABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;

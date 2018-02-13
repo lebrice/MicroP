@@ -181,8 +181,8 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
+	HAL_ADC_Start_IT(&hadc1);
 	
-	ADC_IT = true;
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
@@ -240,12 +240,10 @@ void EXTI0_IRQHandler(void)
 void ADC_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC_IRQn 0 */
-	if (ADC_IT){
-		ADC_IT = false;
+
   /* USER CODE END ADC_IRQn 0 */
   HAL_ADC_IRQHandler(&hadc1);
   /* USER CODE BEGIN ADC_IRQn 1 */
-	}
   
 	
   /* USER CODE END ADC_IRQn 1 */
