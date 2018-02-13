@@ -38,7 +38,10 @@
 /* USER CODE BEGIN 0 */
 #ifndef DISPLAY_RMS 
 #include "heads_up_display.h"
+#include <stdbool.h>
 #endif
+
+bool ADC_IT;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -178,7 +181,8 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
-
+	
+	ADC_IT = true;
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
@@ -214,14 +218,17 @@ void EXTI0_IRQHandler(void)
 			HAL_GPIO_WritePin(GPIOD, LED3_Pin, GPIO_PIN_SET);
 			HAL_GPIO_WritePin(GPIOD, LED4_Pin, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_RESET);
+			break;
 		case DISPLAY_MIN:
 			HAL_GPIO_WritePin(GPIOD, LED3_Pin, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(GPIOD, LED4_Pin, GPIO_PIN_SET);
 			HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_RESET);
+			break;
 		case DISPLAY_MAX:
 			HAL_GPIO_WritePin(GPIOD, LED3_Pin, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(GPIOD, LED4_Pin, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_SET);
+			break;
 	}
 	
   /* USER CODE END EXTI0_IRQn 1 */
@@ -233,16 +240,13 @@ void EXTI0_IRQHandler(void)
 void ADC_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC_IRQn 0 */
-	//uint32_t ADC_raw;
+	if (ADC_IT){
+		ADC_IT = false;
   /* USER CODE END ADC_IRQn 0 */
   HAL_ADC_IRQHandler(&hadc1);
   /* USER CODE BEGIN ADC_IRQn 1 */
-	
-	
-	//ADC_raw = HAL_ADC_GetValue(&hadc1);
-	//printf("ADC Interrupt raised: %u\n", ADC_raw);
+	}
   
-	
 	
   /* USER CODE END ADC_IRQn 1 */
 }

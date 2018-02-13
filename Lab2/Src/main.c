@@ -171,8 +171,8 @@ void FIR_C(int Input, float* Output){
 	static int buffer[5];
 	static int head, tail = 0;
 	
-	int i;
-	float result = 0.f;
+	register int i;
+	register float result = 0.f;
 	head = (head + 1) % 5; // Update the head.
 	if(head == tail){ // Update the tail, if necessary.
 		tail = (tail + 1) % 5; 
@@ -196,19 +196,20 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 	int new_value;
 	if(AdcHandle->Instance == ADC1){
 		
+			
 			ADCBuffer[ADCindex] = HAL_ADC_GetValue(AdcHandle);
 			new_value = ADCBuffer[ADCindex];
 			printf("ADC value: %u\n", new_value);
 			FIR_C(new_value, &filtered_ADCBuffer[ADCindex]);
 			ADCindex++;
-			ADCindex = ADCindex % ADC_BUFFER_SIZE;
-		
+	
 		if(ADCindex == ADC_BUFFER_SIZE){
 			printf("Buffer is full.");
 			ADC_BUFFER_FULL = true;
 		}else{
 			ADC_BUFFER_FULL = false;
 		}
+		ADCindex %= ADC_BUFFER_SIZE;
 		
 		// TODO: if its' full, call the max_min stuff.
 		if (ADC_BUFFER_FULL){
@@ -270,8 +271,9 @@ int main(void)
 	HAL_GPIO_TogglePin(GPIOD, LD5_Pin);
 	HAL_GPIO_TogglePin(GPIOD, LD6_Pin);
 	
-	HAL_DAC_Start(&hdac, DAC_CHANNEL_1); 
 	HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 2048);
+	HAL_DAC_Start(&hdac, DAC_CHANNEL_1); 
+
 	
 	HAL_ADC_Start_IT(&hadc1);
   /* USER CODE END 2 */
@@ -337,7 +339,7 @@ void SystemClock_Config(void)
 
     /**Configure the Systick interrupt time 
     */
-  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
+  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/50);
 
     /**Configure the Systick 
     */
