@@ -415,6 +415,16 @@
               <FileType>2</FileType>
               <FilePath>..\Src\asm_math.s</FilePath>
             </File>
+            <File>
+              <FileName>heads_up_display.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\heads_up_display.c</FilePath>
+            </File>
+            <File>
+              <FileName>heads_up_display.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Src\heads_up_display.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
