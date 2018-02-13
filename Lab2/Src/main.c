@@ -40,7 +40,9 @@
 #include "stm32f4xx_hal.h"
 /* USER CODE BEGIN Includes */
 #include <stdbool.h>
+#ifndef DISPLAY_RMS
 #include "heads_up_display.h"
+#endif
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -49,8 +51,6 @@ ADC_HandleTypeDef hadc1;
 DAC_HandleTypeDef hdac;
 
 /* USER CODE BEGIN PV */
-
-
 const int ADC_BUFFER_SIZE = 50;
 
 float filtered_ADCBuffer[ADC_BUFFER_SIZE];
@@ -144,6 +144,17 @@ void adc_buffer_full_callback()
 	}
 	
 	// TODO:  Update the display with the newly found values.
+	switch(display_mode){
+		case DISPLAY_RMS:
+			// TODO:
+			printf("Showing RMS: %.3f\n", rms);
+		case DISPLAY_MIN:
+			// TODO:
+			printf("Showing MIN: %.3f\n", min_last_10_secs);
+		case DISPLAY_MAX:
+			// TODO:
+			printf("Showing MAX: %.3f\n", max_last_10_secs);
+	}
 }
 
 void FIR_C(int Input, float* Output){
@@ -185,12 +196,12 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 	int new_value;
 	if(AdcHandle->Instance == ADC1){
 		
-			ADCindex = ADCindex % ADC_BUFFER_SIZE;
 			ADCBuffer[ADCindex] = HAL_ADC_GetValue(AdcHandle);
 			new_value = ADCBuffer[ADCindex];
 			printf("ADC value: %u\n", new_value);
 			FIR_C(new_value, &filtered_ADCBuffer[ADCindex]);
 			ADCindex++;
+			ADCindex = ADCindex % ADC_BUFFER_SIZE;
 		
 		if(ADCindex == ADC_BUFFER_SIZE){
 			printf("Buffer is full.");
@@ -207,6 +218,9 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 }
 
 	
+
+
+
 
 
 

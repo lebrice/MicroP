@@ -2,7 +2,6 @@
 This file defines the functions and constants used in the 7-segment display.
 */
 
-
 #define SEG_A 0b00000001
 #define SEG_B 0b00000010
 #define SEG_C 0b00000100
@@ -22,3 +21,18 @@ This file defines the functions and constants used in the 7-segment display.
 #define EIGHT (SEG_A|SEG_B|SEG_C|SEG_D|SEG_E|SEG_F|SEG_G)
 #define NINE 	(SEG_A|SEG_B|SEG_C|SEG_F|SEG_G)
 
+
+// Here we define constants for the Display Mode used to toggle the display.
+#define DISPLAY_RMS 0
+#define DISPLAY_MIN 1
+#define DISPLAY_MAX 2
+
+/** Represents which value we wish to display.
+When 0, the RMS is displayed.
+When 1, the MIN is displayed.
+Whwn 2, the MAX is displayed.
+*/
+extern short display_mode;	
+
+short get_display_mode(void);
+void set_display_mode(short new_display_mode);

@@ -36,7 +36,9 @@
 #include "stm32f4xx_it.h"
 
 /* USER CODE BEGIN 0 */
-
+#ifndef DISPLAY_RMS 
+#include "heads_up_display.h"
+#endif
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -197,15 +199,31 @@ void SysTick_Handler(void)
 */
 void EXTI0_IRQHandler(void)
 {
+	int current_display_mode;
   /* USER CODE BEGIN EXTI0_IRQn 0 */
+	
 
-  /* USER CODE END EXTI0_IRQn 0 */
+	/* USER CODE END EXTI0_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
   /* USER CODE BEGIN EXTI0_IRQn 1 */
-	HAL_GPIO_TogglePin(GPIOD, LED3_Pin);
-	HAL_GPIO_TogglePin(GPIOD, LED4_Pin);
-	HAL_GPIO_TogglePin(GPIOD, LD5_Pin);
-	HAL_GPIO_TogglePin(GPIOD, LD6_Pin);
+	
+	//current_display_mode = get_display_mode();
+	//set_display_mode((current_display_mode + 1)% 3);
+	switch(display_mode){
+		case DISPLAY_RMS:
+			// TODO: display one of the LEDs
+			HAL_GPIO_WritePin(GPIOD, LED3_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOD, LED4_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_RESET);
+		case DISPLAY_MIN:
+			HAL_GPIO_WritePin(GPIOD, LED3_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOD, LED4_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_RESET);
+		case DISPLAY_MAX:
+			HAL_GPIO_WritePin(GPIOD, LED3_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOD, LED4_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_SET);
+	}
   /* USER CODE END EXTI0_IRQn 1 */
 }
 
