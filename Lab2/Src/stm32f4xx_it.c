@@ -311,7 +311,15 @@ void refresh_display(void){
 	extern float displayed_value;
 	uint8_t segments[3];
 	get_segments_for_float(displayed_value, segments);
+	
+	
 	HAL_GPIO_WritePin(GPIOD, SEG_0_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOD, SEG_1_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOD, SEG_2_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOD, SEG_3_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOD, SEG_4_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOD, SEG_5_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOD, SEG_7_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(GPIOD, DIGITS_0_Pin, GPIO_PIN_SET);
 	
 	// TODO:
