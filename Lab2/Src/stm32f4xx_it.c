@@ -199,7 +199,6 @@ void SysTick_Handler(void)
 */
 void EXTI0_IRQHandler(void)
 {
-	int current_display_mode;
   /* USER CODE BEGIN EXTI0_IRQn 0 */
 	
 
@@ -207,8 +206,8 @@ void EXTI0_IRQHandler(void)
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
   /* USER CODE BEGIN EXTI0_IRQn 1 */
 	
-	//current_display_mode = get_display_mode();
-	//set_display_mode((current_display_mode + 1)% 3);
+	display_mode++;
+	display_mode %= 3;
 	switch(display_mode){
 		case DISPLAY_RMS:
 			// TODO: display one of the LEDs
@@ -224,6 +223,7 @@ void EXTI0_IRQHandler(void)
 			HAL_GPIO_WritePin(GPIOD, LED4_Pin, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_SET);
 	}
+	
   /* USER CODE END EXTI0_IRQn 1 */
 }
 
