@@ -62,7 +62,6 @@ float filtered_ADCBuffer[ADC_BUFFER_SIZE];
 static uint32_t ADCBufferDMA[ADC_BUFFER_SIZE];
 
 
-static bool ADC_BUFFER_FULL;
 
 /* USER CODE END PV */
 
@@ -131,6 +130,11 @@ void adc_buffer_full_callback()
 	max = last_second_results.max_value;
 	rms = last_second_results.rms;
 	
+	printf("Showing RMS: %.3f\n", rms);
+	printf("Showing MIN: %.3f\n", min);
+	printf("Showing MAX: %.3f\n", max);
+
+	
 	head = (head + 1) % 10; // Update the head.
 	if(head == tail){ // Update the tail, if necessary.
 		tail = (tail + 1) % 10; 
@@ -146,7 +150,7 @@ void adc_buffer_full_callback()
 	while(current != head){
 		// Update the Min.
 		temp_min = past_ten_seconds_results.past_mins[current];
-		min_last_10_secs = (temp_min < min_last_10_secs)? temp_min : min_last_10_secs;
+		min_last_10_secs = (temp_min < min_last_10_secs && temp_min != 0)? temp_min : min_last_10_secs;
 		
 		// Update the Max.
 		temp_max = past_ten_seconds_results.past_maxs[current];
@@ -159,11 +163,12 @@ void adc_buffer_full_callback()
 		case DISPLAY_RMS:
 			// TODO:
 			printf("Showing RMS: %.3f\n", rms);
+			printf("Showing RMS: %.3f\n", DigitalToAnalogValue(rms));
 			break;
 		case DISPLAY_MIN:
 			// TODO:
 			printf("Showing MIN: %.3f\n", min_last_10_secs);
-		  
+		  printf("Showing MIN: %.3f\n", DigitalToAnalogValue(min_last_10_secs));
 		
 			break;
 		case DISPLAY_MAX:
@@ -171,6 +176,8 @@ void adc_buffer_full_callback()
 			printf("Showing MAX: %.3f\n", max_last_10_secs);
 		  printf("Showing MAX: %.3f\n", DigitalToAnalogValue(max_last_10_secs));
 			break;
+
+		
 	}
 }
 
@@ -213,7 +220,6 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 			FIR_C(ADCBufferDMA[i], &filtered_ADCBuffer[i]); 
 		}
 		adc_buffer_full_callback();
-		HAL_ADC_Start_DMA(&hadc1,ADCBufferDMA,ADC_BUFFER_SIZE);
 	}
 }
 
@@ -322,7 +328,7 @@ void SystemClock_Config(void)
 
     /**Configure the Systick interrupt time 
     */
-  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
+  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/50);
 
     /**Configure the Systick 
     */
@@ -350,7 +356,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
