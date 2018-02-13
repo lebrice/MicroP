@@ -38,9 +38,15 @@
 /* USER CODE BEGIN 0 */
 #ifndef DISPLAY_RMS 
 #include "heads_up_display.h"
+#endif
+
+#ifndef bool
 #include <stdbool.h>
 #endif
 
+
+// Function used to refresh the display.
+void refresh_display(void);
 
 /* USER CODE END 0 */
 
@@ -182,13 +188,45 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
-	HAL_ADC_Start_IT(&hadc1);
 	
-  /* USER CODE END SysTick_IRQn 0 */
+	// NOTE: This function gets called every 20ms.
+	static const int ms_per_systick = 20;
+	
+	// target sampling frequency of the ADC (in Hz)
+	static const int target_ADC_sampling_freq = 50;
+	static const int target_ADC_sampling_period = (1000 / target_ADC_sampling_freq);
+	
+	// Threshold for the display counter. When reached, the display is refreshed.
+	static const int systicks_per_display_refresh = DISPLAY_REFRESH_INTERVAL_MS / ms_per_systick;
+	// Counter for refreshing the display.
+	static int refresh_display_counter;
+	
+	// Threshold for the ADC counter. When reached, the ADC is sampled.
+	static const int systicks_per_ADC_sample = target_ADC_sampling_period / ms_per_systick;
+	// Counter for sampling the ADC.
+	static int sample_ADC_counter;
+	
+
+	/* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
   /* USER CODE BEGIN SysTick_IRQn 1 */
 
+	// Refresh the display when appropriate.
+	refresh_display_counter++;
+	if (refresh_display_counter == systicks_per_display_refresh){
+		refresh_display();
+		refresh_display_counter = 0;
+	}
+	
+	// Sample the ADC when appropriate.
+	sample_ADC_counter++;
+	if (sample_ADC_counter == systicks_per_ADC_sample){
+		// Start the ADC Interrupt Routine.		
+		HAL_ADC_Start_IT(&hadc1);
+		sample_ADC_counter = 0;
+	}
+	
   /* USER CODE END SysTick_IRQn 1 */
 }
 
@@ -266,5 +304,11 @@ void DMA2_Stream0_IRQHandler(void)
 
 /* USER CODE BEGIN 1 */
 
+
+// Function created for refreshing the display.
+void refresh_display(void){
+	// TODO: refresh the display.
+	
+}
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

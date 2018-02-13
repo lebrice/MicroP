@@ -1,14 +1,16 @@
 /**
 This file defines the functions and constants used in the 7-segment display.
 */
+#include <stdint.h>
 
-#define SEG_A 0b00000001
-#define SEG_B 0b00000010
-#define SEG_C 0b00000100
-#define SEG_D 0b00001000
-#define SEG_E 0b00010000
-#define SEG_F 0b00100000
-#define SEG_G 0b01000000
+
+#define SEG_A 0x01
+#define SEG_B 0x02
+#define SEG_C 0x04
+#define SEG_D 0x08
+#define SEG_E 0x10
+#define SEG_F 0x20
+#define SEG_G 0x40
 
 #define ZERO 	(SEG_A|SEG_B|SEG_C|SEG_D|SEG_E|SEG_F)
 #define ONE 	(SEG_B|SEG_C)
@@ -27,6 +29,9 @@ This file defines the functions and constants used in the 7-segment display.
 #define DISPLAY_MIN 1
 #define DISPLAY_MAX 2
 
+#define DISPLAY_REFRESH_INTERVAL_MS 100
+
+
 /** Represents which value we wish to display.
 When 0, the RMS is displayed.
 When 1, the MIN is displayed.
@@ -34,4 +39,6 @@ Whwn 2, the MAX is displayed.
 */
 extern short display_mode;
 
-void split_three_digits(float value, int digits[3]);
+extern float displayed_value;
+
+void get_segments_for_float(float value, uint8_t segments[3]);
