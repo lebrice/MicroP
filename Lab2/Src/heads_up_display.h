@@ -33,3 +33,5 @@ When 1, the MIN is displayed.
 Whwn 2, the MAX is displayed.
 */
 extern short display_mode;
+
+void split_three_digits(float value, int digits[3]);
