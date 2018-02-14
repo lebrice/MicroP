@@ -190,7 +190,7 @@ void SysTick_Handler(void)
   /* USER CODE BEGIN SysTick_IRQn 0 */
 	
 	// NOTE: This function gets called every 20ms.
-	static const int ms_per_systick = 20;
+	static const int ms_per_systick = 1;
 	
 	// target sampling frequency of the ADC (in Hz)
 	static const int target_ADC_sampling_freq = 50;
@@ -305,27 +305,47 @@ void DMA2_Stream0_IRQHandler(void)
 /* USER CODE BEGIN 1 */
 
 
-// Function created for refreshing the display.
+
+
+/**
+* @brief Function created for refreshing the display.
+*(Refreshes the display, using the functions defined in "heads_up_display.h" to get the required digits and segments.
+*/
 void refresh_display(void){
-	// TODO: refresh the display.
+	// The float value to be displayed.
 	extern float displayed_value;
+	
+	// The delay between each digit being displayed.
+	static const int digit_delay_ms = 20;
+	
+	// The resulting segments.
 	uint8_t segments[3];
+	
 	get_segments_for_float(displayed_value, segments);
 	
+	// Write the first digit (X.xx)
+	SET_PIN(DIGITS_1);
+	GPIOD->ODR = 0x0000 | segments[0];
+	GPIOD->BSRR = 0x00FF;// Set the corresponding bits.
+	HAL_Delay(digit_delay_ms);
+	RESET_PIN(DIGITS_1);
 	
-	HAL_GPIO_WritePin(GPIOD, SEG_0_Pin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOD, SEG_1_Pin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOD, SEG_2_Pin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOD, SEG_3_Pin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOD, SEG_4_Pin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOD, SEG_5_Pin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOD, SEG_7_Pin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOD, DIGITS_0_Pin, GPIO_PIN_SET);
+	// Write the second digit (x.Xx)
+	SET_PIN(DIGITS_2);
+	GPIOD->ODR = 0x0000 | segments[1];
+	GPIOD->BSRR = 0x00FF;// Set the corresponding bits.
+	HAL_Delay(digit_delay_ms);
+	RESET_PIN(DIGITS_2);
 	
-	// TODO:
-	for(int digit = 0; digit < 3; digit++){
-		
-	}
+	// Write the third digit (x.xX)
+	SET_PIN(DIGITS_3);
+	GPIOD->ODR = 0x0000 | segments[2];
+	GPIOD->BSRR = 0x00FF;// Set the corresponding bits.
+	HAL_Delay(digit_delay_ms);
+	RESET_PIN(DIGITS_3);
 }
+
+
+
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

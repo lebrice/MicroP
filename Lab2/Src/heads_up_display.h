@@ -3,7 +3,6 @@ This file defines the functions and constants used in the 7-segment display.
 */
 #include <stdint.h>
 
-
 #define SEG_A 0x01
 #define SEG_B 0x02
 #define SEG_C 0x04
@@ -30,6 +29,11 @@ This file defines the functions and constants used in the 7-segment display.
 #define DISPLAY_MAX 2
 
 #define DISPLAY_REFRESH_INTERVAL_MS 100
+
+// Very useful macros for setting and resetting a given pin.
+#define PIN(i) i##_Pin
+#define SET_PIN(i) HAL_GPIO_WritePin(i##_GPIO_Port, PIN(i), GPIO_PIN_SET)
+#define RESET_PIN(i) HAL_GPIO_WritePin(i##_GPIO_Port, PIN(i), GPIO_PIN_RESET)
 
 
 /** Represents which value we wish to display.
