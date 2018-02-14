@@ -53,6 +53,7 @@ void refresh_display(void);
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_adc1;
 extern ADC_HandleTypeDef hadc1;
+extern TIM_HandleTypeDef htim2;
 
 /******************************************************************************/
 /*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
@@ -195,12 +196,12 @@ void SysTick_Handler(void)
 	// target sampling frequency of the ADC (in Hz)
 	static const int target_ADC_sampling_freq = 50;
 	static const int target_ADC_sampling_period = (1000 / target_ADC_sampling_freq);
-	
-	// Threshold for the display counter. When reached, the display is refreshed.
-	static const int systicks_per_display_refresh = DISPLAY_REFRESH_INTERVAL_MS / ms_per_systick;
-	// Counter for refreshing the display.
-	static int refresh_display_counter;
-	
+//	
+//	// Threshold for the display counter. When reached, the display is refreshed.
+//	static const int systicks_per_display_refresh = DISPLAY_REFRESH_INTERVAL_MS / ms_per_systick;
+//	// Counter for refreshing the display.
+//	static int refresh_display_counter;
+//	
 	// Threshold for the ADC counter. When reached, the ADC is sampled.
 	static const int systicks_per_ADC_sample = target_ADC_sampling_period / ms_per_systick;
 	// Counter for sampling the ADC.
@@ -212,12 +213,15 @@ void SysTick_Handler(void)
   HAL_SYSTICK_IRQHandler();
   /* USER CODE BEGIN SysTick_IRQn 1 */
 
-	// Refresh the display when appropriate.
-	refresh_display_counter++;
-	if (refresh_display_counter == systicks_per_display_refresh){
-		refresh_display();
-		refresh_display_counter = 0;
-	}
+
+
+
+//	// Refresh the display when appropriate.
+//	refresh_display_counter++;
+//	if (refresh_display_counter == systicks_per_display_refresh){
+//		refresh_display();
+//		refresh_display_counter = 0;
+//	}
 	
 	// Sample the ADC when appropriate.
 	sample_ADC_counter++;
@@ -289,6 +293,20 @@ void ADC_IRQHandler(void)
 }
 
 /**
+* @brief This function handles TIM2 global interrupt.
+*/
+void TIM2_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM2_IRQn 0 */
+
+  /* USER CODE END TIM2_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim2);
+  /* USER CODE BEGIN TIM2_IRQn 1 */
+
+  /* USER CODE END TIM2_IRQn 1 */
+}
+
+/**
 * @brief This function handles DMA2 stream0 global interrupt.
 */
 void DMA2_Stream0_IRQHandler(void)
@@ -314,7 +332,8 @@ void DMA2_Stream0_IRQHandler(void)
 void refresh_display(void){
 	// The float value to be displayed.
 	extern float displayed_value;
-	
+	// Which digit is currently active.
+	static uint8_t currently_active_digit = 1;
 	// The delay between each digit being displayed.
 	static const int digit_delay_ms = 20;
 	
@@ -322,6 +341,15 @@ void refresh_display(void){
 	uint8_t segments[3];
 	
 	get_segments_for_float(displayed_value, segments);
+	
+	RESET_PIN(DIGITS_0);
+	RESET_PIN(DIGITS_1);
+	RESET_PIN(DIGITS_2);
+	RESET_PIN(DIGITS_3);
+//	
+//	switch currently_active_digit:
+//		case 1:
+//			SE
 	
 	// Write the first digit (X.xx)
 	SET_PIN(DIGITS_1);

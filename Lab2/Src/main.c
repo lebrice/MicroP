@@ -52,6 +52,8 @@ DMA_HandleTypeDef hdma_adc1;
 
 DAC_HandleTypeDef hdac;
 
+TIM_HandleTypeDef htim2;
+
 /* USER CODE BEGIN PV */
 
 const int ADC_BUFFER_SIZE = 50;
@@ -71,6 +73,7 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_DAC_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_TIM2_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -133,7 +136,7 @@ void adc_buffer_full_callback()
 	printf("Showing RMS: %.3f\n", rms);
 	printf("Showing MIN: %.3f\n", min);
 	printf("Showing MAX: %.3f\n", max);
-
+	
 	
 	head = (head + 1) % 10; // Update the head.
 	if(head == tail){ // Update the tail, if necessary.
@@ -260,6 +263,7 @@ int main(void)
   MX_DMA_Init();
   MX_DAC_Init();
   MX_ADC1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 	
 	
@@ -268,13 +272,45 @@ int main(void)
 
 	HAL_ADC_Start_DMA(&hadc1,ADCBufferDMA,ADC_BUFFER_SIZE);
 
+	SET_PIN(DIGITS_0);
+	HAL_GPIO_WritePin(SEG_G_GPIO_Port, SEG_G_Pin, GPIO_PIN_SET);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+	int bob = 0;
   while (1)
   {
-
+		bob++;
+		bob %= 4;
+		RESET_PIN(DIGITS_0);
+		RESET_PIN(DIGITS_1);
+		RESET_PIN(DIGITS_2);
+		RESET_PIN(DIGITS_3);
+		switch(bob){
+			case 0:
+				SET_PIN(DIGITS_0);
+				break;
+			case 1:
+				SET_PIN(DIGITS_1);
+				break;
+			case 2:
+				SET_PIN(DIGITS_2);
+				break;
+			case 3:
+				SET_PIN(DIGITS_3);
+				break;
+		}
+		HAL_GPIO_WritePin(SEG_A_GPIO_Port, SEG_A_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(SEG_B_GPIO_Port, SEG_B_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(SEG_C_GPIO_Port, SEG_C_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(SEG_D_GPIO_Port, SEG_D_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(SEG_E_GPIO_Port, SEG_E_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(SEG_F_GPIO_Port, SEG_F_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(SEG_G_GPIO_Port, SEG_G_Pin, GPIO_PIN_SET);
+		
+		HAL_Delay(50);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -403,6 +439,38 @@ static void MX_DAC_Init(void)
 
 }
 
+/* TIM2 init function */
+static void MX_TIM2_Init(void)
+{
+
+  TIM_ClockConfigTypeDef sClockSourceConfig;
+  TIM_MasterConfigTypeDef sMasterConfig;
+
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 40000;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 500;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
 /** 
   * Enable DMA controller clock
   */
@@ -451,7 +519,7 @@ static void MX_GPIO_Init(void)
                           |DIGITS_1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PA0 */
@@ -460,15 +528,20 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LED3_Pin LED4_Pin LD5_Pin LD6_Pin 
-                           SEG_A_Pin SEG_B_Pin SEG_C_Pin SEG_D_Pin 
-                           SEG_E_Pin SEG_F_Pin SEG_G_Pin SEG_H_Pin */
-  GPIO_InitStruct.Pin = LED3_Pin|LED4_Pin|LD5_Pin|LD6_Pin 
-                          |SEG_A_Pin|SEG_B_Pin|SEG_C_Pin|SEG_D_Pin 
-                          |SEG_E_Pin|SEG_F_Pin|SEG_G_Pin|SEG_H_Pin;
+  /*Configure GPIO pins : LED3_Pin LED4_Pin LD5_Pin LD6_Pin */
+  GPIO_InitStruct.Pin = LED3_Pin|LED4_Pin|LD5_Pin|LD6_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : SEG_A_Pin SEG_B_Pin SEG_C_Pin SEG_D_Pin 
+                           SEG_E_Pin SEG_F_Pin SEG_G_Pin SEG_H_Pin */
+  GPIO_InitStruct.Pin = SEG_A_Pin|SEG_B_Pin|SEG_C_Pin|SEG_D_Pin 
+                          |SEG_E_Pin|SEG_F_Pin|SEG_G_Pin|SEG_H_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
