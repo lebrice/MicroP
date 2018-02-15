@@ -150,6 +150,9 @@ void adc_buffer_full_callback()
 	current = tail;
 	min_last_10_secs = min;
 	max_last_10_secs = max;
+	
+	
+	// Loop through the array of past results, and find the min and max.
 	while(current != head){
 		// Update the Min.
 		temp_min = past_ten_seconds_results.past_mins[current];
@@ -160,6 +163,10 @@ void adc_buffer_full_callback()
 		max_last_10_secs = (temp_max > max_last_10_secs)? temp_max : max_last_10_secs;
 		current = (current + 1) % 10;
 	}
+	
+	
+	
+	
 	float displayed_value_digital;
 	// Update the display with the newly found values.
 	switch(display_mode){
@@ -281,6 +288,7 @@ int main(void)
 
 	SET_PIN(DIGITS_0);
 	HAL_GPIO_WritePin(SEG_G_GPIO_Port, SEG_G_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
 
   /* USER CODE END 2 */
 
