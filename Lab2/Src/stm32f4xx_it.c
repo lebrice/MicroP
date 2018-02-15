@@ -341,13 +341,10 @@ void refresh_display(void){
 	
 	// The resulting segments.
 	uint8_t segments[3];
-	get_segments_for_float(1.23f, segments);
+	get_segments_for_float(displayed_value, segments);
 	
-		
-	GPIOD->ODR = 0x0000 | segments[currently_active_digit];
+	GPIOD->ODR = (GPIOD->ODR & 0xFFFFFF00) | segments[currently_active_digit];
 	
-	currently_active_digit++;
-	currently_active_digit %= 3;
 	switch(currently_active_digit){
 		case 0:
 			SET_PIN(DIGITS_0);
@@ -360,11 +357,14 @@ void refresh_display(void){
 			RESET_PIN(DIGITS_2);
 			break;
 		case 2:
+			HAL_GPIO_WritePin(SEG_H_GPIO_Port, SEG_H_Pin, GPIO_PIN_SET);
 			RESET_PIN(DIGITS_0);
 			RESET_PIN(DIGITS_1);
 			SET_PIN(DIGITS_2);
 			break;
-	}
+	}	
+	currently_active_digit++;
+	currently_active_digit %= 3;
 }
 
 

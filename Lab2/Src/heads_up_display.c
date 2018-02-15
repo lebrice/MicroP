@@ -16,7 +16,7 @@ void split_three_digits(float value, int digits[3]){
 	digits[1] = int_value / 10;
 	int_value -= digits[1] * 10;
 	digits[0] = int_value % 10;
-	printf("%f gets translated to %u, %u, %u\n", value, digits[2], digits[1], digits[0]);
+//	printf("%f gets translated to %u, %u, %u\n", value, digits[2], digits[1], digits[0]);
 }
 
 void get_segments_for_float(float value, uint8_t segments[3]){
@@ -29,6 +29,6 @@ void get_segments_for_float(float value, uint8_t segments[3]){
 	
 	for(int i = 0; i < 3; i++){
 		segments[i] = digit_to_segments[digits[i]];
-		printf("digit: %u, Segments: %02x\n", digits[i], segments[i]);
+//		printf("digit: %u, Segments: %02x\n", digits[i], segments[i]);
 	}
 }

@@ -28,7 +28,7 @@ This file defines the functions and constants used in the 7-segment display.
 #define DISPLAY_MIN 1
 #define DISPLAY_MAX 2
 
-#define DISPLAY_REFRESH_INTERVAL_MS 10
+#define DISPLAY_REFRESH_INTERVAL_MS 5
 
 // Very useful macros for setting and resetting a given pin.
 #define PIN(i) i##_Pin

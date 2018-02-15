@@ -133,9 +133,9 @@ void adc_buffer_full_callback()
 	max = last_second_results.max_value;
 	rms = last_second_results.rms;
 	
-	printf("Showing RMS: %.3f\n", rms);
-	printf("Showing MIN: %.3f\n", min);
-	printf("Showing MAX: %.3f\n", max);
+//	printf("Showing RMS: %.3f\n", rms);
+//	printf("Showing MIN: %.3f\n", min);
+//	printf("Showing MAX: %.3f\n", max);
 	
 	
 	head = (head + 1) % 10; // Update the head.
@@ -160,31 +160,33 @@ void adc_buffer_full_callback()
 		max_last_10_secs = (temp_max > max_last_10_secs)? temp_max : max_last_10_secs;
 		current = (current + 1) % 10;
 	}
-	
+	float displayed_value_digital;
 	// Update the display with the newly found values.
 	switch(display_mode){
 		case DISPLAY_RMS:
 			// TODO:
 			printf("Showing RMS: %.3f\n", rms);
 			printf("Showing RMS: %.3f\n", DigitalToAnalogValue(rms));
-			displayed_value = DigitalToAnalogValue(rms);
+			displayed_value_digital = rms;
+//			displayed_value = 1.11f;
 			break;
 		case DISPLAY_MIN:
 			// TODO:
 			printf("Showing MIN: %.3f\n", min_last_10_secs);
 		  printf("Showing MIN: %.3f\n", DigitalToAnalogValue(min_last_10_secs));
-			displayed_value = DigitalToAnalogValue(min_last_10_secs);
+			displayed_value_digital = min_last_10_secs;
+//			displayed_value = 2.22f;
 		
 			break;
 		case DISPLAY_MAX:
 			// TODO:
 			printf("Showing MAX: %.3f\n", max_last_10_secs);
 		  printf("Showing MAX: %.3f\n", DigitalToAnalogValue(max_last_10_secs));
-			displayed_value = DigitalToAnalogValue(max_last_10_secs);
+ 			displayed_value_digital = max_last_10_secs;
+//			displayed_value = 3.33f;
 			break;
-
-		
 	}
+	displayed_value = DigitalToAnalogValue(displayed_value_digital);
 }
 
 void FIR_C(int Input, float* Output){
@@ -201,8 +203,8 @@ void FIR_C(int Input, float* Output){
 	static int buffer[5];
 	static int head, tail = 0;
 	
-	register int i;
-	register float result = 0.f;
+	int i;
+	float result = 0.f;
 	head = (head + 1) % 5; // Update the head.
 	if(head == tail){ // Update the tail, if necessary.
 		tail = (tail + 1) % 5; 
@@ -218,6 +220,7 @@ void FIR_C(int Input, float* Output){
 
 
 
+
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 {
 	if(AdcHandle->Instance == ADC1){
@@ -226,7 +229,11 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 			FIR_C(ADCBufferDMA[i], &filtered_ADCBuffer[i]); 
 		}
 		adc_buffer_full_callback();
+		HAL_ADC_Stop_DMA(&hadc1);
+		HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
 	}
+	
+	
 }
 
 /* USER CODE END 0 */
@@ -270,7 +277,7 @@ int main(void)
 	HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 2048);
 	HAL_DAC_Start(&hdac, DAC_CHANNEL_1); 
 
-	HAL_ADC_Start_DMA(&hadc1,ADCBufferDMA,ADC_BUFFER_SIZE);
+	HAL_ADC_Start_DMA(&hadc1,ADCBufferDMA, ADC_BUFFER_SIZE);
 
 	SET_PIN(DIGITS_0);
 	HAL_GPIO_WritePin(SEG_G_GPIO_Port, SEG_G_Pin, GPIO_PIN_SET);
