@@ -105,7 +105,7 @@ void asm_math(float *inputValues, int size, asm_output *results);
 static PastResultsVector past_ten_seconds_results;
 
 float DigitalToAnalogValue(int digital_value){
-	float AnalogVal = 3.3*(digital_value)/4095;
+	float AnalogVal = 3.0*(digital_value)/4095;
 	return AnalogVal;
 }
 /*
