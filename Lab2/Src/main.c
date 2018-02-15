@@ -279,38 +279,8 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	int bob = 0;
   while (1)
-  {
-		bob++;
-		bob %= 4;
-		RESET_PIN(DIGITS_0);
-		RESET_PIN(DIGITS_1);
-		RESET_PIN(DIGITS_2);
-		RESET_PIN(DIGITS_3);
-		switch(bob){
-			case 0:
-				SET_PIN(DIGITS_0);
-				break;
-			case 1:
-				SET_PIN(DIGITS_1);
-				break;
-			case 2:
-				SET_PIN(DIGITS_2);
-				break;
-			case 3:
-				SET_PIN(DIGITS_3);
-				break;
-		}
-		HAL_GPIO_WritePin(SEG_A_GPIO_Port, SEG_A_Pin, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(SEG_B_GPIO_Port, SEG_B_Pin, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(SEG_C_GPIO_Port, SEG_C_Pin, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(SEG_D_GPIO_Port, SEG_D_Pin, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(SEG_E_GPIO_Port, SEG_E_Pin, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(SEG_F_GPIO_Port, SEG_F_Pin, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(SEG_G_GPIO_Port, SEG_G_Pin, GPIO_PIN_SET);
-		
-		HAL_Delay(50);
+  {		
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */

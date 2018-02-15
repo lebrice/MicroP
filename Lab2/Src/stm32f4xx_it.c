@@ -197,10 +197,10 @@ void SysTick_Handler(void)
 	static const int target_ADC_sampling_freq = 50;
 	static const int target_ADC_sampling_period = (1000 / target_ADC_sampling_freq);
 //	
-//	// Threshold for the display counter. When reached, the display is refreshed.
-//	static const int systicks_per_display_refresh = DISPLAY_REFRESH_INTERVAL_MS / ms_per_systick;
-//	// Counter for refreshing the display.
-//	static int refresh_display_counter;
+	// Threshold for the display counter. When reached, the display is refreshed.
+	static const int systicks_per_display_refresh = DISPLAY_REFRESH_INTERVAL_MS / ms_per_systick;
+	// Counter for refreshing the display.
+	static int refresh_display_counter;
 //	
 	// Threshold for the ADC counter. When reached, the ADC is sampled.
 	static const int systicks_per_ADC_sample = target_ADC_sampling_period / ms_per_systick;
@@ -216,12 +216,12 @@ void SysTick_Handler(void)
 
 
 
-//	// Refresh the display when appropriate.
-//	refresh_display_counter++;
-//	if (refresh_display_counter == systicks_per_display_refresh){
-//		refresh_display();
-//		refresh_display_counter = 0;
-//	}
+	// Refresh the display when appropriate.
+	refresh_display_counter++;
+	if (refresh_display_counter == systicks_per_display_refresh){
+		refresh_display();
+		refresh_display_counter = 0;
+	}
 	
 	// Sample the ADC when appropriate.
 	sample_ADC_counter++;
@@ -333,44 +333,38 @@ void refresh_display(void){
 	// The float value to be displayed.
 	extern float displayed_value;
 	// Which digit is currently active.
-	static uint8_t currently_active_digit = 1;
+	static uint8_t currently_active_digit = 0;
 	// The delay between each digit being displayed.
 	static const int digit_delay_ms = 20;
 	
+	
+	
 	// The resulting segments.
 	uint8_t segments[3];
+	get_segments_for_float(1.23f, segments);
 	
-	get_segments_for_float(displayed_value, segments);
+		
+	GPIOD->ODR = 0x0000 | segments[currently_active_digit];
 	
-	RESET_PIN(DIGITS_0);
-	RESET_PIN(DIGITS_1);
-	RESET_PIN(DIGITS_2);
-	RESET_PIN(DIGITS_3);
-//	
-//	switch currently_active_digit:
-//		case 1:
-//			SE
-	
-	// Write the first digit (X.xx)
-	SET_PIN(DIGITS_1);
-	GPIOD->ODR = 0x0000 | segments[0];
-	GPIOD->BSRR = 0x00FF;// Set the corresponding bits.
-	HAL_Delay(digit_delay_ms);
-	RESET_PIN(DIGITS_1);
-	
-	// Write the second digit (x.Xx)
-	SET_PIN(DIGITS_2);
-	GPIOD->ODR = 0x0000 | segments[1];
-	GPIOD->BSRR = 0x00FF;// Set the corresponding bits.
-	HAL_Delay(digit_delay_ms);
-	RESET_PIN(DIGITS_2);
-	
-	// Write the third digit (x.xX)
-	SET_PIN(DIGITS_3);
-	GPIOD->ODR = 0x0000 | segments[2];
-	GPIOD->BSRR = 0x00FF;// Set the corresponding bits.
-	HAL_Delay(digit_delay_ms);
-	RESET_PIN(DIGITS_3);
+	currently_active_digit++;
+	currently_active_digit %= 3;
+	switch(currently_active_digit){
+		case 0:
+			SET_PIN(DIGITS_0);
+			RESET_PIN(DIGITS_1);
+			RESET_PIN(DIGITS_2);
+			break;
+		case 1:
+			RESET_PIN(DIGITS_0);
+			SET_PIN(DIGITS_1);
+			RESET_PIN(DIGITS_2);
+			break;
+		case 2:
+			RESET_PIN(DIGITS_0);
+			RESET_PIN(DIGITS_1);
+			SET_PIN(DIGITS_2);
+			break;
+	}
 }
 
 
