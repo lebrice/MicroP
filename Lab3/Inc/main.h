@@ -55,6 +55,18 @@
 #define DIGITS_3_GPIO_Port GPIOE
 #define DIGITS_4_Pin GPIO_PIN_4
 #define DIGITS_4_GPIO_Port GPIOE
+#define ROW_1_Pin GPIO_PIN_10
+#define ROW_1_GPIO_Port GPIOB
+#define ROW_2_Pin GPIO_PIN_11
+#define ROW_2_GPIO_Port GPIOB
+#define ROW_3_Pin GPIO_PIN_12
+#define ROW_3_GPIO_Port GPIOB
+#define COL_0_Pin GPIO_PIN_13
+#define COL_0_GPIO_Port GPIOB
+#define COL_1_Pin GPIO_PIN_14
+#define COL_1_GPIO_Port GPIOB
+#define COL_2_Pin GPIO_PIN_15
+#define COL_2_GPIO_Port GPIOB
 #define LED3_Pin GPIO_PIN_12
 #define LED3_GPIO_Port GPIOD
 #define LED4_Pin GPIO_PIN_13
@@ -79,6 +91,8 @@
 #define SEG_G_GPIO_Port GPIOD
 #define SEG_H_Pin GPIO_PIN_7
 #define SEG_H_GPIO_Port GPIOD
+#define ROW_0_Pin GPIO_PIN_9
+#define ROW_0_GPIO_Port GPIOB
 #define DIGITS_0_Pin GPIO_PIN_0
 #define DIGITS_0_GPIO_Port GPIOE
 #define DIGITS_1_Pin GPIO_PIN_1

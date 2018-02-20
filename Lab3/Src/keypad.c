@@ -12,60 +12,60 @@ float make_float_from_last_two_digits(uint8_t digits[2]);
 * two_digits --(digit entered)--> two_digits (bump the first digit, keep last two digits only)
 * two_digits --(pound sign)--> INIT
 */
-void new_keypad_value(uint8_t new_keypad_value){
+void new_keypad_value(char new_keypad_value){
 	static uint8_t digits[2];
 	switch(new_keypad_value){
-		case KEYPAD_POUND:
+		case '#':
 			// We use the last two digits to assign the input value.
 			input_value = make_float_from_last_two_digits(digits);
 			break;
-		case KEYPAD_STAR:
+		case '*':
 			// We want to reset the digits.
 			digits[0] = 0;
 			digits[1] = 0;
 			break;
-		case KEYPAD_0:
+		case '0':
 			digits[1] = digits[0];
 			digits[0] = 0;
 			break;
-		case KEYPAD_1:
+		case '1':
 			digits[1] = digits[0];
 			digits[0] = 1;
 			break;
-		case KEYPAD_2:
+		case '2':
 			digits[1] = digits[0];
-			digits[0] = 1;
+			digits[0] = 2;
 			break;
-		case KEYPAD_3:
+		case '3':
 			digits[1] = digits[0];
-			digits[0] = 1;
+			digits[0] = 3;
 			break;
-		case KEYPAD_4:
+		case '4':
 			digits[1] = digits[0];
-			digits[0] = 1;
+			digits[0] = 4;
 			break;
-		case KEYPAD_5:
+		case '5':
 			digits[1] = digits[0];
-			digits[0] = 1;
+			digits[0] = 5;
 			break;
-		case KEYPAD_6:
+		case '6':
 			digits[1] = digits[0];
-			digits[0] = 1;
+			digits[0] = 6;
 			break;
-		case KEYPAD_7:
+		case '7':
 			digits[1] = digits[0];
-			digits[0] = 1;
+			digits[0] = 7;
 			break;
-		case KEYPAD_8:
+		case '8':
 			digits[1] = digits[0];
-			digits[0] = 1;
+			digits[0] = 8;
 			break;
-		case KEYPAD_9:
+		case '9':
 			digits[1] = digits[0];
-			digits[0] = 1;
+			digits[0] = 9;
 			break;
 	}
-	
+	printf("digits: %u, %u, \n", digits[1], digits[0]);
 	
 }
 

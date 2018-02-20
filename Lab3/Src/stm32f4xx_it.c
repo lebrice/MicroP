@@ -40,6 +40,10 @@
 #include "heads_up_display.h"
 #endif
 
+#ifndef KEYPAD
+#include "keypad.h"
+#endif
+
 #ifndef bool
 #include <stdbool.h>
 #endif
@@ -50,6 +54,9 @@ void refresh_display(void);
 
 // Function that is called whenever the blue button is pressed.
 void button_pressed_callback(void);
+
+// Function called periodically to check if a digit was pressed.
+void check_for_digit_press(void);
 
 /* USER CODE END 0 */
 
@@ -197,18 +204,23 @@ void SysTick_Handler(void)
 	static const int ms_per_systick = 1;
 	
 	// target sampling frequency of the ADC (in Hz)
-	static const int target_ADC_sampling_freq = 50;
-	static const int target_ADC_sampling_period = (1000 / target_ADC_sampling_freq);
-		
+//	static const int target_ADC_sampling_freq = 50;
+//	static const int target_ADC_sampling_period = (1000 / target_ADC_sampling_freq);
+//		
 	// Threshold for the display counter. When reached, the display is refreshed.
 	static const int systicks_per_display_refresh = DISPLAY_REFRESH_INTERVAL_MS / ms_per_systick;
 	// Counter for refreshing the display.
 	static int refresh_display_counter;
-	//	
-	// Threshold for the ADC counter. When reached, the ADC is sampled.
-	static const int systicks_per_ADC_sample = target_ADC_sampling_period / ms_per_systick;
-	// Counter for sampling the ADC.
-	static int sample_ADC_counter;
+
+	
+	static const int systicks_per_check_for_digit_press = CHECK_FOR_DIGIT_PRESS_INTERVAL_MS / ms_per_systick;
+	static int check_for_digit_press_counter;
+	
+	// TODO: we might remove this when we get the timers to work properly.
+//	// Threshold for the ADC counter. When reached, the ADC is sampled.
+//	static const int systicks_per_ADC_sample = target_ADC_sampling_period / ms_per_systick;
+//	// Counter for sampling the ADC.
+//	static int sample_ADC_counter;
 	
 
   /* USER CODE END SysTick_IRQn 0 */
@@ -221,6 +233,13 @@ void SysTick_Handler(void)
 	if (refresh_display_counter == systicks_per_display_refresh){
 		refresh_display();
 		refresh_display_counter = 0;
+	}
+	
+	// Check for a digit press when appropriate.
+	check_for_digit_press_counter++;
+	if (check_for_digit_press_counter == systicks_per_check_for_digit_press){
+		check_for_digit_press();
+		check_for_digit_press_counter = 0;
 	}
 	
 //	// Sample the ADC when appropriate.
@@ -380,6 +399,84 @@ void refresh_display(void){
 	currently_active_digit++;
 	currently_active_digit %= 3;
 }
+
+
+
+/** @brief Called to check wether one key on the keypad is pressed down.
+*
+*
+*/
+void check_for_digit_press(){
+	uint32_t rows[] = { ROW_0_Pin, ROW_1_Pin, ROW_2_Pin, ROW_3_Pin };
+	uint32_t columns[] = { COL_0_Pin, COL_1_Pin, COL_2_Pin };
+	static uint8_t current_column;
+	
+	// The character that was set in the keypad.
+	char chosen_char = NULL;
+	
+	// Reset all columns
+	for(int i=0; i<ROWS; i++){
+		HAL_GPIO_WritePin(COL_0_GPIO_Port, columns[i], GPIO_PIN_RESET);
+	}
+	
+	HAL_GPIO_WritePin(COL_0_GPIO_Port, columns[current_column], GPIO_PIN_SET);
+	
+	for(int row=0; row < ROWS; row++){
+		// Read each column.
+		GPIO_PinState value = HAL_GPIO_ReadPin(GPIOB, rows[row]);
+		if(value == GPIO_PIN_SET){
+			printf("KEY (%u, %u) is ON.\n", row, current_column);
+			chosen_char = Keys[row][current_column];
+			break;
+		}else{
+			printf("KEY (%u, %u) is OFF.\n", row, current_column);
+		}
+	}
+	current_column++;
+	current_column %= COLS;
+	
+	if(chosen_char != NULL){
+		new_keypad_value(chosen_char);
+	}
+	
+	// reset all the rows.
+//	GPIOE->ODR = (0xFFFFF87F & GPIOE->ODR);
+//	HAL_GPIO_WritePin(GPIOE, rows[0], GPIO_PIN_SET);
+//	printf("IDR: %x", GPIOE->IDR);
+//	for(int row = 0; row < ROWS; row++){
+//		// We want to clear the pins 7, 8, 9 and 10 (all rows), before setting a particular row.
+//		GPIOE->ODR = (0xFFFFF87F & GPIOE->ODR);
+//		HAL_GPIO_WritePin(GPIOE, rows[row], GPIO_PIN_SET);
+////		HAL_Delay(1);
+//		// Read all the column pins to check which one is high.
+//		
+//		int selected_column = -1;
+//		for(int j = 0; j < COLS; j++){
+//			uint8_t value = HAL_GPIO_ReadPin(GPIOE, columns[j]);
+//			printf("Value: %u\n", value);
+//			if(value == GPIO_PIN_SET){
+//				selected_column = j;
+//				break;
+//			}
+//		}
+//		if(selected_column != -1){
+//			// A digit was pressed!
+//			char digit = Keys[row][selected_column];
+//			printf("Digit pressed: %c\n", digit);
+//			
+//			uint8_t value = (uint8_t) (digit - '0');
+//			printf("Value: %u\n", value);
+//			displayed_value = value;
+//			break;
+//		}else{
+//			printf("No column is high.\n");
+//			displayed_value = 0;
+//		}
+//		
+//	}
+}
+
+
 
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
