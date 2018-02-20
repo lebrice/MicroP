@@ -49,7 +49,7 @@
 void refresh_display(void);
 
 // Function that is called whenever the blue button is pressed.
-void button_pressed_callback();
+void button_pressed_callback(void);
 
 /* USER CODE END 0 */
 
@@ -57,6 +57,7 @@ void button_pressed_callback();
 extern DMA_HandleTypeDef hdma_adc1;
 extern ADC_HandleTypeDef hadc1;
 extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
 
 /******************************************************************************/
 /*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
@@ -222,13 +223,13 @@ void SysTick_Handler(void)
 		refresh_display_counter = 0;
 	}
 	
-	// Sample the ADC when appropriate.
-	sample_ADC_counter++;
-	if (sample_ADC_counter == systicks_per_ADC_sample){
-		// Start the ADC Interrupt Routine.		
-		HAL_ADC_Start_IT(&hadc1);
-		sample_ADC_counter = 0;
-	}
+//	// Sample the ADC when appropriate.
+//	sample_ADC_counter++;
+//	if (sample_ADC_counter == systicks_per_ADC_sample){
+//		// Start the ADC Interrupt Routine.		
+//		HAL_ADC_Start_IT(&hadc1);
+//		sample_ADC_counter = 0;
+//	}
 	
 
 
@@ -280,12 +281,26 @@ void ADC_IRQHandler(void)
 void TIM2_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM2_IRQn 0 */
-
+	printf("TIMER IRQ HANDLER\n");
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
   /* USER CODE BEGIN TIM2_IRQn 1 */
 
   /* USER CODE END TIM2_IRQn 1 */
+}
+
+/**
+* @brief This function handles TIM3 global interrupt.
+*/
+void TIM3_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM3_IRQn 0 */
+
+  /* USER CODE END TIM3_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim3);
+  /* USER CODE BEGIN TIM3_IRQn 1 */
+
+  /* USER CODE END TIM3_IRQn 1 */
 }
 
 /**
@@ -337,8 +352,6 @@ void refresh_display(void){
 	extern float displayed_value;
 	// Which digit is currently active.
 	static uint8_t currently_active_digit = 0;
-	// The delay between each digit being displayed.
-	static const int digit_delay_ms = 20;
 	
 	// The resulting segments.
 	uint8_t segments[3];

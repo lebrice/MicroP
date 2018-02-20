@@ -168,9 +168,6 @@ void adc_buffer_full_callback()
 		current = (current + 1) % 10;
 	}
 	
-	
-	
-	
 	float displayed_value_digital;
 	// Update the display with the newly found values.
 	switch(display_mode){
@@ -201,12 +198,10 @@ void adc_buffer_full_callback()
 }
 
 void FIR_C(int Input, float* Output){
-	
 	//Idea: use the buffer like a circular queue.
 	//- Add the element to the buffer, using the head pointer.
 	//- Update tail accordingly
 	//- iterate in the buffer, going from head to tail, and add up the results
-	
 	
 	// Array of weights
 	static float weights[5] = {0.2, 0.2, 0.2, 0.2, 0.2};
@@ -227,11 +222,17 @@ void FIR_C(int Input, float* Output){
 	}
 	*Output = result; // place the result at the given location.
 }
-	
 
 
+// Called when the Buffer was half-filled.
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* AdcHandle){
+	printf("Hello!\n");
+	if(AdcHandle->Instance == ADC1){
+		printf("Here!\n");
+	}
+}
 
-
+// Called when the buffer was filled.
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 {
 	if(AdcHandle->Instance == ADC1){
@@ -240,12 +241,29 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 			FIR_C(ADCBufferDMA[i], &filtered_ADCBuffer[i]); 
 		}
 		adc_buffer_full_callback();
-		HAL_ADC_Stop_DMA(&hadc1);
-		HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
 	}
-	
-	
 }
+
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim){
+	// TODO: this callback might be useful later on, I'm not sure.
+	printf("HERE! timer PWM pulse is finished.\n");
+}
+
+void TIM_DMAPeriodElapsedCplt(DMA_HandleTypeDef *hdma){
+	// TODO: this callback might be useful later on, I'm not sure.
+	printf("HERE! timer DMA period elapsed.\n");
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+	// TODO: this might be useful.
+	printf("HELLO THERE, prediod elapsed!\n");
+}
+
+void HAL_TIM_TriggerCallback(TIM_HandleTypeDef *htim){
+	// TODO: This might be useful, not sure.
+	printf("Trigger callback!\n");
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -289,19 +307,26 @@ int main(void)
 	HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 2048);
 	HAL_DAC_Start(&hdac, DAC_CHANNEL_1); 
 
-	HAL_ADC_Start_DMA(&hadc1,ADCBufferDMA, ADC_BUFFER_SIZE);
+  
 
 	SET_PIN(DIGITS_0);
 	HAL_GPIO_WritePin(SEG_G_GPIO_Port, SEG_G_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
-
+	
+	
+	// Start the timer.
+	HAL_TIM_Base_Start(&htim2);
+	
+	
+//  HAL_TIM_Base_Start_DMA(&htim2, ADCBufferDMA, ADC_BUFFER_SIZE);
+//	HAL_ADC_Start_DMA(&hadc1,ADCBufferDMA, ADC_BUFFER_SIZE);
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -438,9 +463,9 @@ static void MX_TIM2_Init(void)
   TIM_MasterConfigTypeDef sMasterConfig;
 
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 40000;
+  htim2.Init.Prescaler = 8400;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 500;
+  htim2.Init.Period = 200;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
   {
