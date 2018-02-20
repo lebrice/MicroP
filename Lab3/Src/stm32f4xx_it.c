@@ -36,6 +36,20 @@
 #include "stm32f4xx_it.h"
 
 /* USER CODE BEGIN 0 */
+#ifndef DISPLAY_RMS 
+#include "heads_up_display.h"
+#endif
+
+#ifndef bool
+#include <stdbool.h>
+#endif
+
+
+// Function used to refresh the display.
+void refresh_display(void);
+
+// Function that is called whenever the blue button is pressed.
+void button_pressed_callback();
 
 /* USER CODE END 0 */
 
@@ -178,11 +192,45 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
+	// NOTE: This function gets called every 20ms.
+	static const int ms_per_systick = 1;
+	
+	// target sampling frequency of the ADC (in Hz)
+	static const int target_ADC_sampling_freq = 50;
+	static const int target_ADC_sampling_period = (1000 / target_ADC_sampling_freq);
+		
+	// Threshold for the display counter. When reached, the display is refreshed.
+	static const int systicks_per_display_refresh = DISPLAY_REFRESH_INTERVAL_MS / ms_per_systick;
+	// Counter for refreshing the display.
+	static int refresh_display_counter;
+	//	
+	// Threshold for the ADC counter. When reached, the ADC is sampled.
+	static const int systicks_per_ADC_sample = target_ADC_sampling_period / ms_per_systick;
+	// Counter for sampling the ADC.
+	static int sample_ADC_counter;
+	
 
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
   /* USER CODE BEGIN SysTick_IRQn 1 */
+
+	// Refresh the display when appropriate.
+	refresh_display_counter++;
+	if (refresh_display_counter == systicks_per_display_refresh){
+		refresh_display();
+		refresh_display_counter = 0;
+	}
+	
+	// Sample the ADC when appropriate.
+	sample_ADC_counter++;
+	if (sample_ADC_counter == systicks_per_ADC_sample){
+		// Start the ADC Interrupt Routine.		
+		HAL_ADC_Start_IT(&hadc1);
+		sample_ADC_counter = 0;
+	}
+	
+
 
   /* USER CODE END SysTick_IRQn 1 */
 }
@@ -204,7 +252,11 @@ void EXTI0_IRQHandler(void)
   /* USER CODE END EXTI0_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
   /* USER CODE BEGIN EXTI0_IRQn 1 */
-
+	
+	
+	button_pressed_callback();
+	
+	
   /* USER CODE END EXTI0_IRQn 1 */
 }
 
@@ -251,6 +303,70 @@ void DMA2_Stream0_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
+void button_pressed_callback(){
+	extern uint8_t display_mode;
+	display_mode++;
+	display_mode %= 3;
+	switch(display_mode){
+		case DISPLAY_RMS:
+			// TODO: display one of the LEDs
+			HAL_GPIO_WritePin(GPIOD, LED3_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOD, LED4_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_RESET);
+			break;
+		case DISPLAY_MIN:
+			HAL_GPIO_WritePin(GPIOD, LED3_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOD, LED4_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_RESET);
+			break;
+		case DISPLAY_MAX:
+			HAL_GPIO_WritePin(GPIOD, LED3_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOD, LED4_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_SET);
+			break;
+	}
+}
+
+
+/**
+* @brief Function created for refreshing the display.
+*(Refreshes the display, using the functions defined in "heads_up_display.h" to get the required digits and segments.
+*/
+void refresh_display(void){
+	// The float value to be displayed.
+	extern float displayed_value;
+	// Which digit is currently active.
+	static uint8_t currently_active_digit = 0;
+	// The delay between each digit being displayed.
+	static const int digit_delay_ms = 20;
+	
+	// The resulting segments.
+	uint8_t segments[3];
+	get_segments_for_float(displayed_value, segments);
+	
+	GPIOD->ODR = (GPIOD->ODR & 0xFFFFFF00) | segments[currently_active_digit];
+	
+	switch(currently_active_digit){
+		case 0:
+			SET_PIN(DIGITS_0);
+			RESET_PIN(DIGITS_1);
+			RESET_PIN(DIGITS_2);
+			break;
+		case 1:
+			RESET_PIN(DIGITS_0);
+			SET_PIN(DIGITS_1);
+			RESET_PIN(DIGITS_2);
+			break;
+		case 2:
+			HAL_GPIO_WritePin(SEG_H_GPIO_Port, SEG_H_Pin, GPIO_PIN_SET);
+			RESET_PIN(DIGITS_0);
+			RESET_PIN(DIGITS_1);
+			SET_PIN(DIGITS_2);
+			break;
+	}	
+	currently_active_digit++;
+	currently_active_digit %= 3;
+}
 
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -40,7 +40,10 @@
 #include "stm32f4xx_hal.h"
 
 /* USER CODE BEGIN Includes */
-
+#include <stdbool.h>
+#ifndef DISPLAY_RMS
+#include "heads_up_display.h"
+#endif
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -54,6 +57,15 @@ TIM_HandleTypeDef htim3;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+
+const int ADC_BUFFER_SIZE = 50;
+
+float filtered_ADCBuffer[ADC_BUFFER_SIZE];
+
+// Buffer that holds Unfiltered data populated with DMA. 
+static uint32_t ADCBufferDMA[ADC_BUFFER_SIZE];
+
+
 
 /* USER CODE END PV */
 
@@ -71,11 +83,169 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
+typedef struct {
+	float last_RMS;
+	float past_mins[10];
+	float past_maxs[10];	
+} PastResultsVector;
 
+typedef struct {
+	float rms;
+	float max_value;
+	float min_value;
+	int max_index;
+	int min_index;	
+} asm_output;
+
+void adc_buffer_full_callback(void);
+void FIR_C(int Input, float* Output);
+void asm_math(float *inputValues, int size, asm_output *results);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
 
+
+
+static PastResultsVector past_ten_seconds_results;
+
+float DigitalToAnalogValue(int digital_value){
+	float AnalogVal = 3.0*(digital_value)/4095;
+	return AnalogVal;
+}
+/*
+This function is called once per second, when the buffer is full.
+It should calculate what values should be displayed
+*/
+void adc_buffer_full_callback()
+{
+	extern float displayed_value;
+	
+	static int head;
+	static int tail;
+	
+	asm_output last_second_results;
+	float min, max, rms;
+	
+	int current;
+	float temp_max;
+	float temp_min;
+	float min_last_10_secs;
+	float max_last_10_secs;
+	
+	asm_math(filtered_ADCBuffer, ADC_BUFFER_SIZE, &last_second_results);
+	min = last_second_results.min_value;
+	max = last_second_results.max_value;
+	rms = last_second_results.rms;
+	
+//	printf("Showing RMS: %.3f\n", rms);
+//	printf("Showing MIN: %.3f\n", min);
+//	printf("Showing MAX: %.3f\n", max);
+	
+	
+	head = (head + 1) % 10; // Update the head.
+	if(head == tail){ // Update the tail, if necessary.
+		tail = (tail + 1) % 10; 
+	}
+	past_ten_seconds_results.past_mins[head] = min; // write the new value in.
+	past_ten_seconds_results.past_maxs[head] = max;
+	past_ten_seconds_results.last_RMS = rms;
+	
+	//We have to calculate the min and max of the last 10 seconds.
+	current = tail;
+	min_last_10_secs = min;
+	max_last_10_secs = max;
+	
+	
+	// Loop through the array of past results, and find the min and max.
+	while(current != head){
+		// Update the Min.
+		temp_min = past_ten_seconds_results.past_mins[current];
+		min_last_10_secs = (temp_min < min_last_10_secs && temp_min != 0)? temp_min : min_last_10_secs;
+		
+		// Update the Max.
+		temp_max = past_ten_seconds_results.past_maxs[current];
+		max_last_10_secs = (temp_max > max_last_10_secs)? temp_max : max_last_10_secs;
+		current = (current + 1) % 10;
+	}
+	
+	
+	
+	
+	float displayed_value_digital;
+	// Update the display with the newly found values.
+	switch(display_mode){
+		case DISPLAY_RMS:
+			// TODO:
+			printf("Showing RMS: %.3f\n", rms);
+			printf("Showing RMS: %.3f\n", DigitalToAnalogValue(rms));
+			displayed_value_digital = rms;
+//			displayed_value = 1.11f;
+			break;
+		case DISPLAY_MIN:
+			// TODO:
+			printf("Showing MIN: %.3f\n", min_last_10_secs);
+		  printf("Showing MIN: %.3f\n", DigitalToAnalogValue(min_last_10_secs));
+			displayed_value_digital = min_last_10_secs;
+//			displayed_value = 2.22f;
+		
+			break;
+		case DISPLAY_MAX:
+			// TODO:
+			printf("Showing MAX: %.3f\n", max_last_10_secs);
+		  printf("Showing MAX: %.3f\n", DigitalToAnalogValue(max_last_10_secs));
+ 			displayed_value_digital = max_last_10_secs;
+//			displayed_value = 3.33f;
+			break;
+	}
+	displayed_value = DigitalToAnalogValue(displayed_value_digital);
+}
+
+void FIR_C(int Input, float* Output){
+	
+	//Idea: use the buffer like a circular queue.
+	//- Add the element to the buffer, using the head pointer.
+	//- Update tail accordingly
+	//- iterate in the buffer, going from head to tail, and add up the results
+	
+	
+	// Array of weights
+	static float weights[5] = {0.2, 0.2, 0.2, 0.2, 0.2};
+	// Buffer that will hold the values as they come in.
+	static int buffer[5];
+	static int head, tail = 0;
+	
+	int i;
+	float result = 0.f;
+	head = (head + 1) % 5; // Update the head.
+	if(head == tail){ // Update the tail, if necessary.
+		tail = (tail + 1) % 5;
+	}
+	buffer[head] = Input; // write the new value in.
+	for(i=0; i<5; i++){
+		// move backward from 'head' to 'tail', adding up the values.
+		result += weights[i] * buffer[(head - i + 5) % 5];
+	}
+	*Output = result; // place the result at the given location.
+}
+	
+
+
+
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
+{
+	if(AdcHandle->Instance == ADC1){
+		// use the filter on each value in the raw buffer.
+		for(int i=0; i < ADC_BUFFER_SIZE; i++){
+			FIR_C(ADCBufferDMA[i], &filtered_ADCBuffer[i]); 
+		}
+		adc_buffer_full_callback();
+		HAL_ADC_Stop_DMA(&hadc1);
+		HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
+	}
+	
+	
+}
 /* USER CODE END 0 */
 
 /**
@@ -113,6 +283,17 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
+
+
+	
+	HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 2048);
+	HAL_DAC_Start(&hdac, DAC_CHANNEL_1); 
+
+	HAL_ADC_Start_DMA(&hadc1,ADCBufferDMA, ADC_BUFFER_SIZE);
+
+	SET_PIN(DIGITS_0);
+	HAL_GPIO_WritePin(SEG_G_GPIO_Port, SEG_G_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
 
   /* USER CODE END 2 */
 

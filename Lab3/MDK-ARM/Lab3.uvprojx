@@ -483,9 +483,6 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>::CMSIS</GroupName>
-        </Group>
-        <Group>
           <GroupName>Application/User</GroupName>
           <Files>
             <File>
@@ -513,6 +510,21 @@
               <FileType>5</FileType>
               <FilePath>..\Src\keypad.h</FilePath>
             </File>
+            <File>
+              <FileName>heads_up_display.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\heads_up_display.c</FilePath>
+            </File>
+            <File>
+              <FileName>heads_up_display.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Src\heads_up_display.h</FilePath>
+            </File>
+            <File>
+              <FileName>asm_math.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\Src\asm_math.s</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -524,6 +536,9 @@
               <FilePath>../Src/system_stm32f4xx.c</FilePath>
             </File>
           </Files>
+        </Group>
+        <Group>
+          <GroupName>::CMSIS</GroupName>
         </Group>
       </Groups>
     </Target>
