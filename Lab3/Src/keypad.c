@@ -13,6 +13,7 @@ float make_float_from_last_two_digits(uint8_t digits[2]);
 * two_digits --(pound sign)--> INIT
 */
 void new_keypad_value(char new_keypad_value){
+	extern float displayed_value;
 	static uint8_t digits[2];
 	switch(new_keypad_value){
 		case '#':
@@ -65,8 +66,7 @@ void new_keypad_value(char new_keypad_value){
 			digits[0] = 9;
 			break;
 	}
-	printf("digits: %u, %u, \n", digits[1], digits[0]);
-	
+	printf("digits: %u, %u, \n", digits[1], digits[0]); 
 }
 
 void add_new_digit(uint8_t new_digit, uint8_t digits[2]){

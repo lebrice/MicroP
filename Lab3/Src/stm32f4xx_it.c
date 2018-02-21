@@ -404,76 +404,41 @@ void refresh_display(void){
 
 /** @brief Called to check wether one key on the keypad is pressed down.
 *
-*
+* IDEA: Set one column high, and check if any rows are high. If so, the button at the crossing is pressed.
 */
 void check_for_digit_press(){
 	uint32_t rows[] = { ROW_0_Pin, ROW_1_Pin, ROW_2_Pin, ROW_3_Pin };
 	uint32_t columns[] = { COL_0_Pin, COL_1_Pin, COL_2_Pin };
-	static uint8_t current_column;
-	
-	// The character that was set in the keypad.
-	char chosen_char = NULL;
-	
-	// Reset all columns
-	for(int i=0; i<ROWS; i++){
-		HAL_GPIO_WritePin(COL_0_GPIO_Port, columns[i], GPIO_PIN_RESET);
+	static int current_column;
+	static char chosen_char = NULL;
+	// The character that is being pushed in the keypad.
+	char new_char = NULL;
+
+	// Reset all columns, and set the current column to HIGH.
+	for(int i=0; i<COLS; i++){
+		HAL_GPIO_WritePin(GPIOB, columns[i], (i == current_column) ? GPIO_PIN_SET : GPIO_PIN_RESET);
 	}
-	
-	HAL_GPIO_WritePin(COL_0_GPIO_Port, columns[current_column], GPIO_PIN_SET);
-	
-	for(int row=0; row < ROWS; row++){
-		// Read each column.
-		GPIO_PinState value = HAL_GPIO_ReadPin(GPIOB, rows[row]);
-		if(value == GPIO_PIN_SET){
+	for(int row = 0; row < ROWS; row++){
+		// Read each row. If a row is high, we found the digit.
+		// TODO: figure out why the ReadPin returns PIN_RESET when the pin is HIGH, and PIN_SET when pin is LOW.
+		if(HAL_GPIO_ReadPin(GPIOB, rows[row]) == GPIO_PIN_SET){
 			printf("KEY (%u, %u) is ON.\n", row, current_column);
-			chosen_char = Keys[row][current_column];
+			new_char = Keys[row][current_column];
 			break;
 		}else{
 			printf("KEY (%u, %u) is OFF.\n", row, current_column);
 		}
 	}
-	current_column++;
-	current_column %= COLS;
 	
-	if(chosen_char != NULL){
+	if((new_char != NULL) && (new_char != chosen_char)){
+		chosen_char = new_char;
 		new_keypad_value(chosen_char);
+		displayed_value = 0.01 * (chosen_char - '0'); // TODO: figure out the right way to convert to a number, and where to do it.
 	}
 	
-	// reset all the rows.
-//	GPIOE->ODR = (0xFFFFF87F & GPIOE->ODR);
-//	HAL_GPIO_WritePin(GPIOE, rows[0], GPIO_PIN_SET);
-//	printf("IDR: %x", GPIOE->IDR);
-//	for(int row = 0; row < ROWS; row++){
-//		// We want to clear the pins 7, 8, 9 and 10 (all rows), before setting a particular row.
-//		GPIOE->ODR = (0xFFFFF87F & GPIOE->ODR);
-//		HAL_GPIO_WritePin(GPIOE, rows[row], GPIO_PIN_SET);
-////		HAL_Delay(1);
-//		// Read all the column pins to check which one is high.
-//		
-//		int selected_column = -1;
-//		for(int j = 0; j < COLS; j++){
-//			uint8_t value = HAL_GPIO_ReadPin(GPIOE, columns[j]);
-//			printf("Value: %u\n", value);
-//			if(value == GPIO_PIN_SET){
-//				selected_column = j;
-//				break;
-//			}
-//		}
-//		if(selected_column != -1){
-//			// A digit was pressed!
-//			char digit = Keys[row][selected_column];
-//			printf("Digit pressed: %c\n", digit);
-//			
-//			uint8_t value = (uint8_t) (digit - '0');
-//			printf("Value: %u\n", value);
-//			displayed_value = value;
-//			break;
-//		}else{
-//			printf("No column is high.\n");
-//			displayed_value = 0;
-//		}
-//		
-//	}
+	
+	current_column++;
+	current_column %= COLS;
 }
 
 

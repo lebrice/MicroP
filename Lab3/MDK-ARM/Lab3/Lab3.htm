@@ -3,7 +3,7 @@
 <title>Static Call Graph - [Lab3\Lab3.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image Lab3\Lab3.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Tue Feb 20 18:56:57 2018
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Tue Feb 20 21:07:11 2018
 <BR><P>
 <H3>Maximum Stack Usage =        184 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -403,7 +403,8 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[65]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_double_epilogue
 </UL>
-<BR>[Called By]<UL><LI><a href="#[73]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DigitalToAnalogValue
+<BR>[Called By]<UL><LI><a href="#[b7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;check_for_digit_press
+<LI><a href="#[73]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DigitalToAnalogValue
 <LI><a href="#[bd]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_fp_digits
 </UL>
 
@@ -421,7 +422,8 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[65]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_double_epilogue
 </UL>
-<BR>[Called By]<UL><LI><a href="#[73]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DigitalToAnalogValue
+<BR>[Called By]<UL><LI><a href="#[b7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;check_for_digit_press
+<LI><a href="#[73]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DigitalToAnalogValue
 </UL>
 
 <P><STRONG><a name="[c3]"></a>__aeabi_f2d</STRONG> (Thumb, 38 bytes, Stack size 0 bytes, f2d.o(.text))
@@ -433,7 +435,8 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[6a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_float_round
 </UL>
-<BR>[Called By]<UL><LI><a href="#[73]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DigitalToAnalogValue
+<BR>[Called By]<UL><LI><a href="#[b7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;check_for_digit_press
+<LI><a href="#[73]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DigitalToAnalogValue
 </UL>
 
 <P><STRONG><a name="[d2]"></a>__aeabi_uidiv</STRONG> (Thumb, 0 bytes, Stack size 12 bytes, uidiv.o(.text), UNUSED)
@@ -997,8 +1000,8 @@ Global Symbols
 <P><STRONG><a name="[6]"></a>SVC_Handler</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, stm32f4xx_it.o(i.SVC_Handler))
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f407xx.o(RESET)
 </UL>
-<P><STRONG><a name="[9]"></a>SysTick_Handler</STRONG> (Thumb, 48 bytes, Stack size 16 bytes, stm32f4xx_it.o(i.SysTick_Handler))
-<BR><BR>[Stack]<UL><LI>Max Depth = 104<LI>Call Chain = SysTick_Handler &rArr; check_for_digit_press &rArr; new_keypad_value &rArr; __2printf
+<P><STRONG><a name="[9]"></a>SysTick_Handler</STRONG> (Thumb, 50 bytes, Stack size 16 bytes, stm32f4xx_it.o(i.SysTick_Handler))
+<BR><BR>[Stack]<UL><LI>Max Depth = 152<LI>Call Chain = SysTick_Handler &rArr; check_for_digit_press &rArr; __aeabi_dmul &rArr; _double_epilogue &rArr; _double_round
 </UL>
 <BR>[Calls]<UL><LI><a href="#[b6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;refresh_display
 <LI><a href="#[b7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;check_for_digit_press
@@ -1113,10 +1116,13 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[10]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EXTI0_IRQHandler
 </UL>
 
-<P><STRONG><a name="[b7]"></a>check_for_digit_press</STRONG> (Thumb, 160 bytes, Stack size 56 bytes, stm32f4xx_it.o(i.check_for_digit_press))
-<BR><BR>[Stack]<UL><LI>Max Depth = 88<LI>Call Chain = check_for_digit_press &rArr; new_keypad_value &rArr; __2printf
+<P><STRONG><a name="[b7]"></a>check_for_digit_press</STRONG> (Thumb, 176 bytes, Stack size 48 bytes, stm32f4xx_it.o(i.check_for_digit_press))
+<BR><BR>[Stack]<UL><LI>Max Depth = 136<LI>Call Chain = check_for_digit_press &rArr; __aeabi_dmul &rArr; _double_epilogue &rArr; _double_round
 </UL>
 <BR>[Calls]<UL><LI><a href="#[c5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;new_keypad_value
+<LI><a href="#[68]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_i2d
+<LI><a href="#[64]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_dmul
+<LI><a href="#[69]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_d2f
 <LI><a href="#[b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_WritePin
 <LI><a href="#[c4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_ReadPin
 <LI><a href="#[ad]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2printf
