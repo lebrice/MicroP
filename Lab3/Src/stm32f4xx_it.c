@@ -52,8 +52,6 @@
 // Function used to refresh the display.
 void refresh_display(void);
 
-// Function that is called whenever the blue button is pressed.
-void button_pressed_callback(void);
 
 // Function called periodically to check if a digit was pressed.
 void check_for_digit_press(void);
@@ -337,29 +335,7 @@ void DMA2_Stream0_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
-void button_pressed_callback(){
-	extern uint8_t display_mode;
-	display_mode++;
-	display_mode %= 3;
-	switch(display_mode){
-		case DISPLAY_RMS:
-			// TODO: display one of the LEDs
-			HAL_GPIO_WritePin(GPIOD, LED3_Pin, GPIO_PIN_SET);
-			HAL_GPIO_WritePin(GPIOD, LED4_Pin, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_RESET);
-			break;
-		case DISPLAY_MIN:
-			HAL_GPIO_WritePin(GPIOD, LED3_Pin, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(GPIOD, LED4_Pin, GPIO_PIN_SET);
-			HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_RESET);
-			break;
-		case DISPLAY_MAX:
-			HAL_GPIO_WritePin(GPIOD, LED3_Pin, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(GPIOD, LED4_Pin, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_SET);
-			break;
-	}
-}
+
 
 
 /**
@@ -409,7 +385,8 @@ void refresh_display(void){
 void check_for_digit_press(){
 	uint32_t rows[] = { ROW_0_Pin, ROW_1_Pin, ROW_2_Pin, ROW_3_Pin };
 	uint32_t columns[] = { COL_0_Pin, COL_1_Pin, COL_2_Pin };
-	static int current_column;
+	static uint8_t current_column;
+	static uint8_t row;
 	static char chosen_char = NULL;
 	// The character that is being pushed in the keypad.
 	char new_char = NULL;
@@ -418,8 +395,9 @@ void check_for_digit_press(){
 	for(int i=0; i<COLS; i++){
 		HAL_GPIO_WritePin(GPIOB, columns[i], (i == current_column) ? GPIO_PIN_SET : GPIO_PIN_RESET);
 	}
-	for(int row = 0; row < ROWS; row++){
-		// Read each row. If a row is high, we found the digit.
+	
+	// Read each row. If a row is high, we found the digit.
+	for(row = 0; row < ROWS; row++){
 		// TODO: figure out why the ReadPin returns PIN_RESET when the pin is HIGH, and PIN_SET when pin is LOW.
 		if(HAL_GPIO_ReadPin(GPIOB, rows[row]) == GPIO_PIN_SET){
 			printf("KEY (%u, %u) is ON.\n", row, current_column);

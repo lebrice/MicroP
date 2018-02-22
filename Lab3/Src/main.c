@@ -40,6 +40,8 @@
 #include "stm32f4xx_hal.h"
 
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
+
 #include <stdbool.h>
 #ifndef DISPLAY_RMS
 #include "heads_up_display.h"
@@ -97,6 +99,10 @@ typedef struct {
 	int min_index;	
 } asm_output;
 
+
+
+// Function that is called whenever the blue button is pressed.
+void button_pressed_callback(void);
 void adc_buffer_full_callback(void);
 void FIR_C(int Input, float* Output);
 void asm_math(float *inputValues, int size, asm_output *results);
@@ -241,6 +247,43 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 			FIR_C(ADCBufferDMA[i], &filtered_ADCBuffer[i]); 
 		}
 		adc_buffer_full_callback();
+	}
+}
+/** Called whenever an EXTI interrupt occurs (i.e. button press)
+*
+*/
+void HAL_GPIO_EXTI_Callback(uint16_t pin){
+	switch(pin){
+		case BLUE_BUTTON_Pin:
+			button_pressed_callback();
+			break;
+		default:
+			printf("EXTI interrupt!\n");
+	}
+		
+}
+
+void button_pressed_callback(){
+	extern uint8_t display_mode;
+	display_mode++;
+	display_mode %= 3;
+	switch(display_mode){
+		case DISPLAY_RMS:
+			// TODO: display one of the LEDs
+			HAL_GPIO_WritePin(GPIOD, LED3_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOD, LED4_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_RESET);
+			break;
+		case DISPLAY_MIN:
+			HAL_GPIO_WritePin(GPIOD, LED3_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOD, LED4_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_RESET);
+			break;
+		case DISPLAY_MAX:
+			HAL_GPIO_WritePin(GPIOD, LED3_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOD, LED4_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_SET);
+			break;
 	}
 }
 
@@ -591,16 +634,16 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PA0 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  /*Configure GPIO pin : BLUE_BUTTON_Pin */
+  GPIO_InitStruct.Pin = BLUE_BUTTON_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(BLUE_BUTTON_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : ROW_1_Pin ROW_2_Pin ROW_3_Pin ROW_0_Pin */
   GPIO_InitStruct.Pin = ROW_1_Pin|ROW_2_Pin|ROW_3_Pin|ROW_0_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : COL_0_Pin COL_1_Pin COL_2_Pin */

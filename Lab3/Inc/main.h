@@ -55,6 +55,9 @@
 #define DIGITS_3_GPIO_Port GPIOE
 #define DIGITS_4_Pin GPIO_PIN_4
 #define DIGITS_4_GPIO_Port GPIOE
+#define BLUE_BUTTON_Pin GPIO_PIN_0
+#define BLUE_BUTTON_GPIO_Port GPIOA
+#define BLUE_BUTTON_EXTI_IRQn EXTI0_IRQn
 #define ROW_1_Pin GPIO_PIN_10
 #define ROW_1_GPIO_Port GPIOB
 #define ROW_2_Pin GPIO_PIN_11
