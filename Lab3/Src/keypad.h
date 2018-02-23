@@ -30,6 +30,6 @@ static const char Keys[ROWS][COLS] = {
 #define CHECK_FOR_DIGIT_PRESS_INTERVAL_MS 500
 
 
-extern float input_value;
+extern float target_value;
 
 void new_keypad_value(char new_keypad_value);

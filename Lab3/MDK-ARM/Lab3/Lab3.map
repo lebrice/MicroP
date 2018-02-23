@@ -414,18 +414,17 @@ Section Cross References
     stm32f4xx_it.o(i.check_for_digit_press) refers to stm32f4xx_hal_gpio.o(i.HAL_GPIO_ReadPin) for HAL_GPIO_ReadPin
     stm32f4xx_it.o(i.check_for_digit_press) refers to printfa.o(i.__0printf) for __2printf
     stm32f4xx_it.o(i.check_for_digit_press) refers to keypad.o(i.new_keypad_value) for new_keypad_value
-    stm32f4xx_it.o(i.check_for_digit_press) refers to dflti.o(.text) for __aeabi_i2d
-    stm32f4xx_it.o(i.check_for_digit_press) refers to dmul.o(.text) for __aeabi_dmul
-    stm32f4xx_it.o(i.check_for_digit_press) refers to d2f.o(.text) for __aeabi_d2f
     stm32f4xx_it.o(i.check_for_digit_press) refers to stm32f4xx_it.o(.constdata) for .constdata
     stm32f4xx_it.o(i.check_for_digit_press) refers to stm32f4xx_it.o(.data) for .data
-    stm32f4xx_it.o(i.check_for_digit_press) refers to heads_up_display.o(.data) for displayed_value
     stm32f4xx_it.o(i.refresh_display) refers to heads_up_display.o(i.get_segments_for_float) for get_segments_for_float
     stm32f4xx_it.o(i.refresh_display) refers to stm32f4xx_hal_gpio.o(i.HAL_GPIO_WritePin) for HAL_GPIO_WritePin
     stm32f4xx_it.o(i.refresh_display) refers to heads_up_display.o(.data) for displayed_value
     stm32f4xx_it.o(i.refresh_display) refers to stm32f4xx_it.o(.data) for .data
+    keypad.o(i.new_keypad_value) refers to keypad.o(i.make_float_from_last_three_digits) for make_float_from_last_three_digits
+    keypad.o(i.new_keypad_value) refers to keypad.o(i.is_valid_target_value) for is_valid_target_value
     keypad.o(i.new_keypad_value) refers to printfa.o(i.__0printf) for __2printf
     keypad.o(i.new_keypad_value) refers to keypad.o(.data) for .data
+    keypad.o(i.new_keypad_value) refers to heads_up_display.o(.data) for displayed_value
     heads_up_display.o(i.get_segments_for_float) refers to heads_up_display.o(i.split_three_digits) for split_three_digits
     heads_up_display.o(i.get_segments_for_float) refers to heads_up_display.o(.constdata) for .constdata
     system_stm32f4xx.o(i.SystemCoreClockUpdate) refers to system_stm32f4xx.o(.data) for .data
@@ -1072,8 +1071,6 @@ Removing Unused input sections from the image.
     Removing stm32f4xx_it.o(.rev16_text), (4 bytes).
     Removing stm32f4xx_it.o(.revsh_text), (4 bytes).
     Removing stm32f4xx_it.o(.rrx_text), (6 bytes).
-    Removing keypad.o(i.add_new_digit), (8 bytes).
-    Removing keypad.o(i.make_float_from_last_two_digits), (12 bytes).
     Removing fput_debug.o(.rev16_text), (4 bytes).
     Removing fput_debug.o(.revsh_text), (4 bytes).
     Removing fput_debug.o(.rrx_text), (6 bytes).
@@ -1083,7 +1080,7 @@ Removing Unused input sections from the image.
     Removing system_stm32f4xx.o(i.SystemCoreClockUpdate), (120 bytes).
     Removing system_stm32f4xx.o(.constdata), (8 bytes).
 
-377 unused section(s) (total 22714 bytes) removed from the image.
+375 unused section(s) (total 22694 bytes) removed from the image.
 
 ==============================================================================
 
@@ -1117,32 +1114,32 @@ Image Symbol Table
     ../Src/system_stm32f4xx.c                0x00000000   Number         0  system_stm32f4xx.o ABSOLUTE
     ../clib/microlib/division.c              0x00000000   Number         0  uldiv.o ABSOLUTE
     ../clib/microlib/division.c              0x00000000   Number         0  uidiv.o ABSOLUTE
-    ../clib/microlib/init/entry.s            0x00000000   Number         0  entry.o ABSOLUTE
-    ../clib/microlib/init/entry.s            0x00000000   Number         0  entry2.o ABSOLUTE
+    ../clib/microlib/init/entry.s            0x00000000   Number         0  entry7b.o ABSOLUTE
     ../clib/microlib/init/entry.s            0x00000000   Number         0  entry5.o ABSOLUTE
     ../clib/microlib/init/entry.s            0x00000000   Number         0  entry7a.o ABSOLUTE
-    ../clib/microlib/init/entry.s            0x00000000   Number         0  entry10a.o ABSOLUTE
-    ../clib/microlib/init/entry.s            0x00000000   Number         0  entry7b.o ABSOLUTE
+    ../clib/microlib/init/entry.s            0x00000000   Number         0  entry9b.o ABSOLUTE
     ../clib/microlib/init/entry.s            0x00000000   Number         0  entry8a.o ABSOLUTE
+    ../clib/microlib/init/entry.s            0x00000000   Number         0  entry8b.o ABSOLUTE
     ../clib/microlib/init/entry.s            0x00000000   Number         0  entry11b.o ABSOLUTE
     ../clib/microlib/init/entry.s            0x00000000   Number         0  entry11a.o ABSOLUTE
-    ../clib/microlib/init/entry.s            0x00000000   Number         0  entry8b.o ABSOLUTE
     ../clib/microlib/init/entry.s            0x00000000   Number         0  entry10b.o ABSOLUTE
+    ../clib/microlib/init/entry.s            0x00000000   Number         0  entry10a.o ABSOLUTE
     ../clib/microlib/init/entry.s            0x00000000   Number         0  entry9a.o ABSOLUTE
-    ../clib/microlib/init/entry.s            0x00000000   Number         0  entry9b.o ABSOLUTE
+    ../clib/microlib/init/entry.s            0x00000000   Number         0  entry.o ABSOLUTE
+    ../clib/microlib/init/entry.s            0x00000000   Number         0  entry2.o ABSOLUTE
     ../clib/microlib/longlong.c              0x00000000   Number         0  llshl.o ABSOLUTE
     ../clib/microlib/longlong.c              0x00000000   Number         0  llushr.o ABSOLUTE
     ../clib/microlib/longlong.c              0x00000000   Number         0  llsshr.o ABSOLUTE
-    ../clib/microlib/printf/printf.c         0x00000000   Number         0  printf8.o ABSOLUTE
-    ../clib/microlib/printf/printf.c         0x00000000   Number         0  printfa.o ABSOLUTE
-    ../clib/microlib/printf/printf.c         0x00000000   Number         0  printfb.o ABSOLUTE
-    ../clib/microlib/printf/printf.c         0x00000000   Number         0  printf7.o ABSOLUTE
-    ../clib/microlib/printf/printf.c         0x00000000   Number         0  printf6.o ABSOLUTE
-    ../clib/microlib/printf/printf.c         0x00000000   Number         0  printf5.o ABSOLUTE
     ../clib/microlib/printf/printf.c         0x00000000   Number         0  printf4.o ABSOLUTE
     ../clib/microlib/printf/printf.c         0x00000000   Number         0  printf3.o ABSOLUTE
     ../clib/microlib/printf/printf.c         0x00000000   Number         0  printf2.o ABSOLUTE
     ../clib/microlib/printf/printf.c         0x00000000   Number         0  printf1.o ABSOLUTE
+    ../clib/microlib/printf/printf.c         0x00000000   Number         0  printfa.o ABSOLUTE
+    ../clib/microlib/printf/printf.c         0x00000000   Number         0  printfb.o ABSOLUTE
+    ../clib/microlib/printf/printf.c         0x00000000   Number         0  printf8.o ABSOLUTE
+    ../clib/microlib/printf/printf.c         0x00000000   Number         0  printf7.o ABSOLUTE
+    ../clib/microlib/printf/printf.c         0x00000000   Number         0  printf5.o ABSOLUTE
+    ../clib/microlib/printf/printf.c         0x00000000   Number         0  printf6.o ABSOLUTE
     ../clib/microlib/printf/printf.c         0x00000000   Number         0  printf0.o ABSOLUTE
     ../clib/microlib/printf/stubs.s          0x00000000   Number         0  stubs.o ABSOLUTE
     ../clib/microlib/stdio/streams.c         0x00000000   Number         0  stdout.o ABSOLUTE
@@ -1337,20 +1334,24 @@ Image Symbol Table
     i.adc_buffer_full_callback               0x08002ea8   Section        0  main.o(i.adc_buffer_full_callback)
     i.button_pressed_callback                0x0800307c   Section        0  main.o(i.button_pressed_callback)
     i.check_for_digit_press                  0x080030f4   Section        0  stm32f4xx_it.o(i.check_for_digit_press)
-    i.fputc                                  0x080031f8   Section        0  fput_debug.o(i.fputc)
-    i.get_segments_for_float                 0x08003220   Section        0  heads_up_display.o(i.get_segments_for_float)
-    i.main                                   0x08003248   Section        0  main.o(i.main)
-    i.new_keypad_value                       0x080032fc   Section        0  keypad.o(i.new_keypad_value)
-    i.refresh_display                        0x0800339c   Section        0  stm32f4xx_it.o(i.refresh_display)
-    i.split_three_digits                     0x08003440   Section        0  heads_up_display.o(i.split_three_digits)
-    text                                     0x08003484   Section      120  asm_math.o(text)
-    $v0                                      0x08003484   Number         0  asm_math.o(text)
-    .constdata                               0x080034fc   Section        8  stm32f4xx_hal_dma.o(.constdata)
-    flagBitshiftOffset                       0x080034fc   Data           8  stm32f4xx_hal_dma.o(.constdata)
-    .constdata                               0x08003504   Section       40  stm32f4xx_it.o(.constdata)
-    Keys                                     0x08003504   Data          12  stm32f4xx_it.o(.constdata)
-    .constdata                               0x0800352c   Section       40  heads_up_display.o(.constdata)
-    .constdata                               0x08003554   Section       16  system_stm32f4xx.o(.constdata)
+    i.fputc                                  0x080031c0   Section        0  fput_debug.o(i.fputc)
+    i.get_segments_for_float                 0x080031e8   Section        0  heads_up_display.o(i.get_segments_for_float)
+    i.is_valid_target_value                  0x08003210   Section        0  keypad.o(i.is_valid_target_value)
+    i.main                                   0x08003230   Section        0  main.o(i.main)
+    i.make_float_from_last_three_digits      0x080032e4   Section        0  keypad.o(i.make_float_from_last_three_digits)
+    i.new_keypad_value                       0x0800331c   Section        0  keypad.o(i.new_keypad_value)
+    i.refresh_display                        0x08003390   Section        0  stm32f4xx_it.o(i.refresh_display)
+    i.split_three_digits                     0x08003434   Section        0  heads_up_display.o(i.split_three_digits)
+    text                                     0x08003478   Section      120  asm_math.o(text)
+    $v0                                      0x08003478   Number         0  asm_math.o(text)
+    .constdata                               0x080034f0   Section        8  stm32f4xx_hal_dma.o(.constdata)
+    flagBitshiftOffset                       0x080034f0   Data           8  stm32f4xx_hal_dma.o(.constdata)
+    .constdata                               0x080034f8   Section       40  stm32f4xx_it.o(.constdata)
+    Keys                                     0x080034f8   Data          12  stm32f4xx_it.o(.constdata)
+    rows                                     0x08003504   Data          16  stm32f4xx_it.o(.constdata)
+    columns                                  0x08003514   Data          12  stm32f4xx_it.o(.constdata)
+    .constdata                               0x08003520   Section       40  heads_up_display.o(.constdata)
+    .constdata                               0x08003548   Section       16  system_stm32f4xx.o(.constdata)
     .data                                    0x20000000   Section       12  stm32f4xx_hal.o(.data)
     .data                                    0x2000000c   Section       36  main.o(.data)
     head                                     0x2000000c   Data           4  main.o(.data)
@@ -1366,8 +1367,8 @@ Image Symbol Table
     refresh_display_counter                  0x20000034   Data           4  stm32f4xx_it.o(.data)
     check_for_digit_press_counter            0x20000038   Data           4  stm32f4xx_it.o(.data)
     .data                                    0x2000003c   Section        8  keypad.o(.data)
-    digits                                   0x2000003c   Data           2  keypad.o(.data)
-    input_value                              0x20000040   Data           4  keypad.o(.data)
+    digits                                   0x2000003c   Data           3  keypad.o(.data)
+    target_value                             0x20000040   Data           4  keypad.o(.data)
     .data                                    0x20000044   Section        1  heads_up_display.o(.data)
     .data                                    0x20000048   Section        4  heads_up_display.o(.data)
     .data                                    0x2000004c   Section        4  system_stm32f4xx.o(.data)
@@ -1630,18 +1631,20 @@ Image Symbol Table
     __scatterload_zeroinit                   0x080025e5   Thumb Code    14  handlers.o(i.__scatterload_zeroinit)
     adc_buffer_full_callback                 0x08002ea9   Thumb Code   386  main.o(i.adc_buffer_full_callback)
     button_pressed_callback                  0x0800307d   Thumb Code   110  main.o(i.button_pressed_callback)
-    check_for_digit_press                    0x080030f5   Thumb Code   188  stm32f4xx_it.o(i.check_for_digit_press)
-    fputc                                    0x080031f9   Thumb Code    36  fput_debug.o(i.fputc)
-    get_segments_for_float                   0x08003221   Thumb Code    34  heads_up_display.o(i.get_segments_for_float)
-    main                                     0x08003249   Thumb Code   160  main.o(i.main)
-    new_keypad_value                         0x080032fd   Thumb Code   132  keypad.o(i.new_keypad_value)
-    refresh_display                          0x0800339d   Thumb Code   148  stm32f4xx_it.o(i.refresh_display)
-    split_three_digits                       0x08003441   Thumb Code    64  heads_up_display.o(i.split_three_digits)
-    asm_math                                 0x08003485   Thumb Code     0  asm_math.o(text)
-    digit_to_segments                        0x0800352c   Data          40  heads_up_display.o(.constdata)
-    AHBPrescTable                            0x08003554   Data          16  system_stm32f4xx.o(.constdata)
-    Region$$Table$$Base                      0x08003564   Number         0  anon$$obj.o(Region$$Table)
-    Region$$Table$$Limit                     0x08003584   Number         0  anon$$obj.o(Region$$Table)
+    check_for_digit_press                    0x080030f5   Thumb Code   144  stm32f4xx_it.o(i.check_for_digit_press)
+    fputc                                    0x080031c1   Thumb Code    36  fput_debug.o(i.fputc)
+    get_segments_for_float                   0x080031e9   Thumb Code    34  heads_up_display.o(i.get_segments_for_float)
+    is_valid_target_value                    0x08003211   Thumb Code    28  keypad.o(i.is_valid_target_value)
+    main                                     0x08003231   Thumb Code   160  main.o(i.main)
+    make_float_from_last_three_digits        0x080032e5   Thumb Code    48  keypad.o(i.make_float_from_last_three_digits)
+    new_keypad_value                         0x0800331d   Thumb Code    82  keypad.o(i.new_keypad_value)
+    refresh_display                          0x08003391   Thumb Code   148  stm32f4xx_it.o(i.refresh_display)
+    split_three_digits                       0x08003435   Thumb Code    64  heads_up_display.o(i.split_three_digits)
+    asm_math                                 0x08003479   Thumb Code     0  asm_math.o(text)
+    digit_to_segments                        0x08003520   Data          40  heads_up_display.o(.constdata)
+    AHBPrescTable                            0x08003548   Data          16  system_stm32f4xx.o(.constdata)
+    Region$$Table$$Base                      0x08003558   Number         0  anon$$obj.o(Region$$Table)
+    Region$$Table$$Limit                     0x08003578   Number         0  anon$$obj.o(Region$$Table)
     uwTickFreq                               0x20000000   Data           1  stm32f4xx_hal.o(.data)
     uwTickPrio                               0x20000004   Data           4  stm32f4xx_hal.o(.data)
     uwTick                                   0x20000008   Data           4  stm32f4xx_hal.o(.data)
@@ -1665,40 +1668,40 @@ Memory Map of the image
 
   Image Entry point : 0x08000189
 
-  Load Region LR_IROM1 (Base: 0x08000000, Size: 0x000035d8, Max: 0x00100000, ABSOLUTE)
+  Load Region LR_IROM1 (Base: 0x08000000, Size: 0x000035cc, Max: 0x00100000, ABSOLUTE)
 
-    Execution Region ER_IROM1 (Exec base: 0x08000000, Load base: 0x08000000, Size: 0x00003584, Max: 0x00100000, ABSOLUTE)
+    Execution Region ER_IROM1 (Exec base: 0x08000000, Load base: 0x08000000, Size: 0x00003578, Max: 0x00100000, ABSOLUTE)
 
     Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
 
     0x08000000   0x08000000   0x00000188   Data   RO            3    RESET               startup_stm32f407xx.o
-    0x08000188   0x08000188   0x00000000   Code   RO         2984  * .ARM.Collect$$$$00000000  mc_w.l(entry.o)
-    0x08000188   0x08000188   0x00000004   Code   RO         3260    .ARM.Collect$$$$00000001  mc_w.l(entry2.o)
-    0x0800018c   0x0800018c   0x00000004   Code   RO         3263    .ARM.Collect$$$$00000004  mc_w.l(entry5.o)
-    0x08000190   0x08000190   0x00000000   Code   RO         3265    .ARM.Collect$$$$00000008  mc_w.l(entry7b.o)
-    0x08000190   0x08000190   0x00000000   Code   RO         3267    .ARM.Collect$$$$0000000A  mc_w.l(entry8b.o)
-    0x08000190   0x08000190   0x00000008   Code   RO         3268    .ARM.Collect$$$$0000000B  mc_w.l(entry9a.o)
-    0x08000198   0x08000198   0x00000000   Code   RO         3270    .ARM.Collect$$$$0000000D  mc_w.l(entry10a.o)
-    0x08000198   0x08000198   0x00000000   Code   RO         3272    .ARM.Collect$$$$0000000F  mc_w.l(entry11a.o)
-    0x08000198   0x08000198   0x00000004   Code   RO         3261    .ARM.Collect$$$$00002712  mc_w.l(entry2.o)
+    0x08000188   0x08000188   0x00000000   Code   RO         2982  * .ARM.Collect$$$$00000000  mc_w.l(entry.o)
+    0x08000188   0x08000188   0x00000004   Code   RO         3258    .ARM.Collect$$$$00000001  mc_w.l(entry2.o)
+    0x0800018c   0x0800018c   0x00000004   Code   RO         3261    .ARM.Collect$$$$00000004  mc_w.l(entry5.o)
+    0x08000190   0x08000190   0x00000000   Code   RO         3263    .ARM.Collect$$$$00000008  mc_w.l(entry7b.o)
+    0x08000190   0x08000190   0x00000000   Code   RO         3265    .ARM.Collect$$$$0000000A  mc_w.l(entry8b.o)
+    0x08000190   0x08000190   0x00000008   Code   RO         3266    .ARM.Collect$$$$0000000B  mc_w.l(entry9a.o)
+    0x08000198   0x08000198   0x00000000   Code   RO         3268    .ARM.Collect$$$$0000000D  mc_w.l(entry10a.o)
+    0x08000198   0x08000198   0x00000000   Code   RO         3270    .ARM.Collect$$$$0000000F  mc_w.l(entry11a.o)
+    0x08000198   0x08000198   0x00000004   Code   RO         3259    .ARM.Collect$$$$00002712  mc_w.l(entry2.o)
     0x0800019c   0x0800019c   0x00000024   Code   RO            4    .text               startup_stm32f407xx.o
-    0x080001c0   0x080001c0   0x00000062   Code   RO         2987    .text               mc_w.l(uldiv.o)
-    0x08000222   0x08000222   0x000000e4   Code   RO         3250    .text               mf_w.l(dmul.o)
-    0x08000306   0x08000306   0x000000de   Code   RO         3252    .text               mf_w.l(ddiv.o)
-    0x080003e4   0x080003e4   0x00000022   Code   RO         3254    .text               mf_w.l(dflti.o)
-    0x08000406   0x08000406   0x00000026   Code   RO         3256    .text               mf_w.l(f2d.o)
-    0x0800042c   0x0800042c   0x00000038   Code   RO         3258    .text               mf_w.l(d2f.o)
-    0x08000464   0x08000464   0x0000002c   Code   RO         3275    .text               mc_w.l(uidiv.o)
-    0x08000490   0x08000490   0x0000001e   Code   RO         3277    .text               mc_w.l(llshl.o)
-    0x080004ae   0x080004ae   0x00000020   Code   RO         3279    .text               mc_w.l(llushr.o)
-    0x080004ce   0x080004ce   0x00000000   Code   RO         3281    .text               mc_w.l(iusefp.o)
-    0x080004ce   0x080004ce   0x0000006e   Code   RO         3282    .text               mf_w.l(fepilogue.o)
-    0x0800053c   0x0800053c   0x000000ba   Code   RO         3284    .text               mf_w.l(depilogue.o)
-    0x080005f6   0x080005f6   0x0000014e   Code   RO         3286    .text               mf_w.l(dadd.o)
-    0x08000744   0x08000744   0x00000030   Code   RO         3288    .text               mf_w.l(dfixul.o)
-    0x08000774   0x08000774   0x00000030   Code   RO         3290    .text               mf_w.l(cdrcmple.o)
-    0x080007a4   0x080007a4   0x00000024   Code   RO         3292    .text               mc_w.l(init.o)
-    0x080007c8   0x080007c8   0x00000024   Code   RO         3294    .text               mc_w.l(llsshr.o)
+    0x080001c0   0x080001c0   0x00000062   Code   RO         2985    .text               mc_w.l(uldiv.o)
+    0x08000222   0x08000222   0x000000e4   Code   RO         3248    .text               mf_w.l(dmul.o)
+    0x08000306   0x08000306   0x000000de   Code   RO         3250    .text               mf_w.l(ddiv.o)
+    0x080003e4   0x080003e4   0x00000022   Code   RO         3252    .text               mf_w.l(dflti.o)
+    0x08000406   0x08000406   0x00000026   Code   RO         3254    .text               mf_w.l(f2d.o)
+    0x0800042c   0x0800042c   0x00000038   Code   RO         3256    .text               mf_w.l(d2f.o)
+    0x08000464   0x08000464   0x0000002c   Code   RO         3273    .text               mc_w.l(uidiv.o)
+    0x08000490   0x08000490   0x0000001e   Code   RO         3275    .text               mc_w.l(llshl.o)
+    0x080004ae   0x080004ae   0x00000020   Code   RO         3277    .text               mc_w.l(llushr.o)
+    0x080004ce   0x080004ce   0x00000000   Code   RO         3279    .text               mc_w.l(iusefp.o)
+    0x080004ce   0x080004ce   0x0000006e   Code   RO         3280    .text               mf_w.l(fepilogue.o)
+    0x0800053c   0x0800053c   0x000000ba   Code   RO         3282    .text               mf_w.l(depilogue.o)
+    0x080005f6   0x080005f6   0x0000014e   Code   RO         3284    .text               mf_w.l(dadd.o)
+    0x08000744   0x08000744   0x00000030   Code   RO         3286    .text               mf_w.l(dfixul.o)
+    0x08000774   0x08000774   0x00000030   Code   RO         3288    .text               mf_w.l(cdrcmple.o)
+    0x080007a4   0x080007a4   0x00000024   Code   RO         3290    .text               mc_w.l(init.o)
+    0x080007c8   0x080007c8   0x00000024   Code   RO         3292    .text               mc_w.l(llsshr.o)
     0x080007ec   0x080007ec   0x0000000c   Code   RO         2733    i.ADC_IRQHandler    stm32f4xx_it.o
     0x080007f8   0x080007f8   0x00000124   Code   RO         1718    i.ADC_Init          stm32f4xx_hal_adc.o
     0x0800091c   0x0800091c   0x00000002   Code   RO         2734    i.BusFault_Handler  stm32f4xx_it.o
@@ -1783,7 +1786,7 @@ Memory Map of the image
     0x080021b2   0x080021b2   0x00000002   Code   RO         2742    i.SVC_Handler       stm32f4xx_it.o
     0x080021b4   0x080021b4   0x00000038   Code   RO         2743    i.SysTick_Handler   stm32f4xx_it.o
     0x080021ec   0x080021ec   0x000000a0   Code   RO         2543    i.SystemClock_Config  main.o
-    0x0800228c   0x0800228c   0x00000054   Code   RO         2950    i.SystemInit        system_stm32f4xx.o
+    0x0800228c   0x0800228c   0x00000054   Code   RO         2948    i.SystemInit        system_stm32f4xx.o
     0x080022e0   0x080022e0   0x0000002c   Code   RO         2744    i.TIM2_IRQHandler   stm32f4xx_it.o
     0x0800230c   0x0800230c   0x0000000c   Code   RO         2745    i.TIM3_IRQHandler   stm32f4xx_it.o
     0x08002318   0x08002318   0x000000c0   Code   RO         1050    i.TIM_Base_SetConfig  stm32f4xx_hal_tim.o
@@ -1798,46 +1801,48 @@ Memory Map of the image
     0x080025ae   0x080025ae   0x00000002   Code   RO         2746    i.UsageFault_Handler  stm32f4xx_it.o
     0x080025b0   0x080025b0   0x00000002   Code   RO         2545    i._Error_Handler    main.o
     0x080025b2   0x080025b2   0x00000002   PAD
-    0x080025b4   0x080025b4   0x00000020   Code   RO         3222    i.__0printf         mc_w.l(printfa.o)
-    0x080025d4   0x080025d4   0x0000000e   Code   RO         3298    i.__scatterload_copy  mc_w.l(handlers.o)
-    0x080025e2   0x080025e2   0x00000002   Code   RO         3299    i.__scatterload_null  mc_w.l(handlers.o)
-    0x080025e4   0x080025e4   0x0000000e   Code   RO         3300    i.__scatterload_zeroinit  mc_w.l(handlers.o)
+    0x080025b4   0x080025b4   0x00000020   Code   RO         3220    i.__0printf         mc_w.l(printfa.o)
+    0x080025d4   0x080025d4   0x0000000e   Code   RO         3296    i.__scatterload_copy  mc_w.l(handlers.o)
+    0x080025e2   0x080025e2   0x00000002   Code   RO         3297    i.__scatterload_null  mc_w.l(handlers.o)
+    0x080025e4   0x080025e4   0x0000000e   Code   RO         3298    i.__scatterload_zeroinit  mc_w.l(handlers.o)
     0x080025f2   0x080025f2   0x00000002   PAD
-    0x080025f4   0x080025f4   0x00000184   Code   RO         3229    i._fp_digits        mc_w.l(printfa.o)
-    0x08002778   0x08002778   0x000006dc   Code   RO         3230    i._printf_core      mc_w.l(printfa.o)
-    0x08002e54   0x08002e54   0x00000024   Code   RO         3231    i._printf_post_padding  mc_w.l(printfa.o)
-    0x08002e78   0x08002e78   0x0000002e   Code   RO         3232    i._printf_pre_padding  mc_w.l(printfa.o)
+    0x080025f4   0x080025f4   0x00000184   Code   RO         3227    i._fp_digits        mc_w.l(printfa.o)
+    0x08002778   0x08002778   0x000006dc   Code   RO         3228    i._printf_core      mc_w.l(printfa.o)
+    0x08002e54   0x08002e54   0x00000024   Code   RO         3229    i._printf_post_padding  mc_w.l(printfa.o)
+    0x08002e78   0x08002e78   0x0000002e   Code   RO         3230    i._printf_pre_padding  mc_w.l(printfa.o)
     0x08002ea6   0x08002ea6   0x00000002   PAD
     0x08002ea8   0x08002ea8   0x000001d4   Code   RO         2546    i.adc_buffer_full_callback  main.o
     0x0800307c   0x0800307c   0x00000078   Code   RO         2547    i.button_pressed_callback  main.o
-    0x080030f4   0x080030f4   0x00000104   Code   RO         2747    i.check_for_digit_press  stm32f4xx_it.o
-    0x080031f8   0x080031f8   0x00000028   Code   RO         2921    i.fputc             fput_debug.o
-    0x08003220   0x08003220   0x00000028   Code   RO         2885    i.get_segments_for_float  heads_up_display.o
-    0x08003248   0x08003248   0x000000b4   Code   RO         2548    i.main              main.o
-    0x080032fc   0x080032fc   0x000000a0   Code   RO         2857    i.new_keypad_value  keypad.o
-    0x0800339c   0x0800339c   0x000000a4   Code   RO         2748    i.refresh_display   stm32f4xx_it.o
-    0x08003440   0x08003440   0x00000044   Code   RO         2886    i.split_three_digits  heads_up_display.o
-    0x08003484   0x08003484   0x00000078   Code   RO         2915    text                asm_math.o
-    0x080034fc   0x080034fc   0x00000008   Data   RO         2305    .constdata          stm32f4xx_hal_dma.o
-    0x08003504   0x08003504   0x00000028   Data   RO         2749    .constdata          stm32f4xx_it.o
-    0x0800352c   0x0800352c   0x00000028   Data   RO         2887    .constdata          heads_up_display.o
-    0x08003554   0x08003554   0x00000010   Data   RO         2951    .constdata          system_stm32f4xx.o
-    0x08003564   0x08003564   0x00000020   Data   RO         3296    Region$$Table       anon$$obj.o
+    0x080030f4   0x080030f4   0x000000cc   Code   RO         2747    i.check_for_digit_press  stm32f4xx_it.o
+    0x080031c0   0x080031c0   0x00000028   Code   RO         2919    i.fputc             fput_debug.o
+    0x080031e8   0x080031e8   0x00000028   Code   RO         2883    i.get_segments_for_float  heads_up_display.o
+    0x08003210   0x08003210   0x00000020   Code   RO         2855    i.is_valid_target_value  keypad.o
+    0x08003230   0x08003230   0x000000b4   Code   RO         2548    i.main              main.o
+    0x080032e4   0x080032e4   0x00000038   Code   RO         2856    i.make_float_from_last_three_digits  keypad.o
+    0x0800331c   0x0800331c   0x00000074   Code   RO         2857    i.new_keypad_value  keypad.o
+    0x08003390   0x08003390   0x000000a4   Code   RO         2748    i.refresh_display   stm32f4xx_it.o
+    0x08003434   0x08003434   0x00000044   Code   RO         2884    i.split_three_digits  heads_up_display.o
+    0x08003478   0x08003478   0x00000078   Code   RO         2913    text                asm_math.o
+    0x080034f0   0x080034f0   0x00000008   Data   RO         2305    .constdata          stm32f4xx_hal_dma.o
+    0x080034f8   0x080034f8   0x00000028   Data   RO         2749    .constdata          stm32f4xx_it.o
+    0x08003520   0x08003520   0x00000028   Data   RO         2885    .constdata          heads_up_display.o
+    0x08003548   0x08003548   0x00000010   Data   RO         2949    .constdata          system_stm32f4xx.o
+    0x08003558   0x08003558   0x00000020   Data   RO         3294    Region$$Table       anon$$obj.o
 
 
-    Execution Region RW_IRAM1 (Exec base: 0x20000000, Load base: 0x08003584, Size: 0x00000780, Max: 0x00020000, ABSOLUTE)
+    Execution Region RW_IRAM1 (Exec base: 0x20000000, Load base: 0x08003578, Size: 0x00000780, Max: 0x00020000, ABSOLUTE)
 
     Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
 
-    0x20000000   0x08003584   0x0000000c   Data   RW         1910    .data               stm32f4xx_hal.o
-    0x2000000c   0x08003590   0x00000024   Data   RW         2552    .data               main.o
-    0x20000030   0x080035b4   0x0000000c   Data   RW         2750    .data               stm32f4xx_it.o
-    0x2000003c   0x080035c0   0x00000008   Data   RW         2858    .data               keypad.o
-    0x20000044   0x080035c8   0x00000001   Data   RW         2888    .data               heads_up_display.o
-    0x20000045   0x080035c9   0x00000003   PAD
-    0x20000048   0x080035cc   0x00000004   Data   RW         2889    .data               heads_up_display.o
-    0x2000004c   0x080035d0   0x00000004   Data   RW         2953    .data               system_stm32f4xx.o
-    0x20000050   0x080035d4   0x00000004   Data   RW         3274    .data               mc_w.l(stdout.o)
+    0x20000000   0x08003578   0x0000000c   Data   RW         1910    .data               stm32f4xx_hal.o
+    0x2000000c   0x08003584   0x00000024   Data   RW         2552    .data               main.o
+    0x20000030   0x080035a8   0x0000000c   Data   RW         2750    .data               stm32f4xx_it.o
+    0x2000003c   0x080035b4   0x00000008   Data   RW         2858    .data               keypad.o
+    0x20000044   0x080035bc   0x00000001   Data   RW         2886    .data               heads_up_display.o
+    0x20000045   0x080035bd   0x00000003   PAD
+    0x20000048   0x080035c0   0x00000004   Data   RW         2887    .data               heads_up_display.o
+    0x2000004c   0x080035c4   0x00000004   Data   RW         2951    .data               system_stm32f4xx.o
+    0x20000050   0x080035c8   0x00000004   Data   RW         3272    .data               mc_w.l(stdout.o)
     0x20000054        -       0x000002cc   Zero   RW         2549    .bss                main.o
     0x20000320        -       0x00000060   Zero   RW         2550    .bss                main.o
     0x20000380        -       0x00000400   Zero   RW            1    STACK               startup_stm32f407xx.o
@@ -1853,7 +1858,7 @@ Image component sizes
        120          6          0          0          0        256   asm_math.o
         40          4          0          0          0      27291   fput_debug.o
        108         10         40          5          0       1999   heads_up_display.o
-       160         52          0          8          0        847   keypad.o
+       204         46          0          8          0       2417   keypad.o
       1886        326          0         36        812      11777   main.o
         36          8        392          0       1024        832   startup_stm32f407xx.o
        144         24          0         12          0       3925   stm32f4xx_hal.o
@@ -1867,11 +1872,11 @@ Image component sizes
       1208         58          0          0          0     699366   stm32f4xx_hal_rcc.o
       1610         80          0          0          0      13835   stm32f4xx_hal_tim.o
         84          0          0          0          0       2406   stm32f4xx_hal_tim_ex.o
-       582        138         40         12          0       8788   stm32f4xx_it.o
+       526        126         40         12          0       9367   stm32f4xx_it.o
         84         18         16          4          0       1147   system_stm32f4xx.o
 
     ----------------------------------------------------------------------
-      9280        912        528         80       1836     825237   Object Totals
+      9268        894        528         80       1836     827386   Object Totals
          0          0         32          0          0          0   (incl. Generated)
         20          0          0          3          0          0   (incl. Padding)
 
@@ -1929,15 +1934,15 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
 
-     13172       1018        528         84       1836     817657   Grand Totals
-     13172       1018        528         84       1836     817657   ELF Image Totals
-     13172       1018        528         84          0          0   ROM Totals
+     13160       1000        528         84       1836     819806   Grand Totals
+     13160       1000        528         84       1836     819806   ELF Image Totals
+     13160       1000        528         84          0          0   ROM Totals
 
 ==============================================================================
 
-    Total RO  Size (Code + RO Data)                13700 (  13.38kB)
+    Total RO  Size (Code + RO Data)                13688 (  13.37kB)
     Total RW  Size (RW Data + ZI Data)              1920 (   1.88kB)
-    Total ROM Size (Code + RO Data + RW Data)      13784 (  13.46kB)
+    Total ROM Size (Code + RO Data + RW Data)      13772 (  13.45kB)
 
 ==============================================================================
 

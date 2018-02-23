@@ -1,9 +1,21 @@
 // keypad.c
 #include "keypad.h"
 
-static float input_value = 0.0f;
+#ifndef bool
+#include <stdbool.h>
+#endif
 
-float make_float_from_last_two_digits(uint8_t digits[2]);
+#ifndef __stdio_h
+#include <stdio.h>
+#endif
+
+// The value that is to be matched by the 
+static float target_value = 0.0f;
+
+float make_float_from_last_three_digits(uint8_t digits[3]);
+
+bool is_valid_target_value(float target_value);
+
 
 /** @bried Called whenever a new keypad value is received.
 * IDEA: state machine:
@@ -14,67 +26,44 @@ float make_float_from_last_two_digits(uint8_t digits[2]);
 */
 void new_keypad_value(char new_keypad_value){
 	extern float displayed_value;
-	static uint8_t digits[2];
+	static uint8_t digits[3];
+	
+	float new_target;
+	
 	switch(new_keypad_value){
 		case '#':
 			// We use the last two digits to assign the input value.
-			input_value = make_float_from_last_two_digits(digits);
+			new_target = make_float_from_last_three_digits(digits);
+			if (is_valid_target_value(new_target)){
+				target_value = new_target;
+			}
+			
+			
+			// TODO: show the ADC value instead!
+			displayed_value = target_value;
 			break;
 		case '*':
 			// We want to reset the digits.
-			digits[0] = 0;
+			digits[2] = 0;
 			digits[1] = 0;
+		  digits[0] = 0;
 			break;
-		case '0':
+		default:
+			digits[2] = digits[1];
 			digits[1] = digits[0];
-			digits[0] = 0;
-			break;
-		case '1':
-			digits[1] = digits[0];
-			digits[0] = 1;
-			break;
-		case '2':
-			digits[1] = digits[0];
-			digits[0] = 2;
-			break;
-		case '3':
-			digits[1] = digits[0];
-			digits[0] = 3;
-			break;
-		case '4':
-			digits[1] = digits[0];
-			digits[0] = 4;
-			break;
-		case '5':
-			digits[1] = digits[0];
-			digits[0] = 5;
-			break;
-		case '6':
-			digits[1] = digits[0];
-			digits[0] = 6;
-			break;
-		case '7':
-			digits[1] = digits[0];
-			digits[0] = 7;
-			break;
-		case '8':
-			digits[1] = digits[0];
-			digits[0] = 8;
-			break;
-		case '9':
-			digits[1] = digits[0];
-			digits[0] = 9;
-			break;
+			digits[0] = (int)(new_keypad_value - '0');
 	}
-	printf("digits: %u, %u, \n", digits[1], digits[0]); 
+	printf("digits: %u, %u, %u, \n", digits[2], digits[1], digits[0]);
 }
 
-void add_new_digit(uint8_t new_digit, uint8_t digits[2]){
-	digits[1] = digits[0];
-	digits[0] = new_digit;
+bool is_valid_target_value(float target_value){
+	return (target_value > 0.f) && (target_value < 3.0f);
 }
 
-float make_float_from_last_two_digits(uint8_t digits[2]){
+
+
+float make_float_from_last_three_digits(uint8_t digits[3]){
 	// TODO:
-	return 0.f;
+	float value = 1.0f * digits[2] + 0.1f * digits[1] + 0.01f * digits[0];
+	return value;
 }

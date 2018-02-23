@@ -378,8 +378,8 @@ void refresh_display(void){
 * IDEA: Set one column high, and check if any rows are high. If so, the button at the crossing is pressed.
 */
 void check_for_digit_press(){
-	uint32_t rows[] = { ROW_0_Pin, ROW_1_Pin, ROW_2_Pin, ROW_3_Pin };
-	uint32_t columns[] = { COL_0_Pin, COL_1_Pin, COL_2_Pin };
+	static const uint32_t rows[] = { ROW_0_Pin, ROW_1_Pin, ROW_2_Pin, ROW_3_Pin };
+	static const uint32_t columns[] = { COL_0_Pin, COL_1_Pin, COL_2_Pin };
 	static uint8_t current_row;
 	static uint8_t column;
 	static char chosen_char = NULL;
@@ -406,7 +406,6 @@ void check_for_digit_press(){
 	if((new_char != NULL) && (new_char != chosen_char)){
 		chosen_char = new_char;
 		new_keypad_value(chosen_char);
-		displayed_value = 0.01 * (chosen_char - '0'); // TODO: figure out the right way to convert to a number, and where to do it.
 	}
 	
 	
