@@ -25,6 +25,8 @@ bool is_valid_target_value(float target_value);
 * two_digits --(pound sign)--> INIT
 */
 void new_keypad_value(char new_keypad_value){
+	static float temp_value;
+	
 	extern float displayed_value;
 	static uint8_t digits[3];
 	
@@ -37,16 +39,14 @@ void new_keypad_value(char new_keypad_value){
 			if (is_valid_target_value(new_target)){
 				target_value = new_target;
 			}
-			
-			
 			// TODO: show the ADC value instead!
 			displayed_value = target_value;
 			break;
 		case '*':
-			// We want to reset the digits.
+			// We want to remove the last digit.
+		  digits[0] = digits[1];
+			digits[1] = digits[2];
 			digits[2] = 0;
-			digits[1] = 0;
-		  digits[0] = 0;
 			break;
 		default:
 			digits[2] = digits[1];
@@ -54,6 +54,10 @@ void new_keypad_value(char new_keypad_value){
 			digits[0] = (int)(new_keypad_value - '0');
 	}
 	printf("digits: %u, %u, %u, \n", digits[2], digits[1], digits[0]);
+	temp_value = make_float_from_last_three_digits(digits);
+	
+	//TODO: check that this makes sense with the FSM diagram. 
+	displayed_value = temp_value;
 }
 
 bool is_valid_target_value(float target_value){
