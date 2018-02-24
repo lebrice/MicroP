@@ -27,9 +27,12 @@ static const char Keys[ROWS][COLS] = {
 };
 
 
-#define CHECK_FOR_DIGIT_PRESS_INTERVAL_MS 100
+#define CHECK_FOR_DIGIT_PRESS_INTERVAL_MS 25
 
+static const int SLEEP_PRESS_DURATION_MS = 3000;
+static const int RESTART_PRESS_DURATION_MS = 1000;
+static const int DEBOUNCE_INTERVAL_MS = 200;
 
-extern float target_value;
+extern float dac_target_value;
 
-void new_keypad_value(char new_keypad_value);
+void keypad_update(char new_keypad_value);
