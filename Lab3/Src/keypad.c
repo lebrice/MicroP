@@ -5,13 +5,14 @@
 #include <stdbool.h>
 #endif
 
-#ifndef __stdio_h
 #include <stdio.h>
-#endif
 
-#ifndef FSM
+
+#ifndef FMS
 #include "fsm.h"
 #endif
+
+
 float make_float_from_last_three_digits(uint8_t digits[3]);
 
 bool is_valid_target_value(float target_value);
@@ -37,8 +38,7 @@ void keypad_update(char new_keypad_value){
 	extern float displayed_value;
 	
 	// the current state of the FSM.
-	extern STATE current_state;
-	
+	extern STATE current_state;	
 	
 	// the three displayed digits.
 	static uint8_t digits[3];
@@ -55,9 +55,8 @@ void keypad_update(char new_keypad_value){
 	float new_target;
 	
 	// If we encounter a new value, reset the count, if not, increment it.
-	if(new_keypad_value != last_pressed_digit){
+	if(new_keypad_value != last_pressed_digit){		
 		printf("Last pressed digit was '%c', (%u milliseconds)\n", last_pressed_digit, last_digit_updates_count * ROWS * CHECK_FOR_DIGIT_PRESS_INTERVAL_MS);		
-		
 		last_pressed_digit = new_keypad_value;
 		last_digit_updates_count = 1;
 	}else{
@@ -66,7 +65,7 @@ void keypad_update(char new_keypad_value){
 	// if we have seen the same value enough times for it to be significant (debouncing)
 	if(last_digit_updates_count >= min_updates_for_change){
 		
-		if (current_state == SLEEP){
+		if (current_state == SLEEP && new_keypad_value != ' '){
 			// a button was pressed. If we were sleeping, wake up.
 			wake_up();
 		}
@@ -118,10 +117,10 @@ void keypad_update(char new_keypad_value){
 				}
 		}
 	}
-	
-//	printf("digits: %u, %u, %u, \n", digits[2], digits[1], digits[0]);
-	//TODO: check that this makes sense with the FSM diagram. 
-	displayed_value = make_float_from_last_three_digits(digits);
+	// Display the input value if we're in the "input target" state.
+	if(current_state == INPUT_TARGET){
+		displayed_value = make_float_from_last_three_digits(digits);
+	}
 }
 
 bool is_valid_target_value(float target_value){

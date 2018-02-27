@@ -48,15 +48,15 @@
 #include <stdbool.h>
 #endif
 
-#ifndef FSM
 #include "fsm.h"
-#endif
 
 // Function used to refresh the display.
 void refresh_display(void);
 
+void stop_display(void);
+void start_display(void);
 
-
+static bool display_on;
 
 // Function called periodically to check if a digit was pressed.
 void check_for_digit_press(void);
@@ -238,8 +238,9 @@ void SysTick_Handler(void)
 		refresh_display();
 		refresh_display_counter = 0;
 	}
-	refresh_display_counter++;
-	
+	if(display_on){
+		refresh_display_counter++;
+	}
 	// Check for a digit press when appropriate.
 	check_for_digit_press_counter++;
 	if (check_for_digit_press_counter == systicks_per_check_for_digit_press){
@@ -346,7 +347,6 @@ void DMA2_Stream0_IRQHandler(void)
 */
 void refresh_display(void){
 	
-	extern STATE current_state;
 	// The float value to be displayed.
 	extern float displayed_value;
 		
@@ -357,9 +357,7 @@ void refresh_display(void){
 	
 	// The resulting segments.
 	uint8_t segments[3];
-	
-	if (current_state == SLEEP){
-		// We sleep, shut off the display.
+	if (!display_on){
 		RESET_PIN(DIGITS_0);
 		RESET_PIN(DIGITS_1);
 		RESET_PIN(DIGITS_2);
@@ -441,13 +439,21 @@ void check_for_digit_press(){
 			new_char = ' ';
 		}
 	}
-	keypad_update(new_char);
+	if(new_char != NULL){
+		keypad_update(new_char);
+	}
 	
 	current_row++;
 	current_row %= ROWS;
 }
 
+void stop_display(){
+	display_on = false;
+}
 
+void start_display(){
+	display_on = true;
+}
 
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
