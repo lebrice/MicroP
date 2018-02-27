@@ -128,6 +128,7 @@ void start_adc(){
 }
 
 void stop_adc(){
+	
 	HAL_ADC_Stop_DMA(&hadc1);
 }
 
@@ -344,15 +345,16 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
 
+//	
+//	HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 2048);
+//	HAL_DAC_Start(&hdac, DAC_CHANNEL_1); 
 	
-	HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 2048);
-	HAL_DAC_Start(&hdac, DAC_CHANNEL_1); 
-
   
 
-	SET_PIN(DIGITS_0);
-	HAL_GPIO_WritePin(SEG_G_GPIO_Port, SEG_G_Pin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+//	SET_PIN(DIGITS_0);
+//	HAL_GPIO_WritePin(SEG_G_GPIO_Port, SEG_G_Pin, GPIO_PIN_SET);
+//	HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+	
 	
 	
 	// Start the timers.
@@ -361,7 +363,9 @@ int main(void)
 	HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_1);
 	
   HAL_TIM_Base_Start_DMA(&htim2, ADCBufferDMA, ADC_BUFFER_SIZE);
-	HAL_ADC_Start_DMA(&hadc1,ADCBufferDMA, ADC_BUFFER_SIZE);
+	
+	sleep();
+//	HAL_ADC_Start_DMA(&hadc1,ADCBufferDMA, ADC_BUFFER_SIZE);
 	//pwm_duty_cycle(50);
 	
 	
