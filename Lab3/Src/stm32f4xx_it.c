@@ -56,6 +56,8 @@
 void refresh_display(void);
 
 
+
+
 // Function called periodically to check if a digit was pressed.
 void check_for_digit_press(void);
 
@@ -342,13 +344,10 @@ void DMA2_Stream0_IRQHandler(void)
 */
 void refresh_display(void){
 	
-	
+	extern STATE current_state;
 	// The float value to be displayed.
 	extern float displayed_value;
-	
-	// the current state
-	extern STATE current_state;
-	
+		
 	// Which digit is currently active.
 	static uint8_t currently_active_digit = 0;
 	

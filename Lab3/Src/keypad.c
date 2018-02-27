@@ -12,10 +12,6 @@
 #ifndef FSM
 #include "fsm.h"
 #endif
-
-// The value that is to be matched by the 
-static float dac_target_value = 0.0f;
-
 float make_float_from_last_three_digits(uint8_t digits[3]);
 
 bool is_valid_target_value(float target_value);
@@ -70,7 +66,8 @@ void keypad_update(char new_keypad_value){
 	// if we have seen the same value enough times for it to be significant (debouncing)
 	if(last_digit_updates_count >= min_updates_for_change){
 		
-		if ( current_state == SLEEP){
+		if (current_state == SLEEP){
+			// a button was pressed. If we were sleeping, wake up.
 			wake_up();
 		}
 		
@@ -81,10 +78,10 @@ void keypad_update(char new_keypad_value){
 				// We use the last three digits to assign the input value.
 				new_target = make_float_from_last_three_digits(digits);
 				if (is_valid_target_value(new_target)){
-					dac_target_value = new_target;
+						start_matching(new_target);
 				}
 				// Switch to the "view adc level" mode of operation.
-				start_matching();
+				
 				break;
 				
 				
@@ -97,6 +94,7 @@ void keypad_update(char new_keypad_value){
 					digits[0] = 0;
 					digits[1] = 0;
 					digits[2] = 0;
+					restart();
 					// TODO: not sure if we should set the 'current_state' value.					
 				}else if (last_digit_updates_count == min_updates_for_change){
 					// We want to remove the last digit.
@@ -112,6 +110,7 @@ void keypad_update(char new_keypad_value){
 			
 			
 			default:
+				// A digit was pressed ('0' to '9')
 				if (last_digit_updates_count == min_updates_for_change){
 					digits[2] = digits[1];
 					digits[1] = digits[0];

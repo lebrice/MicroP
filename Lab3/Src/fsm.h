@@ -1,5 +1,5 @@
 
-
+#define FSM
 
 typedef enum {
 	SLEEP,
@@ -16,4 +16,4 @@ extern float dac_target_value;
 void sleep(void);
 void restart(void);
 void wake_up(void);
-void start_matching(void);
+void start_matching(float target_voltage);
