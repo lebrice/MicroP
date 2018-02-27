@@ -56,17 +56,11 @@ void keypad_update(char new_keypad_value){
 	
 	// If we encounter a new value, reset the count, if not, increment it.
 	if(new_keypad_value != last_pressed_digit){		
-		
 		printf("Last pressed digit was '%c', (%u milliseconds)\n", last_pressed_digit, last_digit_updates_count * ROWS * CHECK_FOR_DIGIT_PRESS_INTERVAL_MS);		
 		last_pressed_digit = new_keypad_value;
 		last_digit_updates_count = 1;
-		
-		
 	}else{
-		
 		last_digit_updates_count++;
-	
-	
 	}
 	// if we have seen the same value enough times for it to be significant (debouncing)
 	if(last_digit_updates_count >= min_updates_for_change){
@@ -123,10 +117,10 @@ void keypad_update(char new_keypad_value){
 				}
 		}
 	}
-	
-//	printf("digits: %u, %u, %u, \n", digits[2], digits[1], digits[0]);
-	//TODO: check that this makes sense with the FSM diagram. 
-	displayed_value = make_float_from_last_three_digits(digits);
+	// Display the input value if we're in the "input target" state.
+	if(current_state == INPUT_TARGET){
+		displayed_value = make_float_from_last_three_digits(digits);
+	}
 }
 
 bool is_valid_target_value(float target_value){
