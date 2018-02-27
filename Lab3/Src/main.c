@@ -46,6 +46,11 @@
 #ifndef DISPLAY_RMS
 #include "heads_up_display.h"
 #endif
+
+#ifndef FSM
+#include "fsm.h"
+#endif
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -66,6 +71,7 @@ float filtered_ADCBuffer[ADC_BUFFER_SIZE];
 
 // Buffer that holds Unfiltered data populated with DMA. 
 static uint32_t ADCBufferDMA[ADC_BUFFER_SIZE];
+
 
 
 
@@ -102,6 +108,10 @@ typedef struct {
 
 
 // Function that is called whenever the blue button is pressed.
+
+void start_adc(void);
+void stop_adc(void);
+
 void button_pressed_callback(void);
 void adc_buffer_full_callback(void);
 void FIR_C(int Input, float* Output);
@@ -111,6 +121,13 @@ void asm_math(float *inputValues, int size, asm_output *results);
 /* USER CODE BEGIN 0 */
 
 
+void start_adc(){
+	HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
+}
+
+void stop_adc(){
+	HAL_ADC_Stop_DMA(&hadc1);
+}
 
 static PastResultsVector past_ten_seconds_results;
 

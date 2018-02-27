@@ -48,6 +48,9 @@
 #include <stdbool.h>
 #endif
 
+#ifndef FSM
+#include "fsm.h"
+#endif
 
 // Function used to refresh the display.
 void refresh_display(void);
@@ -227,11 +230,11 @@ void SysTick_Handler(void)
   /* USER CODE BEGIN SysTick_IRQn 1 */
 
 	// Refresh the display when appropriate.
-	refresh_display_counter++;
 	if (refresh_display_counter == systicks_per_display_refresh){
 		refresh_display();
 		refresh_display_counter = 0;
 	}
+	refresh_display_counter++;
 	
 	// Check for a digit press when appropriate.
 	check_for_digit_press_counter++;
@@ -338,13 +341,29 @@ void DMA2_Stream0_IRQHandler(void)
 *(Refreshes the display, using the functions defined in "heads_up_display.h" to get the required digits and segments.
 */
 void refresh_display(void){
+	
+	
 	// The float value to be displayed.
 	extern float displayed_value;
+	
+	// the current state
+	extern STATE current_state;
+	
 	// Which digit is currently active.
 	static uint8_t currently_active_digit = 0;
 	
+	
+	
 	// The resulting segments.
 	uint8_t segments[3];
+	
+	if (current_state == SLEEP){
+		// We sleep, shut off the display.
+		RESET_PIN(DIGITS_0);
+		RESET_PIN(DIGITS_1);
+		RESET_PIN(DIGITS_2);
+		return;
+	}
 	get_segments_for_float(displayed_value, segments);
 	
 	GPIOD->ODR = (GPIOD->ODR & 0xFFFFFF00) | segments[currently_active_digit];
@@ -421,9 +440,6 @@ void check_for_digit_press(){
 			new_char = ' ';
 		}
 	}
-	
-	
-	
 	keypad_update(new_char);
 	
 	current_row++;

@@ -33,6 +33,5 @@ static const int SLEEP_PRESS_DURATION_MS = 3000;
 static const int RESTART_PRESS_DURATION_MS = 1000;
 static const int DEBOUNCE_INTERVAL_MS = 200;
 
-extern float dac_target_value;
 
 void keypad_update(char new_keypad_value);
