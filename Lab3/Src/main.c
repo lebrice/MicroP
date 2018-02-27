@@ -118,6 +118,7 @@ void button_pressed_callback(void);
 void adc_buffer_full_callback(void);
 void FIR_C(int Input, float* Output);
 void asm_math(float *inputValues, int size, asm_output *results);
+void pwm_duty_cycle(float percentage);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -131,13 +132,25 @@ void stop_adc(){
 	HAL_ADC_Stop_DMA(&hadc1);
 }
 
-void adjust_duty_cycle(float current_rms){
-	extern float dac_target_value;
-	float difference = current_rms - dac_target_value;
+void adjust_duty_cycle(float current_rms){ //PWM control block
+	extern float target_voltage;
+	float difference = current_rms - target_voltage;
+	static int current_pulse; //starts at 0
 	
-	static int current_pulse;
+	float pulse_increment = 1;
+	
+	if(difference < 0){ //target voltage is higher, make pulse bigger
+		if(current_pulse < 100)
+			pwm_duty_cycle(current_pulse+pulse_increment);
+		
+	}else{ //current_rms is higher, make pulse smaller
+		if(current_pulse > 0)
+			pwm_duty_cycle(current_pulse-pulse_increment);
+		
+	}
 	
 	// TODO: change the duty cycle depending on how far we are from the target value
+	//pwm_duty_cycle(newPercentage);
 }
 
 
@@ -293,7 +306,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t pin){
 
 
 
-void pwm_duty_cycle(uint16_t percentage) //input percentage
+void pwm_duty_cycle(float percentage) //input percentage
 {
     uint16_t value = (100)*percentage/(100); //(period)*(percent/100)
 		TIM_OC_InitTypeDef sConfigOC;
@@ -576,7 +589,7 @@ static void MX_TIM3_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-	sConfigOC.Pulse = 80;
+	sConfigOC.Pulse = 0;
 	HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1);
 	
   HAL_TIM_MspPostInit(&htim3);
