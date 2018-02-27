@@ -2,9 +2,9 @@
 #include "fsm.h"
 #endif
 
-static STATE current_state = SLEEP;
+STATE current_state = SLEEP;
 
-static float dac_target_value;
+float target_voltage;
 
 
 // externally-defined functions for startign and stopping the ADC.
@@ -27,8 +27,8 @@ void wake_up(){
 	current_state = INPUT_TARGET;
 }
 
-void start_matching(float target_voltage){
+void start_matching(float voltage){
 	current_state = MATCH_VOLTAGE;
-	dac_target_value = target_voltage;
+	target_voltage = voltage;
 	start_adc();
 }

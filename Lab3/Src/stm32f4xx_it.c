@@ -219,9 +219,7 @@ void SysTick_Handler(void)
 	static const int systicks_per_check_for_digit_press = CHECK_FOR_DIGIT_PRESS_INTERVAL_MS / ms_per_systick;
 	static int check_for_digit_press_counter;
 	
-	static const int systicks_per_pwm_update = 1000/ms_per_systick;
-	static int pwm_counter;
-	static uint16_t percentage;
+
 	
 	// TODO: we might remove this when we get the timers to work properly.
 //	// Threshold for the ADC counter. When reached, the ADC is sampled.
@@ -234,15 +232,6 @@ void SysTick_Handler(void)
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
   /* USER CODE BEGIN SysTick_IRQn 1 */
-
-	//TODO: get pwm_duty_cycle to be called in this interrupt
-	//update DutyCycle
-	pwm_counter++;
-	if(pwm_counter == systicks_per_pwm_update){
-		percentage = (percentage+10)%100;
-		//pwm_duty_cycle(percentage);
-		pwm_counter = 0;
-	}
 
 	// Refresh the display when appropriate.
 	if (refresh_display_counter == systicks_per_display_refresh){
