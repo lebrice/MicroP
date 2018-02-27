@@ -46,6 +46,11 @@
 #ifndef DISPLAY_RMS
 #include "heads_up_display.h"
 #endif
+
+#ifndef FSM
+#include "fsm.h"
+#endif
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -66,6 +71,7 @@ float filtered_ADCBuffer[ADC_BUFFER_SIZE];
 
 // Buffer that holds Unfiltered data populated with DMA. 
 static uint32_t ADCBufferDMA[ADC_BUFFER_SIZE];
+
 
 
 
@@ -100,6 +106,12 @@ typedef struct {
 } asm_output;
 
 
+// Called in order to adjust the duty cycle.
+void adjust_duty_cycle(float current_rms);
+
+void start_adc(void);
+void stop_adc(void);
+
 
 // Function that is called whenever the blue button is pressed.
 void button_pressed_callback(void);
@@ -111,6 +123,23 @@ void asm_math(float *inputValues, int size, asm_output *results);
 /* USER CODE BEGIN 0 */
 
 
+void start_adc(){
+	HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
+}
+
+void stop_adc(){
+	HAL_ADC_Stop_DMA(&hadc1);
+}
+
+void adjust_duty_cycle(float current_rms){
+	extern float dac_target_value;
+	float difference = current_rms - dac_target_value;
+	
+	static int current_pulse;
+	
+	// TODO: change the duty cycle depending on how far we are from the target value
+}
+
 
 static PastResultsVector past_ten_seconds_results;
 
@@ -118,19 +147,10 @@ float DigitalToAnalogValue(int digital_value){
 	float AnalogVal = 3.0*(digital_value)/4095;
 	return AnalogVal;
 }
-/*
-This function is called once per second, when the buffer is full.
-It should calculate what values should be displayed
-*/
-void adc_buffer_full_callback()
-{
-	extern float displayed_value;
-	
+
+void find_min_max_last_10_secs(asm_output last_results, float results[2]){
 	static int head;
 	static int tail;
-	
-	asm_output last_second_results;
-	float min, max, rms;
 	
 	int current;
 	float temp_max;
@@ -138,14 +158,12 @@ void adc_buffer_full_callback()
 	float min_last_10_secs;
 	float max_last_10_secs;
 	
-	asm_math(filtered_ADCBuffer, ADC_BUFFER_SIZE, &last_second_results);
-	min = last_second_results.min_value;
-	max = last_second_results.max_value;
-	rms = last_second_results.rms;
 	
-//	printf("Showing RMS: %.3f\n", rms);
-//	printf("Showing MIN: %.3f\n", min);
-//	printf("Showing MAX: %.3f\n", max);
+	float min, max, rms;
+	
+	min = last_results.min_value;
+	max = last_results.max_value;
+	rms = last_results.rms;
 	
 	
 	head = (head + 1) % 10; // Update the head.
@@ -174,33 +192,26 @@ void adc_buffer_full_callback()
 		current = (current + 1) % 10;
 	}
 	
-	float displayed_value_digital;
-	// Update the display with the newly found values.
-	switch(display_mode){
-		case DISPLAY_RMS:
-			// TODO:
-			printf("Showing RMS: %.3f\n", rms);
-			printf("Showing RMS: %.3f\n", DigitalToAnalogValue(rms));
-			displayed_value_digital = rms;
-//			displayed_value = 1.11f;
-			break;
-		case DISPLAY_MIN:
-			// TODO:
-			printf("Showing MIN: %.3f\n", min_last_10_secs);
-		  printf("Showing MIN: %.3f\n", DigitalToAnalogValue(min_last_10_secs));
-			displayed_value_digital = min_last_10_secs;
-//			displayed_value = 2.22f;
-		
-			break;
-		case DISPLAY_MAX:
-			// TODO:
-			printf("Showing MAX: %.3f\n", max_last_10_secs);
-		  printf("Showing MAX: %.3f\n", DigitalToAnalogValue(max_last_10_secs));
- 			displayed_value_digital = max_last_10_secs;
-//			displayed_value = 3.33f;
-			break;
-	}
-	displayed_value = DigitalToAnalogValue(displayed_value_digital);
+	results[0] = min_last_10_secs;
+	results[1] = max_last_10_secs;	
+}
+
+
+/** @brief This function is called when the ADC buffer is full.
+*
+*/
+void adc_buffer_full_callback()
+{
+	extern float displayed_value;
+	
+	asm_output last_results;
+	float current_rms_voltage;
+	
+	asm_math(filtered_ADCBuffer, ADC_BUFFER_SIZE, &last_results);
+	current_rms_voltage = DigitalToAnalogValue(last_results.rms);
+	
+	displayed_value = current_rms_voltage;
+	adjust_duty_cycle(current_rms_voltage);
 }
 
 void FIR_C(int Input, float* Output){
@@ -229,16 +240,7 @@ void FIR_C(int Input, float* Output){
 	*Output = result; // place the result at the given location.
 }
 
-
-// Called when the Buffer was half-filled.
-void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* AdcHandle){
-	printf("Hello!\n");
-	if(AdcHandle->Instance == ADC1){
-		printf("Here!\n");
-	}
-}
-
-// Called when the buffer was filled.
+// Called when the buffer is filled.
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 {
 	if(AdcHandle->Instance == ADC1){

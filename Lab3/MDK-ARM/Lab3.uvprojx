@@ -530,6 +530,16 @@
               <FileType>1</FileType>
               <FilePath>..\Src\fput_debug.c</FilePath>
             </File>
+            <File>
+              <FileName>fsm.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Src\fsm.h</FilePath>
+            </File>
+            <File>
+              <FileName>fsm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\fsm.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

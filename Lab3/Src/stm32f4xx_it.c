@@ -48,9 +48,14 @@
 #include <stdbool.h>
 #endif
 
+#ifndef FSM
+#include "fsm.h"
+#endif
 
 // Function used to refresh the display.
 void refresh_display(void);
+
+
 
 
 // Function called periodically to check if a digit was pressed.
@@ -240,11 +245,11 @@ void SysTick_Handler(void)
 	}
 
 	// Refresh the display when appropriate.
-	refresh_display_counter++;
 	if (refresh_display_counter == systicks_per_display_refresh){
 		refresh_display();
 		refresh_display_counter = 0;
 	}
+	refresh_display_counter++;
 	
 	// Check for a digit press when appropriate.
 	check_for_digit_press_counter++;
@@ -351,13 +356,26 @@ void DMA2_Stream0_IRQHandler(void)
 *(Refreshes the display, using the functions defined in "heads_up_display.h" to get the required digits and segments.
 */
 void refresh_display(void){
+	
+	extern STATE current_state;
 	// The float value to be displayed.
 	extern float displayed_value;
+		
 	// Which digit is currently active.
 	static uint8_t currently_active_digit = 0;
 	
+	
+	
 	// The resulting segments.
 	uint8_t segments[3];
+	
+	if (current_state == SLEEP){
+		// We sleep, shut off the display.
+		RESET_PIN(DIGITS_0);
+		RESET_PIN(DIGITS_1);
+		RESET_PIN(DIGITS_2);
+		return;
+	}
 	get_segments_for_float(displayed_value, segments);
 	
 	GPIOD->ODR = (GPIOD->ODR & 0xFFFFFF00) | segments[currently_active_digit];
@@ -393,9 +411,14 @@ void refresh_display(void){
 void check_for_digit_press(){
 	static const uint32_t rows[] = { ROW_0_Pin, ROW_1_Pin, ROW_2_Pin, ROW_3_Pin };
 	static const uint32_t columns[] = { COL_0_Pin, COL_1_Pin, COL_2_Pin };
+	
+	static bool key_pressed_in_rows[4];
+	
 	static uint8_t current_row;
 	static uint8_t column;
-	static char chosen_char = NULL;
+	
+	bool press_detected = false;
+		
 	// The character that is being pushed in the keypad.
 	char new_char = NULL;
 
@@ -404,23 +427,32 @@ void check_for_digit_press(){
 		HAL_GPIO_WritePin(GPIOB, rows[i], (i == current_row) ? GPIO_PIN_SET : GPIO_PIN_RESET);
 	}
 	
+	
 	// Read each row. If a row is high, we found the digit.
 	for(column = 0; column < COLS; column++){
 		// TODO: figure out why the ReadPin returns PIN_RESET when the pin is HIGH, and PIN_SET when pin is LOW.
 		if(HAL_GPIO_ReadPin(GPIOB, columns[column]) == GPIO_PIN_SET){
 			printf("KEY (%u, %u) is ON.\n", current_row, column);
 			new_char = Keys[current_row][column];
+			press_detected = true;
 			break;
 		}else{
 			printf("KEY (%u, %u) is OFF.\n", current_row, column);
 		}
 	}
-	
-	if((new_char != NULL) && (new_char != chosen_char)){
-		chosen_char = new_char;
-		new_keypad_value(chosen_char);
+	if(press_detected){
+		key_pressed_in_rows[current_row] = true;
+	}else{
+		key_pressed_in_rows[current_row] = false;
+		// If we have not detected a keypress in all 4 rows, signal that no key is pressed.
+		if(!(key_pressed_in_rows[0]			
+			|	key_pressed_in_rows[1]
+			| key_pressed_in_rows[2]
+			|	key_pressed_in_rows[3])){
+			new_char = ' ';
+		}
 	}
-	
+	keypad_update(new_char);
 	
 	current_row++;
 	current_row %= ROWS;
