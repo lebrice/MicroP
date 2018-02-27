@@ -18,7 +18,7 @@
 // TODO: FIX these values using the documentation.
 static const uint8_t ROWS = 4;
 static const uint8_t COLS = 3; 
-
+static void pwm_duty_cycle(uint16_t percentage);
 static const char Keys[ROWS][COLS] = {
 	{'1', '2', '3'},
 	{'4', '5', '6'},

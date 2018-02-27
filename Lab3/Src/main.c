@@ -247,6 +247,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 			FIR_C(ADCBufferDMA[i], &filtered_ADCBuffer[i]); 
 		}
 		adc_buffer_full_callback();
+		HAL_ADC_Stop_DMA(&hadc1);
+		HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
 	}
 }
 /** Called whenever an EXTI interrupt occurs (i.e. button press)
@@ -287,24 +289,18 @@ void HAL_GPIO_EXTI_Callback(uint16_t pin){
 	}
 }
 
-void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim){
-	// TODO: this callback might be useful later on, I'm not sure.
-	printf("HERE! timer PWM pulse is finished.\n");
-}
 
-void TIM_DMAPeriodElapsedCplt(DMA_HandleTypeDef *hdma){
-	// TODO: this callback might be useful later on, I'm not sure.
-	printf("HERE! timer DMA period elapsed.\n");
-}
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
-	// TODO: this might be useful.
-	printf("HELLO THERE, prediod elapsed!\n");
-}
-
-void HAL_TIM_TriggerCallback(TIM_HandleTypeDef *htim){
-	// TODO: This might be useful, not sure.
-	printf("Trigger callback!\n");
+void pwm_duty_cycle(uint16_t percentage) //input percentage
+{
+    uint16_t value = (100)*percentage/(100); //(period)*(percent/100)
+		TIM_OC_InitTypeDef sConfigOC;
+		sConfigOC.OCMode = TIM_OCMODE_PWM1;
+		sConfigOC.Pulse = value;
+		sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+		sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+    HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);  
 }
 
 /* USER CODE END 0 */
@@ -357,12 +353,15 @@ int main(void)
 	HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
 	
 	
-	// Start the timer.
+	// Start the timers.
 	HAL_TIM_Base_Start(&htim2);
-	
+	HAL_TIM_Base_Start(&htim3); 
+	HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_1);
 	
   HAL_TIM_Base_Start_DMA(&htim2, ADCBufferDMA, ADC_BUFFER_SIZE);
 	HAL_ADC_Start_DMA(&hadc1,ADCBufferDMA, ADC_BUFFER_SIZE);
+	//pwm_duty_cycle(50);
+	
 	
   /* USER CODE END 2 */
 
@@ -506,7 +505,7 @@ static void MX_TIM2_Init(void)
   TIM_MasterConfigTypeDef sMasterConfig;
 
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 8400/1; //setting timer: Prescaler (8400/x) = (50*x)Hz
+  htim2.Init.Prescaler = 8400/40; //setting timer: Prescaler (8400/x) = (50*x)Hz
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 200;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -539,9 +538,9 @@ static void MX_TIM3_Init(void)
   TIM_OC_InitTypeDef sConfigOC;
 
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 8400;
+  htim3.Init.Prescaler = 84;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 0;
+  htim3.Init.Period = 100;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
   {
@@ -575,7 +574,7 @@ static void MX_TIM3_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-	sConfigOC.Pulse = 2099; /* 25% duty cycle */
+	sConfigOC.Pulse = 80;
 	HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1);
 	
   HAL_TIM_MspPostInit(&htim3);
