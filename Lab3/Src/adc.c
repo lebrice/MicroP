@@ -27,6 +27,7 @@ void adc_buffer_full_callback()
 	asm_math(filtered_ADCBuffer, ADC_BUFFER_SIZE, &last_results);
 	current_rms_voltage = DigitalToAnalogValue(last_results.rms);
 	
+	// TODO: use round to display the closest value.
 	displayed_value = current_rms_voltage;
 	adjust_duty_cycle(current_rms_voltage);
 }

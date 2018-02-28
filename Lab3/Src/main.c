@@ -144,22 +144,23 @@ void pwm_duty_cycle(uint16_t new_period) //input percentage
 */
 void adjust_duty_cycle(float current_rms){ 
 	extern float target_voltage;
-	
 	// a damping constant, that limits the rate of change of the percentage.
-	static const float damping = 0.001f;
+	static const float damping = 0.002f;
 	
 //	static const float increment = PWM_TIMER_PERIOD / 3.0f;
 	static float current_percentage;
 	static int current_period;
 	static float difference;
 	
-	difference = current_rms - target_voltage;	
+	difference = current_rms - target_voltage;
 	
 	current_percentage -= damping * difference;
 	current_percentage = BOUND(current_percentage, 0.f, 1.f);
+	
+	
 	current_period = round(current_percentage * PWM_TIMER_PERIOD);
 	
-	printf("Current voltage: %2.3f, Target Voltage: %2.3f, current percentage: %2.5f%%, current_period: %u / %u \n", current_rms, target_voltage, current_percentage, current_period, PWM_TIMER_PERIOD);
+	printf("Current voltage: %2.3f, Target Voltage: %2.3f, current percentage: %2.5f%%, current_period: %u / %u \n", current_rms, target_voltage, current_percentage*100, current_period, PWM_TIMER_PERIOD);
 	pwm_duty_cycle(current_period);
 }
 

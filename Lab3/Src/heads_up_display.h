@@ -35,7 +35,8 @@ This file defines the functions and constants used in the 7-segment display.
 #define DISPLAY_MIN 1
 #define DISPLAY_MAX 2
 
-#define DISPLAY_REFRESH_INTERVAL_MS 5
+
+#define DISPLAY_REFRESH_INTERVAL_MS 8
 
 // Very useful macros for setting and resetting a given pin.
 #define PIN(i) i##_Pin
@@ -55,3 +56,5 @@ extern float displayed_value;
 void get_segments_for_float(float value, uint8_t segments[3]);
 
 void refresh_display(void);
+void start_display(void);
+void stop_display(void);

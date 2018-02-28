@@ -51,12 +51,7 @@
 #include "fsm.h"
 
 // Function used to refresh the display.
-void refresh_display(void);
-
-void stop_display(void);
-void start_display(void);
-
-static bool display_on;
+extern void refresh_display(void);
 
 // Function called periodically to check if a digit was pressed.
 void check_for_digit_press(void);
@@ -219,7 +214,7 @@ void SysTick_Handler(void)
 	static const int systicks_per_check_for_digit_press = CHECK_FOR_DIGIT_PRESS_INTERVAL_MS / ms_per_systick;
 	static int check_for_digit_press_counter;
 	
-
+	extern bool display_on;
 	
 	// TODO: we might remove this when we get the timers to work properly.
 //	// Threshold for the ADC counter. When reached, the ADC is sampled.
@@ -238,9 +233,7 @@ void SysTick_Handler(void)
 		refresh_display();
 		refresh_display_counter = 0;
 	}
-	if(display_on){
-		refresh_display_counter++;
-	}
+	refresh_display_counter++;
 	// Check for a digit press when appropriate.
 	check_for_digit_press_counter++;
 	if (check_for_digit_press_counter == systicks_per_check_for_digit_press){
@@ -396,15 +389,6 @@ void check_for_digit_press(){
 	current_row %= ROWS;
 }
 
-void stop_display(){
-	extern bool display_on;
-	display_on = false;
-}
-
-void start_display(){
-	extern bool display_on;
-	display_on = true;
-}
 
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
