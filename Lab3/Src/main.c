@@ -153,7 +153,7 @@ void adjust_duty_cycle(float current_rms){ //PWM control block
 	extern float target_voltage;
 	
 	
-	static const float some_constant = 1.0f;
+	static const float some_constant = 0.1f;
 	
 	
 	static float old_voltage;
@@ -184,9 +184,9 @@ void adjust_duty_cycle(float current_rms){ //PWM control block
 //	current_percentage = old_percentage - some_constant * diff * (d_percent / d_v);
 
 	if(diff > 0){
-		current_percentage -= 0.0001f;
+		current_percentage -= 0.001f;
 	}else{
-		current_percentage += 0.0001f;
+		current_percentage += 0.001f;
 	}
 	current_percentage = BOUND(current_percentage, 0.0f, 1.0f);
 	old_percentage = current_percentage;

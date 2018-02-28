@@ -24,6 +24,11 @@ void sleep(void);
 
 void restart(){
 	// TODO: not sure if we're supposed to do anything here.
+	if(current_state == MATCH_VOLTAGE){
+		// TODO
+	}else if (current_state == INPUT_TARGET){
+		// TODO
+	}
 }
 
 void sleep(){
