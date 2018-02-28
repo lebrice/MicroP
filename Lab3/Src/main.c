@@ -287,21 +287,31 @@ void FIR_C(int Input, float* Output){
 	//- iterate in the buffer, going from head to tail, and add up the results
 	
 	// Array of weights
-	static float weights[5] = {0.2, 0.2, 0.2, 0.2, 0.2};
+	static const int FILTER_ORDER = 5;
+	static const float WEIGHT = 1.f / FILTER_ORDER;
+	
+	static float weights[FILTER_ORDER];
+		
+	if(weights[0] == 0.f){
+		for(int i=0; i<FILTER_ORDER; i++)
+			weights[i] = WEIGHT;
+	}
+		
+		
 	// Buffer that will hold the values as they come in.
-	static int buffer[5];
+	static int buffer[FILTER_ORDER];
 	static int head, tail = 0;
 	
 	int i;
 	float result = 0.f;
-	head = (head + 1) % 5; // Update the head.
+	head = (head + 1) % FILTER_ORDER; // Update the head.
 	if(head == tail){ // Update the tail, if necessary.
-		tail = (tail + 1) % 5;
+		tail = (tail + 1) % FILTER_ORDER;
 	}
 	buffer[head] = Input; // write the new value in.
-	for(i=0; i<5; i++){
+	for(i=0; i<FILTER_ORDER; i++){
 		// move backward from 'head' to 'tail', adding up the values.
-		result += weights[i] * buffer[(head - i + 5) % 5];
+		result += weights[i] * buffer[(head - i + FILTER_ORDER) % FILTER_ORDER];
 	}
 	*Output = result; // place the result at the given location.
 }
