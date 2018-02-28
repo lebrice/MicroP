@@ -1,6 +1,12 @@
 
 #define FSM
 
+#define ABS(x) ((x < 0)? -x : x)
+#define MAX(a, b) ((a > b) ? a : b)
+#define MIN(a, b) ((a < b) ? a : b)
+#define BOUND(x, lower, upper) (MAX(MIN(x, upper), lower))
+
+
 typedef enum {
 	SLEEP,
 	INPUT_TARGET,

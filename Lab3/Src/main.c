@@ -66,6 +66,8 @@ TIM_HandleTypeDef htim3;
 /* Private variables ---------------------------------------------------------*/
 
 const int ADC_BUFFER_SIZE = 50;
+const int PWM_TIMER_PERIOD = 100;
+
 
 float filtered_ADCBuffer[ADC_BUFFER_SIZE];
 
@@ -123,6 +125,20 @@ void pwm_duty_cycle(float percentage);
 
 /* USER CODE BEGIN 0 */
 
+/** @brief Set the period of the PWM timer
+* @param percentage: float value from 0 to 1.
+*/
+void pwm_duty_cycle(float percentage) //input percentage
+{
+    uint16_t value = (uint16_t)(PWM_TIMER_PERIOD)*percentage; //(period)*(percent/100)
+		TIM_OC_InitTypeDef sConfigOC;
+		sConfigOC.OCMode = TIM_OCMODE_PWM1;
+		sConfigOC.Pulse = value;
+		sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+		sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+    HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);  
+}
 
 void start_adc(){
 	HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
@@ -135,23 +151,47 @@ void stop_adc(){
 
 void adjust_duty_cycle(float current_rms){ //PWM control block
 	extern float target_voltage;
-	float difference = current_rms - target_voltage;
-	static int current_pulse; //starts at 0
 	
-	float pulse_increment = 1;
 	
-	if(difference < 0){ //target voltage is higher, make pulse bigger
-		if(current_pulse < 100)
-			pwm_duty_cycle(current_pulse+pulse_increment);
-		
-	}else{ //current_rms is higher, make pulse smaller
-		if(current_pulse > 0)
-			pwm_duty_cycle(current_pulse-pulse_increment);
-		
+	static const float some_constant = 1.0f;
+	
+	
+	static float old_voltage;
+	// TODO: check if we need to set this to some initial value.
+	static float old_percentage;
+	static float current_percentage = 0.001f;
+	
+	static float current_voltage;
+	static float d_v;
+	static float d_percent;
+	
+	static float diff;
+	float temp;
+	current_voltage = current_rms;
+	
+	d_v = current_voltage - old_voltage; 
+	d_percent = current_percentage - old_percentage;
+	
+	diff = current_voltage - target_voltage;
+	
+	d_v = BOUND(d_v, -0.0001f, 0.0001f);
+	
+	
+	
+	/** IDEA:
+	* new_p = old_p - (diff) * (d_percent / d_v) * some_constant.
+	*/
+//	current_percentage = old_percentage - some_constant * diff * (d_percent / d_v);
+
+	if(diff > 0){
+		current_percentage -= 0.001;
+	}else{
+		current_percentage += 0.001;
 	}
-	
-	// TODO: change the duty cycle depending on how far we are from the target value
-	//pwm_duty_cycle(newPercentage);
+	current_percentage = BOUND(current_percentage, 0.0f, 1.0f);
+	old_percentage = current_percentage;
+		
+	pwm_duty_cycle(current_percentage);
 }
 
 
@@ -160,6 +200,10 @@ static PastResultsVector past_ten_seconds_results;
 float DigitalToAnalogValue(int digital_value){
 	float AnalogVal = 3.0*(digital_value)/4095;
 	return AnalogVal;
+}
+
+int analog_to_digital_value(float analog_voltage){
+	return (analog_voltage / 3.0f) * 4095;
 }
 
 void find_min_max_last_10_secs(asm_output last_results, float results[2]){
@@ -307,17 +351,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t pin){
 
 
 
-void pwm_duty_cycle(float percentage) //input percentage
-{
-    uint16_t value = (100)*percentage/(100); //(period)*(percent/100)
-		TIM_OC_InitTypeDef sConfigOC;
-		sConfigOC.OCMode = TIM_OCMODE_PWM1;
-		sConfigOC.Pulse = value;
-		sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-		sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-    HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1);
-    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);  
-}
+
 
 /* USER CODE END 0 */
 
