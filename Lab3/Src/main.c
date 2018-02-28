@@ -51,6 +51,10 @@
 #include "fsm.h"
 #endif
 
+#ifndef ADC
+#include "adc.h"
+#endif
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -65,14 +69,10 @@ TIM_HandleTypeDef htim3;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
-const int ADC_BUFFER_SIZE = 50;
 const int PWM_TIMER_PERIOD = 100;
 
 
-float filtered_ADCBuffer[ADC_BUFFER_SIZE];
 
-// Buffer that holds Unfiltered data populated with DMA. 
-static uint32_t ADCBufferDMA[ADC_BUFFER_SIZE];
 
 
 
@@ -93,33 +93,21 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-typedef struct {
-	float last_RMS;
-	float past_mins[10];
-	float past_maxs[10];	
-} PastResultsVector;
-
-typedef struct {
-	float rms;
-	float max_value;
-	float min_value;
-	int max_index;
-	int min_index;	
-} asm_output;
 
 
 // Called in order to adjust the duty cycle.
 void adjust_duty_cycle(float current_rms);
 
-void start_adc(void);
-void stop_adc(void);
 
+
+extern int ADC_BUFFER_SIZE;
+extern uint32_t ADCBufferDMA[];
+extern void start_adc(void);
+extern void stop_adc(void);
+extern void adc_buffer_full_callback(void);
 
 // Function that is called whenever the blue button is pressed.
 void button_pressed_callback(void);
-void adc_buffer_full_callback(void);
-void FIR_C(int Input, float* Output);
-void asm_math(float *inputValues, int size, asm_output *results);
 void pwm_duty_cycle(float percentage);
 /* USER CODE END PFP */
 
@@ -140,13 +128,6 @@ void pwm_duty_cycle(float percentage) //input percentage
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);  
 }
 
-void start_adc(){
-	HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
-}
-
-void stop_adc(){
-	HAL_ADC_Stop_DMA(&hadc1);
-}
 
 /** @brief Controller which adjusts the PWM duty cycle in order to match the current target RMS voltage.
 * @param current_rms: The current RMS voltage from the ADC.
@@ -202,128 +183,23 @@ void adjust_duty_cycle(float current_rms){
 	pwm_duty_cycle(current_percentage);
 }
 
-
-static PastResultsVector past_ten_seconds_results;
-
-float DigitalToAnalogValue(int digital_value){
-	float AnalogVal = 3.0*(digital_value)/4095;
-	return AnalogVal;
+void start_adc(){
+	HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
 }
 
-int analog_to_digital_value(float analog_voltage){
-	return (analog_voltage / 3.0f) * 4095;
-}
-
-void find_min_max_last_10_secs(asm_output last_results, float results[2]){
-	static int head;
-	static int tail;
-	
-	int current;
-	float temp_max;
-	float temp_min;
-	float min_last_10_secs;
-	float max_last_10_secs;
-	
-	
-	float min, max, rms;
-	
-	min = last_results.min_value;
-	max = last_results.max_value;
-	rms = last_results.rms;
-	
-	
-	head = (head + 1) % 10; // Update the head.
-	if(head == tail){ // Update the tail, if necessary.
-		tail = (tail + 1) % 10; 
-	}
-	past_ten_seconds_results.past_mins[head] = min; // write the new value in.
-	past_ten_seconds_results.past_maxs[head] = max;
-	past_ten_seconds_results.last_RMS = rms;
-	
-	//We have to calculate the min and max of the last 10 seconds.
-	current = tail;
-	min_last_10_secs = min;
-	max_last_10_secs = max;
-	
-	
-	// Loop through the array of past results, and find the min and max.
-	while(current != head){
-		// Update the Min.
-		temp_min = past_ten_seconds_results.past_mins[current];
-		min_last_10_secs = (temp_min < min_last_10_secs && temp_min != 0)? temp_min : min_last_10_secs;
-		
-		// Update the Max.
-		temp_max = past_ten_seconds_results.past_maxs[current];
-		max_last_10_secs = (temp_max > max_last_10_secs)? temp_max : max_last_10_secs;
-		current = (current + 1) % 10;
-	}
-	
-	results[0] = min_last_10_secs;
-	results[1] = max_last_10_secs;	
+void stop_adc(){
+	HAL_ADC_Stop_DMA(&hadc1);
 }
 
 
-/** @brief This function is called when the ADC buffer is full.
-*
-*/
-void adc_buffer_full_callback()
-{
-	extern float displayed_value;
-	
-	asm_output last_results;
-	float current_rms_voltage;
-	
-	asm_math(filtered_ADCBuffer, ADC_BUFFER_SIZE, &last_results);
-	current_rms_voltage = DigitalToAnalogValue(last_results.rms);
-	
-	displayed_value = current_rms_voltage;
-	adjust_duty_cycle(current_rms_voltage);
-}
-
-void FIR_C(int Input, float* Output){
-	//Idea: use the buffer like a circular queue.
-	//- Add the element to the buffer, using the head pointer.
-	//- Update tail accordingly
-	//- iterate in the buffer, going from head to tail, and add up the results
-	
-	// Array of weights
-	static const int FILTER_ORDER = 5;
-	static const float WEIGHT = 1.f / FILTER_ORDER;
-	
-	static float weights[FILTER_ORDER];
-		
-	if(weights[0] == 0.f){
-		for(int i=0; i<FILTER_ORDER; i++)
-			weights[i] = WEIGHT;
-	}
-		
-		
-	// Buffer that will hold the values as they come in.
-	static int buffer[FILTER_ORDER];
-	static int head, tail = 0;
-	
-	int i;
-	float result = 0.f;
-	head = (head + 1) % FILTER_ORDER; // Update the head.
-	if(head == tail){ // Update the tail, if necessary.
-		tail = (tail + 1) % FILTER_ORDER;
-	}
-	buffer[head] = Input; // write the new value in.
-	for(i=0; i<FILTER_ORDER; i++){
-		// move backward from 'head' to 'tail', adding up the values.
-		result += weights[i] * buffer[(head - i + FILTER_ORDER) % FILTER_ORDER];
-	}
-	*Output = result; // place the result at the given location.
-}
 
 // Called when the buffer is filled.
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 {
+	
 	if(AdcHandle->Instance == ADC1){
 		// use the filter on each value in the raw buffer.
-		for(int i=0; i < ADC_BUFFER_SIZE; i++){
-			FIR_C(ADCBufferDMA[i], &filtered_ADCBuffer[i]); 
-		}
+		
 		adc_buffer_full_callback();
 		HAL_ADC_Stop_DMA(&hadc1);
 		HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
