@@ -98,12 +98,14 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 // Called in order to adjust the duty cycle.
 void adjust_duty_cycle(float current_rms);
 
-
+// starts the ADC.
+void start_adc(void);
+// stops the ADC.
+void stop_adc(void);
 
 extern int ADC_BUFFER_SIZE;
 extern uint32_t ADCBufferDMA[];
-extern void start_adc(void);
-extern void stop_adc(void);
+
 extern void adc_buffer_full_callback(void);
 
 // Function that is called whenever the blue button is pressed.
@@ -191,18 +193,14 @@ void stop_adc(){
 	HAL_ADC_Stop_DMA(&hadc1);
 }
 
-
-
 // Called when the buffer is filled.
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 {
 	
 	if(AdcHandle->Instance == ADC1){
-		// use the filter on each value in the raw buffer.
-		
 		adc_buffer_full_callback();
-		HAL_ADC_Stop_DMA(&hadc1);
-		HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
+		stop_adc();
+		start_adc();
 	}
 }
 /** Called whenever an EXTI interrupt occurs (i.e. button press)

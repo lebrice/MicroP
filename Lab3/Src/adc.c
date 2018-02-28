@@ -2,7 +2,6 @@
 
 float filtered_ADCBuffer[ADC_BUFFER_SIZE];
 
-
 // Buffer that holds Unfiltered data populated with DMA. 
 uint32_t ADCBufferDMA[ADC_BUFFER_SIZE];
 
@@ -20,8 +19,9 @@ void adc_buffer_full_callback()
 	asm_output last_results;
 	float current_rms_voltage;
 	
+	// use the filter on each value in the raw buffer.
 	for(int i=0; i < ADC_BUFFER_SIZE; i++){
-		FIR_C(ADCBufferDMA[i], &filtered_ADCBuffer[i]); 
+		FIR_C(ADCBufferDMA[i], &filtered_ADCBuffer[i]);
 	}
 	
 	
@@ -120,8 +120,7 @@ void FIR_C(int Input, float* Output){
 
 
 float DigitalToAnalogValue(int digital_value){
-	float AnalogVal = 3.0*(digital_value)/4095;
-	return AnalogVal;
+	return 3.0*(digital_value)/4095;
 }
 
 int analog_to_digital_value(float analog_voltage){
