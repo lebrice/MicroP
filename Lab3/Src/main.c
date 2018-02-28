@@ -184,9 +184,9 @@ void adjust_duty_cycle(float current_rms){ //PWM control block
 //	current_percentage = old_percentage - some_constant * diff * (d_percent / d_v);
 
 	if(diff > 0){
-		current_percentage -= 0.001;
+		current_percentage -= 0.0001f;
 	}else{
-		current_percentage += 0.001;
+		current_percentage += 0.0001f;
 	}
 	current_percentage = BOUND(current_percentage, 0.0f, 1.0f);
 	old_percentage = current_percentage;
@@ -558,9 +558,9 @@ static void MX_TIM2_Init(void)
   TIM_MasterConfigTypeDef sMasterConfig;
 
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 8400/40; //setting timer: Prescaler (8400/x) = (50*x)Hz
+  htim2.Init.Prescaler = 84;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 200;
+  htim2.Init.Period = 500; // (we want 2kHz.)
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
   {
