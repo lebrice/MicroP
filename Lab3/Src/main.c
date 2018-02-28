@@ -55,6 +55,14 @@
 #include "adc.h"
 #endif
 
+#include <math.h>
+
+#define ABS(x) ((x < 0)? -x : x)
+#define MAX(a, b) ((a > b) ? a : b)
+#define MIN(a, b) ((a < b) ? a : b)
+#define BOUND(x, lower, upper) (MAX(MIN(x, upper), lower))
+
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -69,7 +77,7 @@ TIM_HandleTypeDef htim3;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
-const int PWM_TIMER_PERIOD = 168;
+const int PWM_TIMER_PERIOD = 1680;
 
 
 
@@ -110,20 +118,20 @@ extern void adc_buffer_full_callback(void);
 
 // Function that is called whenever the blue button is pressed.
 void button_pressed_callback(void);
-void pwm_duty_cycle(float percentage);
+void pwm_duty_cycle(uint16_t new_period);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
 
 /** @brief Set the period of the PWM timer
-* @param percentage: float value from 0 to 1.
+* @param new_period: new timer period.
 */
-void pwm_duty_cycle(float percentage) //input percentage
+void pwm_duty_cycle(uint16_t new_period) //input percentage
 {
-    uint16_t value = (uint16_t)(PWM_TIMER_PERIOD)*percentage; //(period)*(percent/100)
+//    uint16_t value = (uint16_t)(PWM_TIMER_PERIOD)*percentage; //(period)*(percent/100)
 		TIM_OC_InitTypeDef sConfigOC;
 		sConfigOC.OCMode = TIM_OCMODE_PWM1;
-		sConfigOC.Pulse = value;
+		sConfigOC.Pulse = BOUND(new_period, 0, PWM_TIMER_PERIOD);
 		sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
 		sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
     HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1);
@@ -138,53 +146,21 @@ void adjust_duty_cycle(float current_rms){
 	extern float target_voltage;
 	
 	// a damping constant, that limits the rate of change of the percentage.
-	static const float damping = 0.5f;
+	static const float damping = 0.001f;
 	
-	
-	static float old_voltage;
-	// TODO: check if we need to set this to some initial value.
-	static float old_percentage;
-	static float current_percentage = 0.001f;
-	
-	static float current_voltage;
-	static float d_v;
-	static float d_p = 0.001f;
-	
+//	static const float increment = PWM_TIMER_PERIOD / 3.0f;
+	static float current_percentage;
+	static int current_period;
 	static float difference;
-	current_voltage = current_rms;
 	
-	d_v = current_voltage - old_voltage;
+	difference = current_rms - target_voltage;	
 	
-	difference = current_voltage - target_voltage;
+	current_percentage -= damping * difference;
+	current_percentage = BOUND(current_percentage, 0.f, 1.f);
+	current_period = round(current_percentage * PWM_TIMER_PERIOD);
 	
-	d_p = (-0.001f < d_p <= 0) ? -0.001f : d_p;
-	d_p = (0 < d_p < 0.001f) ? 0.001f: d_p;	
-	
-	// avoid possible divide-by-zero errors in below equation.
-	d_v = (-0.001f < d_v <= 0) ? -0.001f : d_v;
-	d_v = (0 < d_v < 0.001f) ? 0.001f: d_v;	
-	
-	/** @brief This is the main controller logic.
-	*
-	* IDEA: adjust the percentage by using the derivative of duty cycle with respect to change in voltage.
-	* new_p = old_p - k * difference * (d_p / d_v);
-	*/
-//	current_percentage = old_percentage - damping * difference * (d_p / d_v);
-//	printf("%2.5f = %2.5f - %2.5f * %2.5f * (%2.5f / %2.5f)\n", current_percentage, old_percentage, damping, difference, d_p, d_v);
-	if(difference > 0){
-		current_percentage -= 0.001f;
-	}else{
-		current_percentage += 0.001f;
-	}
-	
-	// The percentage is limited between 0% and 100%.
-	current_percentage = BOUND(current_percentage, 0.0f, 1.0f);
-	printf("Current voltage: %2.3f, Target Voltage: %2.3f, Current On-Percentage: %2.5f%%\n", current_voltage, target_voltage, current_percentage);
-	
-	pwm_duty_cycle(current_percentage);
-	
-	d_p = current_percentage - old_percentage;
-	old_percentage = current_percentage;
+	printf("Current voltage: %2.3f, Target Voltage: %2.3f, current percentage: %2.5f%%, current_period: %u / %u \n", current_rms, target_voltage, current_percentage, current_period, PWM_TIMER_PERIOD);
+	pwm_duty_cycle(current_period);
 }
 
 void start_adc(){
@@ -487,7 +463,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 168;
+  htim3.Init.Period = 1680;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
   {

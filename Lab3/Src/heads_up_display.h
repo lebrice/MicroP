@@ -2,6 +2,13 @@
 This file defines the functions and constants used in the 7-segment display.
 */
 #include <stdint.h>
+#include "main.h"
+#include "stm32f4xx_hal.h"
+
+#ifndef bool
+#include <stdbool.h>
+#endif
+
 
 #define SEG_A 0x01
 #define SEG_B 0x02
@@ -46,3 +53,5 @@ extern uint8_t display_mode;
 extern float displayed_value;
 
 void get_segments_for_float(float value, uint8_t segments[3]);
+
+void refresh_display(void);

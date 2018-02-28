@@ -4,6 +4,8 @@
 #include <stdint.h>
 #endif
 
+
+
 const int ADC_BUFFER_SIZE = 50;
 
 extern float filtered_ADCBuffer[ADC_BUFFER_SIZE];

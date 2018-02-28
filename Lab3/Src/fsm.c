@@ -38,10 +38,10 @@ void restart(){
 }
 
 void sleep(){
-	current_state = SLEEP;
 	if(current_state == MATCH_VOLTAGE){
 		stop_adc();
 	}
+	current_state = SLEEP;
 	stop_display();
 }
 
