@@ -138,7 +138,7 @@ void adjust_duty_cycle(float current_rms){
 	extern float target_voltage;
 	
 	// a damping constant, that limits the rate of change of the percentage.
-	static const float damping = 0.1f;
+	static const float damping = 0.5f;
 	
 	
 	static float old_voltage;
@@ -148,15 +148,17 @@ void adjust_duty_cycle(float current_rms){
 	
 	static float current_voltage;
 	static float d_v;
-	static float d_p;
+	static float d_p = 0.001f;
 	
 	static float difference;
 	current_voltage = current_rms;
 	
-	d_v = current_voltage - old_voltage; 
-	d_p = current_percentage - old_percentage;
+	d_v = current_voltage - old_voltage;
 	
 	difference = current_voltage - target_voltage;
+	
+	d_p = (-0.001f < d_p <= 0) ? -0.001f : d_p;
+	d_p = (0 < d_p < 0.001f) ? 0.001f: d_p;	
 	
 	// avoid possible divide-by-zero errors in below equation.
 	d_v = (-0.001f < d_v <= 0) ? -0.001f : d_v;
@@ -167,22 +169,22 @@ void adjust_duty_cycle(float current_rms){
 	* IDEA: adjust the percentage by using the derivative of duty cycle with respect to change in voltage.
 	* new_p = old_p - k * difference * (d_p / d_v);
 	*/
-	current_percentage = old_percentage - damping * difference * (d_p / d_v);
+//	current_percentage = old_percentage - damping * difference * (d_p / d_v);
+//	printf("%2.5f = %2.5f - %2.5f * %2.5f * (%2.5f / %2.5f)\n", current_percentage, old_percentage, damping, difference, d_p, d_v);
+	if(difference > 0){
+		current_percentage -= 0.01f;
+	}else{
+		current_percentage += 0.01f;
+	}
 	
 	// The percentage is limited between 0% and 100%.
 	current_percentage = BOUND(current_percentage, 0.0f, 1.0f);
-	printf("Current voltage: %2.3f: Current Percentage: %2.3f\n", current_voltage, current_percentage);
-
-
-//	if(diff > 0){
-//		current_percentage -= 0.001f;
-//	}else{
-//		current_percentage += 0.001f;
-//	}
-
-	old_percentage = current_percentage;
-		
+	printf("Current voltage: %2.3f, Target Voltage: %2.3f, Current On-Percentage: %2.5f%%\n", current_voltage, target_voltage, current_percentage);
+	
 	pwm_duty_cycle(current_percentage);
+	
+	d_p = current_percentage - old_percentage;
+	old_percentage = current_percentage;
 }
 
 void start_adc(){
@@ -452,7 +454,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 84;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 200;
+  htim2.Init.Period = 1000; //  1kHz.
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
   {
@@ -483,9 +485,9 @@ static void MX_TIM3_Init(void)
   TIM_OC_InitTypeDef sConfigOC;
 
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 84;
+  htim3.Init.Prescaler = 83;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 50; // (20kHz)
+  htim3.Init.Period = 2; // (500 kHz)
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
   {

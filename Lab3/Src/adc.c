@@ -24,7 +24,6 @@ void adc_buffer_full_callback()
 		FIR_C(ADCBufferDMA[i], &filtered_ADCBuffer[i]);
 	}
 	
-	
 	asm_math(filtered_ADCBuffer, ADC_BUFFER_SIZE, &last_results);
 	current_rms_voltage = DigitalToAnalogValue(last_results.rms);
 	
