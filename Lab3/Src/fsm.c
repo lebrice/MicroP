@@ -2,6 +2,7 @@
 #include "fsm.h"
 #endif
 
+#include <stdint.h>
 STATE current_state = SLEEP;
 
 
@@ -18,16 +19,21 @@ extern void stop_adc(void);
 extern void start_display(void);
 extern void stop_display(void);
 
-
+extern void pwm_duty_cycle(float);
 void sleep(void);
 
 
 void restart(){
+	// the digits of the display.
+	extern uint8_t digits[3];
 	// TODO: not sure if we're supposed to do anything here.
 	if(current_state == MATCH_VOLTAGE){
-		// TODO
+		// Reset the pwm duty cycle to 0%.
+		pwm_duty_cycle(0.0f);
 	}else if (current_state == INPUT_TARGET){
-		// TODO
+		digits[0] = 0;
+		digits[1] = 0;
+		digits[2] = 0;
 	}
 }
 

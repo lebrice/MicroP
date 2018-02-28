@@ -419,12 +419,12 @@ void check_for_digit_press(){
 	for(column = 0; column < COLS; column++){
 		// TODO: figure out why the ReadPin returns PIN_RESET when the pin is HIGH, and PIN_SET when pin is LOW.
 		if(HAL_GPIO_ReadPin(GPIOB, columns[column]) == GPIO_PIN_SET){
-			printf("KEY (%u, %u) is ON.\n", current_row, column);
+			// printf("KEY (%u, %u) is ON.\n", current_row, column);
 			new_char = Keys[current_row][column];
 			press_detected = true;
 			break;
 		}else{
-			printf("KEY (%u, %u) is OFF.\n", current_row, column);
+			// printf("KEY (%u, %u) is OFF.\n", current_row, column);
 		}
 	}
 	if(press_detected){

@@ -145,15 +145,17 @@ void start_adc(){
 }
 
 void stop_adc(){
-	
 	HAL_ADC_Stop_DMA(&hadc1);
 }
 
-void adjust_duty_cycle(float current_rms){ //PWM control block
+/** @brief Controller which adjusts the PWM duty cycle in order to match the current target RMS voltage.
+* @param current_rms: The current RMS voltage from the ADC.
+*/
+void adjust_duty_cycle(float current_rms){ 
 	extern float target_voltage;
 	
-	
-	static const float some_constant = 0.1f;
+	// a damping constant, that limits the rate of change of the percentage.
+	static const float damping = 0.1f;
 	
 	
 	static float old_voltage;
@@ -163,32 +165,38 @@ void adjust_duty_cycle(float current_rms){ //PWM control block
 	
 	static float current_voltage;
 	static float d_v;
-	static float d_percent;
+	static float d_p;
 	
-	static float diff;
-	float temp;
+	static float difference;
 	current_voltage = current_rms;
 	
 	d_v = current_voltage - old_voltage; 
-	d_percent = current_percentage - old_percentage;
+	d_p = current_percentage - old_percentage;
 	
-	diff = current_voltage - target_voltage;
+	difference = current_voltage - target_voltage;
 	
-	d_v = BOUND(d_v, -0.0001f, 0.0001f);
+	// avoid possible divide-by-zero errors in below equation.
+	d_v = (-0.001f < d_v <= 0) ? -0.001f : d_v;
+	d_v = (0 < d_v < 0.001f) ? 0.001f: d_v;	
 	
-	
-	
-	/** IDEA:
-	* new_p = old_p - (diff) * (d_percent / d_v) * some_constant.
+	/** @brief This is the main controller logic.
+	*
+	* IDEA: adjust the percentage by using the derivative of duty cycle with respect to change in voltage.
+	* new_p = old_p - k * difference * (d_p / d_v);
 	*/
-//	current_percentage = old_percentage - some_constant * diff * (d_percent / d_v);
-
-	if(diff > 0){
-		current_percentage -= 0.001f;
-	}else{
-		current_percentage += 0.001f;
-	}
+	current_percentage = old_percentage - damping * difference * (d_p / d_v);
+	
+	// The percentage is limited between 0% and 100%.
 	current_percentage = BOUND(current_percentage, 0.0f, 1.0f);
+	printf("Current voltage: %2.3f: Current Percentage: %2.3f\n", current_voltage, current_percentage);
+
+
+//	if(diff > 0){
+//		current_percentage -= 0.001f;
+//	}else{
+//		current_percentage += 0.001f;
+//	}
+
 	old_percentage = current_percentage;
 		
 	pwm_duty_cycle(current_percentage);

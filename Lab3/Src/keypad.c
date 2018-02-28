@@ -18,6 +18,10 @@ float make_float_from_last_three_digits(uint8_t digits[3]);
 bool is_valid_target_value(float target_value);
 
 
+// the three displayed digits.
+uint8_t digits[3];
+
+
 /** @bried Called whenever a new keypad value is received.
 * IDEA: state machine:
 * INIT --(digit entered)--> one digit
@@ -40,8 +44,6 @@ void keypad_update(char new_keypad_value){
 	// the current state of the FSM.
 	extern STATE current_state;	
 	
-	// the three displayed digits.
-	static uint8_t digits[3];
 	
 	
 	

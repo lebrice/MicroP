@@ -35,3 +35,6 @@ static const int DEBOUNCE_INTERVAL_MS = 200;
 
 
 void keypad_update(char new_keypad_value);
+
+
+extern uint8_t digits[3];
