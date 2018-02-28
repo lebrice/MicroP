@@ -69,7 +69,7 @@ TIM_HandleTypeDef htim3;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
-const int PWM_TIMER_PERIOD = 100;
+const int PWM_TIMER_PERIOD = 168;
 
 
 
@@ -172,9 +172,9 @@ void adjust_duty_cycle(float current_rms){
 //	current_percentage = old_percentage - damping * difference * (d_p / d_v);
 //	printf("%2.5f = %2.5f - %2.5f * %2.5f * (%2.5f / %2.5f)\n", current_percentage, old_percentage, damping, difference, d_p, d_v);
 	if(difference > 0){
-		current_percentage -= 0.01f;
+		current_percentage -= 0.001f;
 	}else{
-		current_percentage += 0.01f;
+		current_percentage += 0.001f;
 	}
 	
 	// The percentage is limited between 0% and 100%.
@@ -452,9 +452,9 @@ static void MX_TIM2_Init(void)
   TIM_MasterConfigTypeDef sMasterConfig;
 
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 84;
+  htim2.Init.Prescaler = 83;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 1000; //  1kHz.
+  htim2.Init.Period = 1000;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
   {
@@ -485,9 +485,9 @@ static void MX_TIM3_Init(void)
   TIM_OC_InitTypeDef sConfigOC;
 
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 83;
+  htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 2; // (500 kHz)
+  htim3.Init.Period = 168;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
   {
