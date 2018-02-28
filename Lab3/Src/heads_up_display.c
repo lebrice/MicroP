@@ -1,5 +1,8 @@
 #include "heads_up_display.h"
+
+#ifndef __math_h
 #include "math.h"
+#endif 
 
 bool display_on;
 
@@ -21,12 +24,12 @@ void start_display(){
 
 
 void split_three_digits(float value, int digits[3]){
-	int int_value = (value * 100);
-	digits[2] = int_value / 100;
+	int int_value = round(value * 100);
+	digits[2] = round(int_value / 100);
 	int_value -= digits[2] * 100;
-	digits[1] = int_value / 10;
+	digits[1] = round(int_value / 10);
 	int_value -= digits[1] * 10;
-	digits[0] = int_value % 10;
+	digits[0] = round(int_value % 10);
 //	printf("%f gets translated to %u, %u, %u\n", value, digits[2], digits[1], digits[0]);
 }
 

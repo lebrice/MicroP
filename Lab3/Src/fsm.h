@@ -1,6 +1,9 @@
-
 #define FSM
 
+
+#ifndef __stdint_h
+#include <stdint.h>
+#endif
 
 
 typedef enum {
@@ -8,6 +11,8 @@ typedef enum {
 	INPUT_TARGET,
 	MATCH_VOLTAGE	
 }STATE;
+
+
 // Current state of the FSM.
 extern STATE current_state;
 

@@ -4,6 +4,25 @@
 
 #define KEYPAD 0
 
+#ifndef bool
+#include <stdbool.h>
+#endif
+
+#ifndef __stdio_h
+#include <stdio.h>
+#endif 
+
+#ifndef __MAIN_H__
+#include "main.h"
+#endif
+
+#ifndef __STM32F4xx_HAL_H
+#include "stm32f4xx_hal.h"
+#endif 
+
+#ifndef FMS
+#include "fsm.h"
+#endif
 
 /** PIN NAME	|	BREAD_BOARD LANE |	BOARD PHYSICAL PIN
 * 	COL_0				6										PB13
@@ -33,7 +52,7 @@ static const int SLEEP_PRESS_DURATION_MS = 3000;
 static const int RESTART_PRESS_DURATION_MS = 1000;
 static const int DEBOUNCE_INTERVAL_MS = 200;
 
-
+void check_for_digit_press(void);
 void keypad_update(char new_keypad_value);
 
 

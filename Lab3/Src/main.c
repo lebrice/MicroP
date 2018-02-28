@@ -40,7 +40,9 @@
 #include "stm32f4xx_hal.h"
 
 /* USER CODE BEGIN Includes */
+#ifdef __stdio_h
 #include <stdio.h>
+#endif
 
 #include <stdbool.h>
 #ifndef DISPLAY_RMS
@@ -77,7 +79,7 @@ TIM_HandleTypeDef htim3;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
-const int PWM_TIMER_PERIOD = 1680;
+const int PWM_TIMER_PERIOD = 8400;
 
 
 
@@ -145,7 +147,7 @@ void pwm_duty_cycle(uint16_t new_period) //input percentage
 void adjust_duty_cycle(float current_rms){ 
 	extern float target_voltage;
 	// a damping constant, that limits the rate of change of the percentage.
-	static const float damping = 0.002f;
+	static const float damping = 0.005f;
 	
 //	static const float increment = PWM_TIMER_PERIOD / 3.0f;
 	static float current_percentage;
@@ -464,7 +466,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 1680;
+  htim3.Init.Period = 8400;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
   {
