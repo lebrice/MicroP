@@ -17,6 +17,10 @@
 
   <project>
     <PathAndName>.\Lab3\MDK-ARM\Lab3.uvprojx</PathAndName>
+  </project>
+
+  <project>
+    <PathAndName>.\Lab4\MDK-ARM\Lab4.uvprojx</PathAndName>
     <NodeIsActive>1</NodeIsActive>
     <NodeIsExpanded>1</NodeIsExpanded>
   </project>
