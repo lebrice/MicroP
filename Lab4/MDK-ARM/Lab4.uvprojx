@@ -574,6 +574,46 @@
           <GroupName>Application/User</GroupName>
           <Files>
             <File>
+              <FileName>FreeRTOSConfig.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\FreeRTOSConfig.h</FilePath>
+            </File>
+            <File>
+              <FileName>freertos.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Src/freertos.c</FilePath>
+            </File>
+            <File>
+              <FileName>main.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\main.h</FilePath>
+            </File>
+            <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Src/main.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_it.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\stm32f4xx_it.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_it.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Src/stm32f4xx_it.c</FilePath>
+            </File>
+            <File>
+              <FileName>segment_display.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Src\segment_display.h</FilePath>
+            </File>
+            <File>
+              <FileName>segment_display.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\segment_display.c</FilePath>
+            </File>
+            <File>
               <FileName>fsm.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\Src\fsm.h</FilePath>
@@ -584,34 +624,14 @@
               <FilePath>..\Src\fsm.c</FilePath>
             </File>
             <File>
-              <FileName>dma.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Src/dma.c</FilePath>
+              <FileName>asm_math.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\Src\asm_math.s</FilePath>
             </File>
             <File>
-              <FileName>freertos.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Src/freertos.c</FilePath>
-            </File>
-            <File>
-              <FileName>gpio.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Src/gpio.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f4xx_hal_timebase_TIM.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Src/stm32f4xx_hal_timebase_TIM.c</FilePath>
-            </File>
-            <File>
-              <FileName>dac.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Src/dac.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f4xx_it.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Src/stm32f4xx_it.c</FilePath>
+              <FileName>adc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\adc.h</FilePath>
             </File>
             <File>
               <FileName>adc.c</FileName>
@@ -619,9 +639,39 @@
               <FilePath>../Src/adc.c</FilePath>
             </File>
             <File>
-              <FileName>main.c</FileName>
+              <FileName>dac.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\dac.h</FilePath>
+            </File>
+            <File>
+              <FileName>dac.c</FileName>
               <FileType>1</FileType>
-              <FilePath>../Src/main.c</FilePath>
+              <FilePath>../Src/dac.c</FilePath>
+            </File>
+            <File>
+              <FileName>dma.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\dma.h</FilePath>
+            </File>
+            <File>
+              <FileName>dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Src/dma.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpio.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\gpio.h</FilePath>
+            </File>
+            <File>
+              <FileName>gpio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Src/gpio.c</FilePath>
+            </File>
+            <File>
+              <FileName>tim.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\tim.h</FilePath>
             </File>
             <File>
               <FileName>tim.c</FileName>
@@ -634,19 +684,14 @@
               <FilePath>../Src/stm32f4xx_hal_msp.c</FilePath>
             </File>
             <File>
-              <FileName>segment_display.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\segment_display.c</FilePath>
-            </File>
-            <File>
-              <FileName>segment_display.h</FileName>
+              <FileName>stm32f4xx_hal_conf.h</FileName>
               <FileType>5</FileType>
-              <FilePath>..\Src\segment_display.h</FilePath>
+              <FilePath>..\Inc\stm32f4xx_hal_conf.h</FilePath>
             </File>
             <File>
-              <FileName>asm_math.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\Src\asm_math.s</FilePath>
+              <FileName>stm32f4xx_hal_timebase_TIM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Src/stm32f4xx_hal_timebase_TIM.c</FilePath>
             </File>
             <File>
               <FileName>fput_debug.c</FileName>
