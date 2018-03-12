@@ -74,6 +74,7 @@ osThreadId defaultTaskHandle;
 
 osThreadId displayTaskHandle;
 osThreadId keypadTaskHandle;
+osThreadId adcTaskHandle;
 
 /* USER CODE END Variables */
 
@@ -89,7 +90,7 @@ extern void StartDisplayTask(void const * arguments);
 
 extern void StartKeypadTask(void const * arguments);
 
-
+extern void StartAdcTask(void const * arguments);
 /* USER CODE END FunctionPrototypes */
 
 /* Hook prototypes */
@@ -107,6 +108,7 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
+	
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* USER CODE BEGIN RTOS_TIMERS */
@@ -120,11 +122,15 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-	osThreadDef(displayTask, StartDisplayTask, osPriorityNormal, 1, 0);
+	osThreadDef(displayTask, StartDisplayTask, osPriorityNormal, 1, 128);
 	displayTaskHandle = osThreadCreate(osThread(displayTask), NULL);
 	
-	osThreadDef(keypadTask, StartKeypadTask, osPriorityNormal, 1, 0);
+	osThreadDef(keypadTask, StartKeypadTask, osPriorityNormal, 1, 128);
 	keypadTaskHandle = osThreadCreate(osThread(keypadTask), NULL);
+	
+	osThreadDef(adcTask, StartAdcTask, osPriorityNormal, 1, 128);
+	adcTaskHandle = osThreadCreate(osThread(adcTask), NULL);
+	
 	
 	// TODO: not sure if the ADC should be a thread, since its being called with an interrupt whenever the buffer is full anyway...
 	

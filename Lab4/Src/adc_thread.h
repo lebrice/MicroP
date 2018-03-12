@@ -6,14 +6,32 @@
 #include <stdint.h>
 #endif
 
+#ifndef bool
+#include <stdbool.h>
+#endif
+
 #ifndef __CMSIS_OS_H
 #include "cmsis_os.h"
 #endif
 
+#ifndef __stm32f4xx_hal_h
+#include "stm32f4xx_hal.h"
+#endif
+
+#ifndef __math_h
+#include "math.h"
+#endif
+
+
+#define ABS(x) ((x < 0)? -x : x)
+#define MAX(a, b) ((a > b) ? a : b)
+#define MIN(a, b) ((a < b) ? a : b)
+#define BOUND(x, lower, upper) (MAX(MIN(x, upper), lower))
+
 #define ADC_BUFFER_SIZE 50
 
 
-
+void StartAdcTask(void const * arguments);
 
 
 extern float filtered_ADCBuffer[ADC_BUFFER_SIZE];
@@ -38,6 +56,9 @@ typedef struct {
 
 
 void adc_buffer_full_callback(void);
+void adjust_duty_cycle(float);
+void pwm_duty_cycle(uint16_t);
+
 void FIR_C(int Input, float* Output);
 void asm_math(float *inputValues, int size, asm_output *results);
 
