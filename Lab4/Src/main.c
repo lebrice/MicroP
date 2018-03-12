@@ -57,12 +57,45 @@
 
 /* USER CODE BEGIN Includes */
 
+#include "math.h"
+
+#ifdef __stdio_h
+#include <stdio.h>
+#endif
+
+#ifndef bool
+#include <stdbool.h>
+#endif
+
+#ifndef __segment_display_h
+#include "segment_display.h"
+#endif
+
+#ifndef __fsm_h
+#include "fsm.h"
+#endif
+
+#ifndef __adc_thread_h
+#include "adc_thread.h"
+#endif
+
+
+#define ABS(x) ((x < 0)? -x : x)
+#define MAX(a, b) ((a > b) ? a : b)
+#define MIN(a, b) ((a < b) ? a : b)
+#define BOUND(x, lower, upper) (MAX(MIN(x, upper), lower))
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+
+const int PWM_TIMER_PERIOD = 1680;
+
+
+
 
 /* USER CODE END PV */
 
@@ -73,9 +106,127 @@ void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 
+// Called in order to adjust the duty cycle.
+void adjust_duty_cycle(float current_rms);
+
+// starts the ADC.
+void start_adc(void);
+// stops the ADC.
+void stop_adc(void);
+
+extern uint32_t ADCBufferDMA[];
+
+extern void adc_buffer_full_callback(void);
+
+// Function that is called whenever the blue button is pressed.
+void button_pressed_callback(void);
+void pwm_duty_cycle(uint16_t new_period);
+
+
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+
+/** @brief Set the period of the PWM timer
+* @param new_period: new timer period.
+*/
+void pwm_duty_cycle(uint16_t new_period) //input percentage
+{
+//    uint16_t value = (uint16_t)(PWM_TIMER_PERIOD)*percentage; //(period)*(percent/100)
+		TIM_OC_InitTypeDef sConfigOC;
+		sConfigOC.OCMode = TIM_OCMODE_PWM1;
+		sConfigOC.Pulse = BOUND(new_period, 0, PWM_TIMER_PERIOD);
+		sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+		sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+    HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);  
+}
+
+
+/** @brief Controller which adjusts the PWM duty cycle in order to match the current target RMS voltage.
+* @param current_rms: The current RMS voltage from the ADC.
+*/
+void adjust_duty_cycle(float current_rms){ 
+	extern float target_voltage;
+	// a damping constant, that limits the rate of change of the percentage.
+	static const float damping = 0.005f;
+	
+//	static const float increment = PWM_TIMER_PERIOD / 3.0f;
+	static float current_percentage;
+	static int current_period;
+	static float difference;
+	
+	difference = current_rms - target_voltage;
+	
+	current_percentage -= damping * difference;
+	current_percentage = BOUND(current_percentage, 0.f, 1.f);
+	
+	
+	current_period = round(current_percentage * PWM_TIMER_PERIOD);
+	
+	printf("Current voltage: %2.3f, Target Voltage: %2.3f, current percentage: %2.5f%%, current_period: %u / %u \n", current_rms, target_voltage, current_percentage*100, current_period, PWM_TIMER_PERIOD);
+	pwm_duty_cycle(current_period);
+}
+
+void start_adc(){
+	HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
+}
+
+void stop_adc(){
+	HAL_ADC_Stop_DMA(&hadc1);
+}
+
+// Called when the buffer is filled.
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
+{
+	
+	if(AdcHandle->Instance == ADC1){
+		adc_buffer_full_callback();
+		stop_adc();
+		start_adc();
+	}
+}
+/** Called whenever an EXTI interrupt occurs (i.e. button press)
+*
+*/
+void HAL_GPIO_EXTI_Callback(uint16_t pin){
+	switch(pin){
+		case BLUE_BUTTON_Pin:
+			button_pressed_callback();
+			break;
+		default:
+			printf("EXTI interrupt!\n");
+	}
+		
+}
+
+ void button_pressed_callback(){
+	extern uint8_t display_mode;
+	display_mode++;
+	display_mode %= 3;
+	switch(display_mode){
+		case DISPLAY_RMS:
+			// TODO: display one of the LEDs
+			HAL_GPIO_WritePin(GPIOD, LED3_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOD, LED4_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_RESET);
+			break;
+		case DISPLAY_MIN:
+			HAL_GPIO_WritePin(GPIOD, LED3_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOD, LED4_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_RESET);
+			break;
+		case DISPLAY_MAX:
+			HAL_GPIO_WritePin(GPIOD, LED3_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOD, LED4_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_SET);
+			break;
+	}
+}
+
+
+
+
 
 /* USER CODE END 0 */
 
@@ -115,6 +266,16 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
+	
+	
+	// Start the timers.
+	HAL_TIM_Base_Start(&htim2);
+	HAL_TIM_Base_Start(&htim3); 
+	HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_1);
+	
+  HAL_TIM_Base_Start_DMA(&htim2, ADCBufferDMA, ADC_BUFFER_SIZE);
+	
+	sleep();
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
