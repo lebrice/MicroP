@@ -53,18 +53,4 @@ This file defines the functions and constants used in the 7-segment display.
 #define SET_PIN(i) HAL_GPIO_WritePin(i##_GPIO_Port, PIN(i), GPIO_PIN_SET)
 #define RESET_PIN(i) HAL_GPIO_WritePin(i##_GPIO_Port, PIN(i), GPIO_PIN_RESET)
 
-
-/** Represents which value we wish to display.
-When 0, the RMS is displayed.
-When 1, the MIN is displayed.
-Whwn 2, the MAX is displayed.
-*/
-extern uint8_t display_mode;
-
-extern float displayed_value;
-
 void get_segments_for_float(float value, uint8_t segments[3]);
-
-void refresh_display(void);
-void start_display(void);
-void stop_display(void);

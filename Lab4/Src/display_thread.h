@@ -2,6 +2,10 @@
 #define __display_thread_h
 #endif
 
+#ifndef __stdint_h
+#include <stdint.h>
+#endif
+
 #ifndef bool
 #include <stdbool.h>
 #endif
@@ -10,6 +14,17 @@
 #include "cmsis_os.h"
 #endif
 
+#ifndef __main_h
+#include "main.h"
+#endif
+
+#ifndef __segment_display_h
+#include "segment_display.h"
+#endif
+
+#ifndef __math_h
+#include "math.h"
+#endif
 
 void StartDisplayTask(void const * arguments);
 

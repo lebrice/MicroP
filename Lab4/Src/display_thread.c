@@ -1,13 +1,6 @@
 #include "display_thread.h"
-#include <stdint.h>
-#ifndef __main_h
-#include "main.h"
-#endif
 
-#ifndef __segment_display_h
-#include "segment_display.h"
-#endif
-
+float displayed_value;
 
 void StartDisplayTask(void const * arguments){
 	// TODO
@@ -18,15 +11,20 @@ void StartDisplayTask(void const * arguments){
 }
 
 
+void stop_display(){
+	display_on = false;
+}
+
+void start_display(){
+	display_on = true;
+}
+
+
 /**
 * @brief Function created for refreshing the display.
 *(Refreshes the display, using the functions defined in "segment_display.h" to get the required digits and segments.
 */
 void refresh_display(void){
-	
-	// The float value to be displayed.
-	extern float displayed_value;
-		
 	// Which digit is currently active.
 	static uint8_t currently_active_digit = 0;
 	
@@ -63,5 +61,3 @@ void refresh_display(void){
 	currently_active_digit++;
 	currently_active_digit %= 3;
 }
-
-

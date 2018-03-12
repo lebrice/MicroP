@@ -3,7 +3,7 @@
 STATE current_state = SLEEP;
 
 float target_voltage;
-
+uint8_t display_mode;
 
 // externally-defined functions for startign and stopping the ADC.
 extern void start_adc(void);
