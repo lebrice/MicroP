@@ -1,12 +1,14 @@
 #include "display_thread.h"
 
+extern osThreadId displayTaskHandle;
 float displayed_value;
+
 
 void StartDisplayTask(void const * arguments){
 	// TODO
 	for(;;){
 		osDelay(DISPLAY_REFRESH_INTERVAL_MS);
-		refresh_display();	
+		refresh_display();
 	}
 }
 

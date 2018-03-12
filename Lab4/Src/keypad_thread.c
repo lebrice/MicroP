@@ -1,6 +1,8 @@
 // keypad.c
 #include "keypad_thread.h"
 
+extern osThreadId keypadTaskHandle;
+
 float make_float_from_last_three_digits(uint8_t digits[3]);
 
 bool is_valid_target_value(float target_value);
@@ -11,8 +13,11 @@ uint8_t digits[3];
 
 void StartKeypadTask(void const * arguments){
 	// TODO:
-	for(;;){	
-		check_for_digit_press();
+	for(;;){
+		char pressed_char = check_for_digit_press();
+		if(pressed_char != NULL){
+			keypad_update(pressed_char);
+		}
 		osDelay(CHECK_FOR_DIGIT_PRESS_INTERVAL_MS);
 	}
 }
@@ -25,7 +30,7 @@ void StartKeypadTask(void const * arguments){
 *
 * IDEA: Set one column high, and check if any rows are high. If so, the button at the crossing is pressed.
 */
-void check_for_digit_press(){
+char check_for_digit_press(){
 	static const uint32_t rows[] = { ROW_0_Pin, ROW_1_Pin, ROW_2_Pin, ROW_3_Pin };
 	static const uint32_t columns[] = { COL_0_Pin, COL_1_Pin, COL_2_Pin };
 	
@@ -58,7 +63,6 @@ void check_for_digit_press(){
 	}
 	if(press_detected){
 		key_pressed_in_rows[current_row] = true;
-		keypad_update(new_char);
 	}else{
 		key_pressed_in_rows[current_row] = false;
 		// If we have not detected a keypress in all 4 rows, signal that no key is pressed.
@@ -67,12 +71,13 @@ void check_for_digit_press(){
 			| key_pressed_in_rows[2]
 			|	key_pressed_in_rows[3])){
 			new_char = ' ';
-			keypad_update(new_char);
 		}
 	}
 	
 	current_row++;
 	current_row %= ROWS;
+	
+	return new_char;
 }
 
 

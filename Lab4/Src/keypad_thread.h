@@ -45,7 +45,6 @@ void StartKeypadTask(void const * arguments);
 
 static const uint8_t ROWS = 4;
 static const uint8_t COLS = 3; 
-static void pwm_duty_cycle(uint16_t percentage);
 static const char Keys[ROWS][COLS] = {
 	{'1', '2', '3'},
 	{'4', '5', '6'},
@@ -60,7 +59,7 @@ static const int SLEEP_PRESS_DURATION_MS = 3000;
 static const int RESTART_PRESS_DURATION_MS = 1000;
 static const int DEBOUNCE_INTERVAL_MS = 200;
 
-void check_for_digit_press(void);
+char check_for_digit_press(void);
 void keypad_update(char new_keypad_value);
 
 
