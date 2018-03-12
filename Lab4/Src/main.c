@@ -179,7 +179,6 @@ void stop_adc(){
 // Called when the buffer is filled.
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 {
-	
 	if(AdcHandle->Instance == ADC1){
 		adc_buffer_full_callback();
 		stop_adc();

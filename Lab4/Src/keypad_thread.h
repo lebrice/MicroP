@@ -22,8 +22,12 @@
 #include "stm32f4xx_hal.h"
 #endif 
 
-#ifndef FMS
+#ifndef __fsm_h
 #include "fsm.h"
+#endif
+
+#ifndef __CMSIS_OS_H
+#include "cmsis_os.h"
 #endif
 
 /** PIN NAME	|	BREAD_BOARD LANE |	BOARD PHYSICAL PIN
@@ -36,7 +40,9 @@
 * 	ROW_3				5										PB12*
 */
 
-// TODO: FIX these values using the documentation.
+
+void StartKeypadTask(void const * arguments);
+
 static const uint8_t ROWS = 4;
 static const uint8_t COLS = 3; 
 static void pwm_duty_cycle(uint16_t percentage);

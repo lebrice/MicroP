@@ -5,9 +5,20 @@ float make_float_from_last_three_digits(uint8_t digits[3]);
 
 bool is_valid_target_value(float target_value);
 
-
 // the three displayed digits.
 uint8_t digits[3];
+
+
+void StartKeypadTask(void const * arguments){
+	// TODO:
+	for(;;){	
+		check_for_digit_press();
+		osDelay(CHECK_FOR_DIGIT_PRESS_INTERVAL_MS);
+	}
+}
+
+
+
 
 
 /** @brief Called to check wether one key on the keypad is pressed down.
@@ -36,7 +47,6 @@ void check_for_digit_press(){
 	
 	// Read each row. If a row is high, we found the digit.
 	for(column = 0; column < COLS; column++){
-		// TODO: figure out why the ReadPin returns PIN_RESET when the pin is HIGH, and PIN_SET when pin is LOW.
 		if(HAL_GPIO_ReadPin(GPIOB, columns[column]) == GPIO_PIN_SET){
 			// printf("KEY (%u, %u) is ON.\n", current_row, column);
 			new_char = Keys[current_row][column];

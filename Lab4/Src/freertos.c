@@ -53,12 +53,27 @@
 
 /* USER CODE BEGIN Includes */     
 
+#ifndef __adc_thread_h
+#include "adc_thread.h"
+#endif
+
+#ifndef __display_thread_h
+#include "display_thread.h"
+#endif
+
+#ifndef __keypad_thread_h
+#include "keypad_thread.h"
+#endif
+
 /* USER CODE END Includes */
 
 /* Variables -----------------------------------------------------------------*/
 osThreadId defaultTaskHandle;
 
 /* USER CODE BEGIN Variables */
+
+osThreadId displayTaskHandle;
+osThreadId keypadTaskHandle;
 
 /* USER CODE END Variables */
 
@@ -68,6 +83,12 @@ void StartDefaultTask(void const * argument);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /* USER CODE BEGIN FunctionPrototypes */
+
+
+extern void StartDisplayTask(void const * arguments);
+
+extern void StartKeypadTask(void const * arguments);
+
 
 /* USER CODE END FunctionPrototypes */
 
@@ -99,6 +120,14 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+	osThreadDef(displayTask, StartDisplayTask, osPriorityNormal, 1, 0);
+	displayTaskHandle = osThreadCreate(osThread(displayTask), NULL);
+	
+	osThreadDef(keypadTask, StartKeypadTask, osPriorityNormal, 1, 0);
+	keypadTaskHandle = osThreadCreate(osThread(keypadTask), NULL);
+	
+	// TODO: not sure if the ADC should be a thread, since its being called with an interrupt whenever the buffer is full anyway...
+	
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_QUEUES */

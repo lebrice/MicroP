@@ -6,6 +6,12 @@
 #include <stdbool.h>
 #endif
 
+#ifndef __CMSIS_OS_H
+#include "cmsis_os.h"
+#endif
+
+
+void StartDisplayTask(void const * arguments);
 
 // Function used to refresh the display.
 void refresh_display(void);

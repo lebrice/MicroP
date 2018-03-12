@@ -6,6 +6,10 @@
 #include <stdint.h>
 #endif
 
+#ifndef __CMSIS_OS_H
+#include "cmsis_os.h"
+#endif
+
 #define ADC_BUFFER_SIZE 50
 
 

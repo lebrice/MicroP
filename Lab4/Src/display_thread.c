@@ -8,6 +8,16 @@
 #include "segment_display.h"
 #endif
 
+
+void StartDisplayTask(void const * arguments){
+	// TODO
+	for(;;){
+		osDelay(DISPLAY_REFRESH_INTERVAL_MS);
+		refresh_display();	
+	}
+}
+
+
 /**
 * @brief Function created for refreshing the display.
 *(Refreshes the display, using the functions defined in "segment_display.h" to get the required digits and segments.
@@ -19,8 +29,6 @@ void refresh_display(void){
 		
 	// Which digit is currently active.
 	static uint8_t currently_active_digit = 0;
-	
-	
 	
 	// The resulting segments.
 	uint8_t segments[3];
@@ -55,3 +63,5 @@ void refresh_display(void){
 	currently_active_digit++;
 	currently_active_digit %= 3;
 }
+
+
