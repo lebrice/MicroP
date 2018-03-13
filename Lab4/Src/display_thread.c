@@ -31,8 +31,8 @@ void stop_display(){
 }
 
 void start_display(){
-	osSignalSet(displayTaskHandle, display_on);
 	display_on = 1;
+	osSignalSet(displayTaskHandle, display_on);
 }
 
 

@@ -14,6 +14,9 @@ void stop_adc(void);
 void start_pwm_timer(void);
 void stop_pwm_timer(void);
 
+
+void adjust_duty_cycle_2(float);
+
 float filtered_ADCBuffer[ADC_BUFFER_SIZE];
 
 // Buffer that holds Unfiltered data populated with DMA. 
@@ -52,8 +55,7 @@ void StartAdcTask(void const * arguments){
 
 
 void start_adc(){
-	
-	
+	start_pwm_timer();
 	HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
 	
 	
@@ -62,7 +64,7 @@ void start_adc(){
 }
 
 void stop_adc(){
-	
+	stop_pwm_timer();
 	HAL_ADC_Stop_DMA(&hadc1);
 //	adc_on = 0;
 }
@@ -88,7 +90,7 @@ void adc_buffer_full_callback()
 	
 	// TODO: use round to display the closest value.
 	displayed_value = current_rms_voltage;
-	adjust_duty_cycle(current_rms_voltage);
+	adjust_duty_cycle_2(current_rms_voltage);
 }
 
 
@@ -229,6 +231,62 @@ void adjust_duty_cycle(float current_rms){
 	
 	printf("Current voltage: %2.3f, Target Voltage: %2.3f, current percentage: %2.5f%%, current_period: %u / %u \n", current_rms, target_voltage, current_percentage*100, current_period, PWM_TIMER_PERIOD);
 	pwm_duty_cycle(current_period);
+}
+
+
+void adjust_duty_cycle_2(float current_rms){
+	extern float target_voltage;
+	static int pwm_period;
+	
+	static float last_target_voltage = 0.f;
+		
+	const float threshold = 0.01f;
+	
+	static int i = 1;	
+	
+	if(target_voltage != last_target_voltage){
+		printf("New target voltage detected: %1.2f\n", target_voltage);
+		// restart the 'binary-search' process.
+		i = 1;
+		last_target_voltage = target_voltage;
+	}
+	
+	float difference = current_rms - target_voltage;
+	
+	
+	if (ABS(difference) < threshold)
+	{
+		printf("Done. we matched. (difference is %1.5f)\n", difference);
+	}
+	else if (i >= 32)
+	{
+		printf("We can't seem to be able to match this voltage! (%1.2f) (Did the circuit change ?)\n", target_voltage);
+		if(difference >= 0.05){
+			// if the difference is large, start over.
+			printf("Starting over, maybe this will work!\n");
+			i = 1;
+		}
+	}
+	else {
+		
+		printf("Iteration %u, pwm_period: %u / %u, difference: %1.5f\n", i, pwm_period, PWM_TIMER_PERIOD, difference); 
+	
+		if (difference < 0)
+		{
+			// we undershoot.
+			pwm_period += MAX(PWM_TIMER_PERIOD >> i, 1);
+			i++;
+		}
+		else
+		{
+			// we overshoot last time. We have to undo the change we did last time (reset that bit). 
+			pwm_period -= MAX(PWM_TIMER_PERIOD >> (i-1), 1);
+		}
+		i = BOUND(i, 1, 32);
+		pwm_period = BOUND(pwm_period, 0, PWM_TIMER_PERIOD);
+		pwm_duty_cycle(pwm_period);
+	
+	}
 }
 
 
