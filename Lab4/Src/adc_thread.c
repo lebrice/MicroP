@@ -11,6 +11,8 @@ extern ADC_HandleTypeDef hadc1;
 void start_adc(void);
 void stop_adc(void);
 
+void start_pwm_timer(void);
+void stop_pwm_timer(void);
 
 float filtered_ADCBuffer[ADC_BUFFER_SIZE];
 
@@ -19,31 +21,50 @@ uint32_t ADCBufferDMA[ADC_BUFFER_SIZE];
 
 static PastResultsVector past_ten_seconds_results;
 
+uint32_t adc_on = 0;
+
+
 void StartAdcTask(void const * arguments){
 	extern uint32_t adc_buffer_full;
 	
 	while(true){
-		start_adc();
 		// wait for the buffer to be full.
-		osSignalWait(adc_buffer_full, osWaitForever);
-		adc_buffer_full_callback();
-		
-		// not yet implemented:
-		//osSignalClear(adcTaskHandle, adc_buffer_full);
-		adc_buffer_full = false;
-		
-		stop_adc();	
+		osSignalWait(adc_on, osWaitForever);
+		// ADC is now ON.
+		HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
+		while(adc_on){
+			
+			// wait until the ADC is full.
+			osSignalWait(adc_buffer_full, osWaitForever);
+			adc_buffer_full_callback();
+			
+			HAL_ADC_Stop_DMA(&hadc1);
+			HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
+			// not yet implemented:
+			//osSignalClear(adcTaskHandle, adc_buffer_full);
+			adc_buffer_full = false;
+			osThreadYield();
+		}
+		HAL_ADC_Stop_DMA(&hadc1);
 	}
 }
 
 
 
 void start_adc(){
+	
+	
 	HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
+	
+	
+//	adc_on = 1;
+//	osSignalSet(adcTaskHandle, adc_on);
 }
 
 void stop_adc(){
+	
 	HAL_ADC_Stop_DMA(&hadc1);
+//	adc_on = 0;
 }
 
 
@@ -157,6 +178,17 @@ void FIR_C(int Input, float* Output){
 }
 
 
+void stop_pwm_timer(){
+	extern TIM_HandleTypeDef htim3;
+	HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
+}
+
+void start_pwm_timer(){
+	extern TIM_HandleTypeDef htim3;
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+}
+
+
 /** @brief Set the period of the PWM timer
 * @param new_period: new timer period.
 */
@@ -170,7 +202,7 @@ void pwm_duty_cycle(uint16_t new_period) //input percentage
 		sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
 		sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
     HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1);
-    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);  
+    start_pwm_timer();
 }
 
 

@@ -6,6 +6,10 @@
 #include <stdint.h>
 #endif
 
+#ifndef __stdio_h
+#include <stdio.h>
+#endif
+
 #ifndef bool
 #include <stdbool.h>
 #endif
@@ -25,8 +29,6 @@
 #ifndef __math_h
 #include "math.h"
 #endif
-
-static bool display_on;
 
 void StartDisplayTask(void const * arguments);
 

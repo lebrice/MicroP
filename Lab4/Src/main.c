@@ -122,7 +122,13 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 {
 	extern osThreadId adcTaskHandle;
 	if(AdcHandle->Instance == ADC1){
-		osSignalSet(adcTaskHandle, adc_buffer_full);
+		
+		adc_buffer_full_callback();
+		HAL_ADC_Stop_DMA(&hadc1);
+		HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
+		
+		
+//		osSignalSet(adcTaskHandle, adc_buffer_full);
 	}
 }
 /** Called whenever an EXTI interrupt occurs (i.e. button press)
