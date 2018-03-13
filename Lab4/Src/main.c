@@ -90,7 +90,8 @@
 const int PWM_TIMER_PERIOD = 1680;
 
 
-bool adc_buffer_full = false;
+uint32_t adc_buffer_full = 0;
+
 
 /* USER CODE END PV */
 

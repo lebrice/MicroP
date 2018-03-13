@@ -20,17 +20,20 @@ uint32_t ADCBufferDMA[ADC_BUFFER_SIZE];
 static PastResultsVector past_ten_seconds_results;
 
 void StartAdcTask(void const * arguments){
-	extern bool adc_buffer_full;
-	start_adc();
-	// wait for the buffer to be full.
-	osSignalWait(adc_buffer_full, 0);
-	adc_buffer_full_callback();
+	extern uint32_t adc_buffer_full;
 	
-	// not yet implemented:
-	//osSignalClear(adcTaskHandle, adc_buffer_full);
-	adc_buffer_full = false;
-	
-	stop_adc();	
+	while(true){
+		start_adc();
+		// wait for the buffer to be full.
+		osSignalWait(adc_buffer_full, osWaitForever);
+		adc_buffer_full_callback();
+		
+		// not yet implemented:
+		//osSignalClear(adcTaskHandle, adc_buffer_full);
+		adc_buffer_full = false;
+		
+		stop_adc();	
+	}
 }
 
 

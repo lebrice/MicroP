@@ -6,7 +6,8 @@ float displayed_value;
 
 void StartDisplayTask(void const * arguments){
 	// TODO
-	for(;;){
+	while(true){
+		// TODO: 
 		osDelay(DISPLAY_REFRESH_INTERVAL_MS);
 		refresh_display();
 	}
