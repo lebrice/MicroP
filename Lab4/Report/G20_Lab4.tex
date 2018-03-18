@@ -1,0 +1,58 @@
+\documentclass{article}
+
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{pdfpages}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{pbox}
+\usepackage{threeparttable}
+
+\usepackage{graphicx}  % include images
+\usepackage[caption=false]{subfig} % subfigures.  false option prevents conflicts in caption styling with other packages
+
+
+\usepackage{tikz}
+\usetikzlibrary{automata,positioning}
+
+\begin{document}
+
+\title{ECSE426 - Microprocessor Systems \\ Group 20 - Lab 3 \& 4}
+\author{Fabrice Normandin \\ 260636800 \and Marcel Morin \\ 260605670}
+\maketitle
+
+
+\input{abstract}
+
+
+\listoftodos
+\pagebreak
+\tableofcontents
+\pagebreak
+
+\section{Problem Statement}
+A comprehensive list of all system requirements can be found within the Lab 3 \& Lab 4 handouts. \ref{Lab_3_handout} Among these requirements, one of the most challenging to meet was one related to the keypad, as it showed that the system had to respond differently to buttons depending on their press duration, and generate a transition between different modes of operation (a long “\*” press would put the system into sleep mode, for example). Consequently, an additional requirement was created, by which the system code had to be structured as a finite-state machine (FSM), and successfully manage state transitions in a clear, well-structured way. State diagrams were also deemed essential, and we considered it a system requirement that each sub-system have its own related state diagram, in order to clearly represent the functioning of our system.
+
+
+
+\include{theory_and_hypothesis}
+
+
+
+\include{Implementation}
+
+
+
+\end{document}  
