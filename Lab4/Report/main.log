@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/W32TeX) (preloaded format=pdflatex 2017.11.28)  18 MAR 2018 17:16
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/W32TeX) (preloaded format=pdflatex 2017.11.28)  18 MAR 2018 17:23
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**./G20_Lab4.tex
-(./G20_Lab4.tex
+**./main.tex
+(./main.tex
 LaTeX2e <2017-04-15>
 Babel <3.15> and hyphenation patterns for 7 language(s) loaded.
 (c:/texlive/2017/texmf-dist/tex/latex/base/article.cls
@@ -717,9 +717,9 @@ File: pgflibraryshapes.multipart.code.tex 2010/01/07 v3.0.1a (rcs-revision 1.2)
 \pgfnodepartsevenbox=\box60
 \pgfnodepartsixbox=\box61
 \pgfnodepartfivebox=\box62
-))) (./G20_Lab4.aux (./theory_and_hypothesis.aux)
-(./Implementation.aux))
-\openout1 = `G20_Lab4.aux'.
+))) (./main.aux (./theory_and_hypothesis.aux)
+(./Implementation.aux) (./testing_and_observations.aux) (./conclusion.aux))
+\openout1 = `main.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 30.
 LaTeX Font Info:    ... okay on input line 30.
@@ -735,7 +735,8 @@ LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 30.
 LaTeX Font Info:    ... okay on input line 30.
 LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 30.
 LaTeX Font Info:    ... okay on input line 30.
- (c:/texlive/2017/texmf-dist/tex/latex/ucs/ucsencs.def
+
+(c:/texlive/2017/texmf-dist/tex/latex/ucs/ucsencs.def
 File: ucsencs.def 2011/01/21 Fixes to fontencodings LGR, T3
 )
 *geometry* driver: auto-detecting
@@ -818,9 +819,9 @@ LaTeX Info: Redefining \ref on input line 30.
 LaTeX Info: Redefining \pageref on input line 30.
 LaTeX Info: Redefining \nameref on input line 30.
 
-(./G20_Lab4.out) (./G20_Lab4.out)
+(./main.out) (./main.out)
 \@outlinefile=\write4
-\openout4 = `G20_Lab4.out'.
+\openout4 = `main.out'.
 
 
 (c:/texlive/2017/texmf-dist/tex/latex/oberdiek/pdflscape.sty
@@ -835,28 +836,24 @@ Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: subfig package v1.3 is loaded.
 Package caption Info: End \AtBeginDocument code.
  (./abstract.tex)
-(./G20_Lab4.tdo)
+(./main.tdo)
 \tf@tdo=\write5
-\openout5 = `G20_Lab4.tdo'.
+\openout5 = `main.tdo'.
 
  [1
 
-{c:/texlive/2017/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] (./G20_Lab4.toc
-)
+{c:/texlive/2017/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
+(./main.toc)
 \tf@toc=\write6
-\openout6 = `G20_Lab4.toc'.
+\openout6 = `main.toc'.
 
- [2]
-
-LaTeX Warning: Reference `Lab_3_handout' on page 3 undefined on input line 46.
-
-(c:/texlive/2017/texmf-dist/tex/latex/ucs/data/uni-32.def
+ [2] (c:/texlive/2017/texmf-dist/tex/latex/ucs/data/uni-32.def
 File: uni-32.def 2013/05/13 UCS: Unicode data U+2000..U+20FF
-) [3]
+)
+[3]
 \openout2 = `theory_and_hypothesis.aux'.
 
-
-(./theory_and_hypothesis.tex
+ (./theory_and_hypothesis.tex
 Package hyperref Info: bookmark level for unknown todo defaults to 0 on input l
 ine 2.
 ) [4
@@ -868,51 +865,52 @@ ine 2.
 
 
 ]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 58.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 58.
- (./G20_Lab4.aux
-(./theory_and_hypothesis.aux) (./Implementation.aux))
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 58.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 58.
+\openout2 = `testing_and_observations.aux'.
 
 
-Package rerunfilecheck Warning: File `G20_Lab4.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
+(./testing_and_observations.tex) [6
 
-Package rerunfilecheck Info: Checksums for `G20_Lab4.out':
-(rerunfilecheck)             Before: F7C5ABDC79C30F9AADABE20C24A27194;187
-(rerunfilecheck)             After:  3A61FBA57DA77367021720F07DCECFF1;236.
 
-LaTeX Warning: There were undefined references.
+]
+\openout2 = `conclusion.aux'.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 58.
+ (./conclusion.tex) [7
+
+
+]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 55.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 55.
+ (./main.aux
+(./theory_and_hypothesis.aux) (./Implementation.aux)
+(./testing_and_observations.aux) (./conclusion.aux))
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 55.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 55.
+Package rerunfilecheck Info: File `main.out' has not changed.
+(rerunfilecheck)             Checksum: FD3D6CD7E23AE0616599DF31CA54B2E7;340.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 55.
  ) 
 Here is how much of TeX's memory you used:
- 20363 strings out of 494856
- 382384 string characters out of 6178696
- 473957 words of memory out of 5000000
- 23280 multiletter control sequences out of 15000+600000
+ 20384 strings out of 494856
+ 382688 string characters out of 6178696
+ 474947 words of memory out of 5000000
+ 23284 multiletter control sequences out of 15000+600000
  14435 words of font info for 37 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 62i,9n,92p,1131b,797s stack positions out of 5000i,500n,10000p,200000b,80000s
-pdfTeX warning (dest): name{subsection.2.1} has been referenced but does not 
-exist, replaced by a fixed one
-
-{c:/texlive/2017/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc}<c:/texliv
-e/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/texlive/2017/te
-xmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb><c:/texlive/2017/texmf-dist/fo
-nts/type1/public/cm-super/sfbx0900.pfb><c:/texlive/2017/texmf-dist/fonts/type1/
-public/cm-super/sfbx1000.pfb><c:/texlive/2017/texmf-dist/fonts/type1/public/cm-
-super/sfbx1200.pfb><c:/texlive/2017/texmf-dist/fonts/type1/public/cm-super/sfbx
-1440.pfb><c:/texlive/2017/texmf-dist/fonts/type1/public/cm-super/sfrm0900.pfb><
-c:/texlive/2017/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb><c:/texlive
-/2017/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb><c:/texlive/2017/texm
-f-dist/fonts/type1/public/cm-super/sfrm1728.pfb>
-Output written on G20_Lab4.pdf (5 pages, 159836 bytes).
+ 62i,9n,92p,1127b,797s stack positions out of 5000i,500n,10000p,200000b,80000s
+{c:/texlive/2017/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc}<c:/texl
+ive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/texlive/2017/
+texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb><c:/texlive/2017/texmf-dist/
+fonts/type1/public/cm-super/sfbx0900.pfb><c:/texlive/2017/texmf-dist/fonts/type
+1/public/cm-super/sfbx1000.pfb><c:/texlive/2017/texmf-dist/fonts/type1/public/c
+m-super/sfbx1200.pfb><c:/texlive/2017/texmf-dist/fonts/type1/public/cm-super/sf
+bx1440.pfb><c:/texlive/2017/texmf-dist/fonts/type1/public/cm-super/sfrm0900.pfb
+><c:/texlive/2017/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb><c:/texli
+ve/2017/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb><c:/texlive/2017/te
+xmf-dist/fonts/type1/public/cm-super/sfrm1728.pfb>
+Output written on main.pdf (7 pages, 163865 bytes).
 PDF statistics:
- 102 PDF objects out of 1000 (max. 8388607)
- 84 compressed objects within 1 object stream
- 16 named destinations out of 1000 (max. 500000)
- 37 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 127 PDF objects out of 1000 (max. 8388607)
+ 106 compressed objects within 2 object streams
+ 19 named destinations out of 1000 (max. 500000)
+ 61 words of extra memory for PDF output out of 10000 (max. 10000000)
 
