@@ -5,10 +5,13 @@ STATE current_state = SLEEP;
 float target_voltage;
 uint8_t display_mode;
 
-// externally-defined functions for startign and stopping the ADC.
+// externally-defined functions for starting and stopping the ADC.
 extern void start_adc(void);
 extern void stop_adc(void);
 
+// externally-defined functions for starting and stopping the PWM timer.
+extern void start_pwm_timer(void);
+extern void stop_pwm_timer(void);
 
 // externally-defined function for stopping the display
 extern void start_display(void);
@@ -35,6 +38,7 @@ void restart(){
 
 void sleep(){
 	if(current_state == MATCH_VOLTAGE){
+		stop_pwm_timer();
 		stop_adc();
 		pwm_duty_cycle(0);
 	}
@@ -50,5 +54,7 @@ void wake_up(){
 void start_matching(float voltage){
 	current_state = MATCH_VOLTAGE;
 	target_voltage = voltage;
+	start_pwm_timer();
 	start_adc();
+	
 }

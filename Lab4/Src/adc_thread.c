@@ -55,7 +55,6 @@ void StartAdcTask(void const * arguments){
 
 
 void start_adc(){
-	start_pwm_timer();
 	HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
 	
 	
@@ -64,7 +63,6 @@ void start_adc(){
 }
 
 void stop_adc(){
-	stop_pwm_timer();
 	HAL_ADC_Stop_DMA(&hadc1);
 //	adc_on = 0;
 }
@@ -261,7 +259,7 @@ void adjust_duty_cycle_2(float current_rms){
 	else if (i >= 32)
 	{
 		printf("We can't seem to be able to match this voltage! (%1.2f) (Did the circuit change ?)\n", target_voltage);
-		if(difference >= 0.05){
+		if(difference >= 0.20f){
 			// if the difference is large, start over.
 			printf("Starting over, maybe this will work!\n");
 			i = 1;
@@ -281,6 +279,8 @@ void adjust_duty_cycle_2(float current_rms){
 		{
 			// we overshoot last time. We have to undo the change we did last time (reset that bit). 
 			pwm_period -= MAX(PWM_TIMER_PERIOD >> (i-1), 1);
+			pwm_period += MAX(PWM_TIMER_PERIOD >> i, 1);
+			
 		}
 		i = BOUND(i, 1, 32);
 		pwm_period = BOUND(pwm_period, 0, PWM_TIMER_PERIOD);
