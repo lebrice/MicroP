@@ -2,5 +2,9 @@
 \BOOKMARK [1][-]{section.2}{Theory and Hypothesis}{}% 2
 \BOOKMARK [1][-]{section.3}{Implementation}{}% 3
 \BOOKMARK [2][-]{subsection.3.1}{High-Level System Architecture}{section.3}% 4
-\BOOKMARK [1][-]{section.4}{Testing and Observations}{}% 5
-\BOOKMARK [1][-]{section.5}{conclusion}{}% 6
+\BOOKMARK [2][-]{subsection.3.2}{Display Thread}{section.3}% 5
+\BOOKMARK [2][-]{subsection.3.3}{Keypad Thread}{section.3}% 6
+\BOOKMARK [2][-]{subsection.3.4}{ADC Logic}{section.3}% 7
+\BOOKMARK [2][-]{subsection.3.5}{PWM Timer}{section.3}% 8
+\BOOKMARK [1][-]{section.4}{Testing and Observations}{}% 9
+\BOOKMARK [1][-]{section.5}{conclusion}{}% 10
