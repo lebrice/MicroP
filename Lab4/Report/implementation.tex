@@ -4,11 +4,10 @@ This section will describe the design and engineering processes that were used w
 
 
 \subsection{High-Level System Architecture}
-The various requirements and corresponding program functionality of our system can be broken down into four main areas: the 7-segment display, the keypad, the ADC and the PWM timer. Despite the overall system having significant complexity, there is a very limited number of states for the overall system, with the transition between them being very well defined. A state diagram showing the three states, along with the name of their transitions can be seen in Figure \ref{high_level_state_diagram}.
+The various requirements and corresponding program functionality of our system can be broken down into four main areas: the 7-segment display, the keypad, the ADC and the PWM timer. Despite the overall system having significant complexity, there is a very limited number of states for the overall system, with the transition between them being very well defined. A state diagram showing the three states, along with the name of their transitions can be seen in Figure \ref{fig:high_level_state_diagram}.
 
 
 \begin{figure}[h]
-\label{high_level_state_diagram}
 \centering
 \begin{tikzpicture}[shorten >=1pt,node distance=4cm,on grid,auto] 
    \node[state,initial] (sleep)  {$Sleep$}; 
@@ -24,23 +23,23 @@ The various requirements and corresponding program functionality of our system c
     ;  
 \end{tikzpicture}
 \caption{System high-level state diagram}
+\label{fig:high_level_state_diagram}
 \end{figure}
 
 
 
 
-\begin{tabular}{ p{4cm} | p{4cm} | p{4cm}}
+\begin{tabular}{ p{5cm} | p{5cm} | p{5cm}}
 Sleep & Input & Match \\
 \hline
 % Sleep state description 
-The sleep state (blabla)
+The sleep state is the initial state of the system. In this state, the only active component is the keypad thread. All other components (display, ADC, PWM timer) are turned off, in order to conserve energy. Whenever a keypress is detected, the system transitions into the 'input' state.
 &
 % Input state description
-The Input state (blabla)
-
+During the "input" state, the Keypad thread detects button presses and updates the target value accordingly, while the Display thread shows the current target value. The Keypad and Display threads are active, while the ADC and PWM timer are turned off. Whenever a valid voltage value is entered, the system transitions into the "match" state.
 &
 % Match state state description
-The Match state is (blabla)
+When the system enters the "match" state, 
 \\
 \end{tabular}
 
@@ -48,9 +47,7 @@ The Match state is (blabla)
 \subsection{Display Thread}
 
 \begin{figure}[h]
-\label{display_state_diagram}
 \centering
-
 
 \begin{tikzpicture}[shorten >=1pt,node distance=3cm,on grid,auto] 
 \node[state,initial] (off)  {$Off$};
@@ -59,7 +56,6 @@ The Match state is (blabla)
 \node[state] [right=of digit_1] (digit_2) {$Digit\_2$};
 \path[->]
 	(off) edge node {$start\_display()$} (digit_0);
-
 % adding a grey background
 \begin{pgfonlayer}{background}
 \filldraw [line width=4mm,join=round,black!10]
@@ -67,6 +63,9 @@ The Match state is (blabla)
 \end{pgfonlayer}
 \end{tikzpicture}
 
+
+\caption{Display thread state diagram}
+\label{fig:display_state_diagram}
 \end{figure}
 
 
