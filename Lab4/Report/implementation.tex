@@ -47,6 +47,29 @@ The Match state is (blabla)
 
 \subsection{Display Thread}
 
+\begin{figure}[h]
+\label{display_state_diagram}
+\centering
+
+
+\begin{tikzpicture}[shorten >=1pt,node distance=3cm,on grid,auto] 
+\node[state,initial] (off)  {$Off$};
+\node[state] [below=of off] (digit_1) {$Digit\_1$};
+\node[state] [left=of digit_1] (digit_0) {$Digit\_0$}; 
+\node[state] [right=of digit_1] (digit_2) {$Digit\_2$};
+\path[->]
+	(off) edge node {$start\_display()$} (digit_0);
+
+% adding a grey background
+\begin{pgfonlayer}{background}
+\filldraw [line width=4mm,join=round,black!10]
+(digit_0.north  -| digit_2.east)  rectangle (digit_2.south  -| digit_0.west);
+\end{pgfonlayer}
+\end{tikzpicture}
+
+\end{figure}
+
+
 \subsection{Keypad Thread}
 
 \subsection{ADC Logic}
