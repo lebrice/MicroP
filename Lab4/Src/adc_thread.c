@@ -88,7 +88,7 @@ void adc_buffer_full_callback()
 	
 	// TODO: use round to display the closest value.
 	displayed_value = current_rms_voltage;
-	adjust_duty_cycle_2(current_rms_voltage);
+	adjust_duty_cycle(current_rms_voltage);
 }
 
 
@@ -192,7 +192,7 @@ void start_pwm_timer(){
 /** @brief Set the period of the PWM timer
 * @param new_period: new timer period.
 */
-void pwm_duty_cycle(uint16_t new_period) //input percentage
+void set_pwm_duty_cycle(uint16_t new_period) //input percentage
 {
 		extern TIM_HandleTypeDef htim3;
 //    uint16_t value = (uint16_t)(PWM_TIMER_PERIOD)*percentage; //(period)*(percent/100)
@@ -228,7 +228,7 @@ void adjust_duty_cycle(float current_rms){
 	current_period = round(current_percentage * PWM_TIMER_PERIOD);
 	
 	printf("Current voltage: %2.3f, Target Voltage: %2.3f, current percentage: %2.5f%%, current_period: %u / %u \n", current_rms, target_voltage, current_percentage*100, current_period, PWM_TIMER_PERIOD);
-	pwm_duty_cycle(current_period);
+	set_pwm_duty_cycle(current_period);
 }
 
 
@@ -259,7 +259,7 @@ void adjust_duty_cycle_2(float current_rms){
 	else if (i >= 32)
 	{
 		printf("We can't seem to be able to match this voltage! (%1.2f) (Did the circuit change ?)\n", target_voltage);
-		if(difference >= 0.20f){
+		if(ABS(difference) >= 0.20f){
 			// if the difference is large, start over.
 			printf("Starting over, maybe this will work!\n");
 			i = 1;
@@ -284,7 +284,7 @@ void adjust_duty_cycle_2(float current_rms){
 		}
 		i = BOUND(i, 1, 32);
 		pwm_period = BOUND(pwm_period, 0, PWM_TIMER_PERIOD);
-		pwm_duty_cycle(pwm_period);
+		set_pwm_duty_cycle(pwm_period);
 	
 	}
 }

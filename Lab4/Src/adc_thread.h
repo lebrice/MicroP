@@ -57,7 +57,7 @@ typedef struct {
 
 void adc_buffer_full_callback(void);
 void adjust_duty_cycle(float);
-void pwm_duty_cycle(uint16_t);
+void set_pwm_duty_cycle(uint16_t);
 
 void FIR_C(int Input, float* Output);
 void asm_math(float *inputValues, int size, asm_output *results);
