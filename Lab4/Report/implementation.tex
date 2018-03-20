@@ -79,10 +79,11 @@ The logic used in the Display thread was almost all created as part of Lab 2. A 
 	\end{tikzpicture}
 	\label{fig:display_state_diagram}
 	\caption{Display thread state diagram}
-\end{minipage}\hfill
+\end{minipage}
+\hfill
 \vrule
 \begin{minipage}{0.45\textwidth}
-	\begin{lstlisting}[
+\begin{lstlisting}[
 	language=C,
 	basicstyle=\small,
 	xleftmargin={0.2cm},
@@ -107,22 +108,92 @@ void StartDisplayTask(void const * arguments){
     	RESET_PIN(DIGITS_2);
   }
 }
-	\end{lstlisting}
+\end{lstlisting}
 	\caption{Main Display thread logic}
 	\label{fig:display_thread_main_logic}
-\end{minipage}\hfill
+\end{minipage}
 \end{figure}
 
 
 
-This thread calls the \verb|osSignalWait| function in order to be blocked until the \verb|display_on| variable is set externally, at which point the thread is resumed, and the refreshing cycle begins. Refreshing the display consists of setting the pin associated with the currently active digit high, along with the required segment pins for the corresponding digit of the \verb|displayed_value| variable. This variable may contain either the target value, if the system is currently in the \verb|"Input"| state, or the current RMS, when in the \verb|"match"| state. Since there is no contention for the display, the use of a synchronization variable (a semaphore, for instance) is not needed. The system may only be one of the two states at a time. After a digit is set, the thread goes to sleep for \verb|DISPLAY_REFRESH_INTERVAL_MS| (\DISPLAYREFRESHINTERVAL).
+This thread calls the \verb|osSignalWait| function in order to be blocked until the \verb|display_on| variable is set externally, at which point the thread is resumed, and the refreshing cycle begins. Refreshing the display consists of setting the pin associated with the currently active digit high, along with the required segment pins for the corresponding digit of the \verb|displayed_value| variable. This variable may contain either the target value, if the system is currently in the \verb|"Input"| state, or the current RMS, when in the \verb|"match"| state. Since there is no contention for the display (i.e. the system may only be in either state at any time), the use of a synchronization variable - for instance, a semaphore - is not needed. After a digit is set, the thread goes to sleep for \verb|DISPLAY_REFRESH_INTERVAL_MS| (\DISPLAYREFRESHINTERVAL), in order to reduce power consumption. This interval was determined by experimentation, since it is the lowest interval at which the display does not appear to flicker. The effective display refresh rate is therefore $ 1/(3 * \DISPLAYREFRESHINTERVAL) \approx 42$Hz.
 
 
 
 
 
-
+\pagebreak
 \subsection{Keypad Thread}
+
+
+\def \CHECKFORDIGITPRESSINTERVALMS {25ms}
+The keypad was without a doubt the most challenging portion of this lab. The complexity of this component stems from the need for the system to debounce each keypress, as well as keep track of the amount of time each key has been pressed for. 
+
+\begin{figure}[h]
+\begin{minipage}{0.45\textwidth}
+
+	\begin{tikzpicture}[shorten >=1pt,node distance=3cm,on grid,auto] 
+		\node[state,initial] (row_0)  {row\_0};
+		\node[state] [below right=of row_0] (row_1) {row\_1};
+		\node[state] [below left=of row_1] (row_2) {row\_2};
+		\node[state] [above left=of row_2] (row_3) {row\_3}; 
+		%\node[fit=(digit_0) (digit_1) (digit_2), rectangle, fill=black!10, draw=black, fill opacity=0.3, label=left:\fbox{On}] (on) {};
+		\path[->]
+			(row_0)	edge	 node {\CHECKFORDIGITPRESSINTERVALMS} (row_1)
+			(row_1)	edge	 node {\CHECKFORDIGITPRESSINTERVALMS} (row_2)
+			(row_2)	edge	 node {\CHECKFORDIGITPRESSINTERVALMS} (row_3)
+			(row_3)	edge	 node {\CHECKFORDIGITPRESSINTERVALMS} (row_0)
+			;
+	\end{tikzpicture}
+	\label{fig:keypad_state_diagram}
+	\caption{Display thread state diagram}
+\end{minipage}
+\hfill
+\begin{minipage}{0.45\textwidth}
+	\begin{tabular}{|c|c|c|c|}
+	\hline
+	\multicolumn{4}{|c|}{Keypad Output} \\
+	\hline 
+	Row\verb|\|Column & col\_0 & col\_1 & col\_2 \\ 
+	\hline 
+	row\_0 & "0" & "1" & "2" \\ 
+	\hline 
+	row\_1 & "3" & "4" & "5" \\ 
+	\hline 
+	row\_2 & "6" & "7" & "8" \\ 
+	\hline 
+	row\_3 & "\*" & N/A & "\#" \\ 
+	\hline 
+	\end{tabular} 
+	\caption{Output of the keypad FSM, depending on which row is currently set, and which column read returns a '1'. Note that the '0' key on our keypad was dysfunctional.}
+\end{minipage}
+
+\begin{minipage}{0.45\textwidth}
+\vspace{1cm}
+\begin{lstlisting}[
+	language=C,
+	basicstyle=\small,
+	tabsize=1,
+]
+void StartKeypadTask(void const * arguments){
+	static char pressed_char = NULL;
+	while(true){
+		pressed_char = check_for_digit_press();
+		if(pressed_char != NULL){
+			keypad_update(pressed_char);
+		}
+		osDelay(CHECK_FOR_DIGIT_PRESS_INTERVAL_MS);
+	}
+}
+\end{lstlisting}
+	\caption{Main Keypad thread logic}
+	\label{fig:keypad_thread_main_logic}
+\end{minipage}
+
+\end{figure}
+
+
+
 
 \subsection{ADC Logic}
 
