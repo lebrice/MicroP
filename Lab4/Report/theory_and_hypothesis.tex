@@ -2,7 +2,7 @@
 The main component of this experiment is the Pulse Wave Modulation (PWM) which would apply a voltage across a load and a capacitor. The PWM has a set cycle time that we picked to be faster than the time constant of our circuit. The equation bellow is used to calculate the time constant of an RC circuit. $$\tau = RC$$ During this cycle we can choose the duty cycle, or the time the voltage is turned on during the total cycle time of our PWM unit. With our capacitor and resistive load in place the capacitor would collect charge during the active duty cycle of our PWM pulse, and then dissipate its charge during the rest of the PWM cycle. 
 Would the duty cycle of the PWM start at 0, there would be no active high voltage outputted by the timer during the cycle. This would give a calculated RMS value of 0 volts. By increasing the duty cycle of the PWM pulse we can start to introduce a voltage for a portion of the PWM cycle. This would charge the capacitor and have it then discharge on the off duty cycle time, leading to a larger RMS value. Figure ? bellow shows the charging of the capacitor during the active duty cycle of our rectifier circuit. 
 
-\todo[inline]{add picture here}
+\todo[inline]{add picture here} %https://www.allaboutcircuits.com/uploads/articles/PWMDAC2_plot7.jpg
 
 With our PWM timer created, we need a controller to compare our measured RMS with the target RMS value given by the user via keypad. This controller would then see if the duty cycle needed to be increased or decreased based on if the measured RMS value was above or bellow our target. The implementation of this controller would be quite simple as it just needs to compare two values in order to determine which action to perform.
 

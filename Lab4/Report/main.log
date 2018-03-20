@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2017.5.23)  20 MAR 2018 17:04
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2017.5.23)  20 MAR 2018 18:30
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1011,7 +1011,22 @@ Overfull \hbox (50.99998pt too wide) in paragraph at lines 38--51
 ]) [6]
 \openout2 = `testing_and_observations.aux'.
 
- (./testing_and_observations.tex) [7
+ (./testing_and_observations.tex)
+! Missing $ inserted.
+<inserted text> 
+                $
+l.53 \include{testing_and_observations}
+                                       
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+
+Overfull \hbox (118.8638pt too wide) in paragraph at lines 5--53
+\OT1/cmr/m/n/10 25\OML/cmm/m/it/10 ControllertypesOurfirstcontrolledasintroduce
+dintheTheoryandHypothesissectioncanbeseenDifferentloads=capacitors$ 
+ []
+
+[7
 
 
 ]
@@ -1023,9 +1038,9 @@ Overfull \hbox (50.99998pt too wide) in paragraph at lines 38--51
 ]
 Package atveryend Info: Empty hook `BeforeClearDocument' on input line 56.
 Package atveryend Info: Empty hook `AfterLastShipout' on input line 56.
-
-(./main.aux (./problem_statement.aux) (./theory_and_hypothesis.aux)
-(./Implementation.aux) (./testing_and_observations.aux) (./conclusion.aux))
+ (./main.aux (./problem_statement.aux)
+(./theory_and_hypothesis.aux) (./Implementation.aux)
+(./testing_and_observations.aux) (./conclusion.aux))
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 56.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 56.
 Package rerunfilecheck Info: File `main.out' has not changed.
@@ -1033,10 +1048,10 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 56.
  ) 
 Here is how much of TeX's memory you used:
- 23310 strings out of 492995
- 439569 string characters out of 6132704
- 557880 words of memory out of 5000000
- 26369 multiletter control sequences out of 15000+600000
+ 23313 strings out of 492995
+ 439620 string characters out of 6132704
+ 557929 words of memory out of 5000000
+ 26371 multiletter control sequences out of 15000+600000
  16968 words of font info for 41 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  62i,10n,92p,1125b,1120s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1054,10 +1069,10 @@ ive/2017/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb></usr/local/texliv
 e/2017/texmf-dist/fonts/type1/public/cm-super/sfrm1728.pfb></usr/local/texlive/
 2017/texmf-dist/fonts/type1/public/cm-super/sfti1000.pfb></usr/local/texlive/20
 17/texmf-dist/fonts/type1/public/cm-super/sftt1000.pfb>
-Output written on main.pdf (8 pages, 238735 bytes).
+Output written on main.pdf (8 pages, 241801 bytes).
 PDF statistics:
- 175 PDF objects out of 1000 (max. 8388607)
- 150 compressed objects within 2 object streams
- 32 named destinations out of 1000 (max. 500000)
+ 177 PDF objects out of 1000 (max. 8388607)
+ 152 compressed objects within 2 object streams
+ 33 named destinations out of 1000 (max. 500000)
  93 words of extra memory for PDF output out of 10000 (max. 10000000)
 
