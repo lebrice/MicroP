@@ -1,12 +1,13 @@
 \section{Implementation}
 
-This section will describe the design and engineering processes that were used while implementing our system, based on the requirements described above. In order to simplify and structure its description, the system will first be broken down into its different logical components.\\
+This section will describe the design and engineering processes that were used while implementing our system, based on the requirements described above. In order to simplify and structure its description, the system will first be broken down into its different logical components.
 
 
 \subsection{High-Level System Architecture}
 
 
-The various requirements and corresponding program functionality of our system can be broken down into four main areas: the 7-segment display, the keypad, the ADC and the PWM controller. The keypad and display components were implemented as Threads, each behaving as a simple finite-state-machine. The ADC and PWM-related logic components were implemented as a part of an Interrupt-Service-Routine (ISR).\\
+The various requirements and corresponding program functionality of our system can be broken down into four main areas: the 7-segment display, the keypad, the ADC and the PWM controller. The keypad and display components were implemented as Threads, each behaving as a simple finite-state-machine. The ADC and PWM-related logic components were implemented as a part of an Interrupt-Service-Routine (ISR).
+
 
 Despite the overall system having significant complexity, its high-level behaviour can be broken down into a very limited number of states. The transitions between each state were also well defined (as part of the Section \ref{section:problem-statement}). By taking advantage of this fact, a very simple state machine was created, where each state manages to turn each sub-component "on" or "off". A state diagram showing the three system states, along with the name of their transitions and their outputs can be seen in Figure \ref{fig:high-level-state-diagram}.
 
@@ -35,7 +36,7 @@ Despite the overall system having significant complexity, its high-level behavio
 
 
 
-\begin{tabular}{ p{0.33\textwidth} | p{0.33\textwidth} | p{0.33\textwidth}}
+\begin{tabular}{ p{0.30\textwidth} | p{0.30\textwidth} | p{0.33\textwidth}}
 Sleep & Input & Match \\
 \hline
 % Sleep state description 
@@ -46,7 +47,6 @@ During the "input" state, the Keypad thread detects button presses and updates t
 &
 % Match state state description
 When the system enters the "match" state, the PWM timer and ADC are both started. After each \verb|HAL_ADC_ConvCpltCallback()| interrupt service routine, the ADC samples are filtered and their RMS is extracted. This value is fed to the PWM controller, which modifies the period of the PWM timer in order to attempt to reach the target voltage.
-\\
 \end{tabular}
 
 
@@ -54,10 +54,10 @@ The associated code for this finite state machine can be found within the \href{
 
 
 \subsection{Display Thread}
-
 \def \DISPLAYREFRESHINTERVAL {8ms}
 
-The logic used in the Display thread was almost all created as part of Lab 2. A state diagram of the display FSM can be seen Figure \ref{fig:display-thread-state-diagram}. Its main logic, as shown in Figure \ref{fig:display-thread-main-logic}, can be found within the \href{https://github.com/lebrice/MicroP/blob/master/Lab4/Src/display_thread.c}{display\_thread.c} file. \\ 
+
+The logic used in the Display thread was almost all created as part of Lab 2. A state diagram of the display FSM can be seen Figure \ref{fig:display-thread-state-diagram}. Its main logic, as shown in Figure \ref{fig:display-thread-main-logic}, can be found within the \href{https://github.com/lebrice/MicroP/blob/master/Lab4/Src/display_thread.c}{display\_thread.c} file.  
 
 
 \begin{figure}[h]
@@ -121,8 +121,6 @@ This thread calls the \verb|osSignalWait| function in order to be blocked until 
 
 
 
-
-\pagebreak
 \subsection{Keypad Thread}
 
 
@@ -194,14 +192,171 @@ void StartKeypadTask(void const * arguments){
 \end{minipage}
 \end{figure}
 
-Then, the \verb|keypad_update()| function keeps track of the currently pressed digit and counts the number of successive updates received for the current digit. Whenever the number of consecutive updates reaches one of the defined thresholds, the appropriate action is taken, depending on the currently pressed digit. Three thresholds were defined within the \href{https://github.com/lebrice/MicroP/blob/master/Lab4/Src/keypad_thread.h}{keypad\_thread.h} file\verb|:| \verb|min_updates_for_change|, \verb|min_updates_for_restart|, and \verb|min_updates_for_sleep|. These three constants represent the minimum number of updates that are required in order to make a state transition. They were calculated using the corresponding desired delays in milliseconds divided by the time required to scan the entire keypad.
+Then, the \verb|keypad_update()| function keeps track of the currently pressed digit and counts the number of successive updates received for the current digit. Whenever the number of consecutive updates reaches one of the defined thresholds, the appropriate action is taken, depending on the currently pressed digit. Three thresholds were defined within the \href{https://github.com/lebrice/MicroP/blob/master/Lab4/Src/keypad_thread.h}{keypad\_thread.h} file\verb|:| \verb|min_updates_for_change|, \verb|min_updates_for_restart|, and \verb|min_updates_for_sleep|. These three constants represent the minimum number of updates that are required in order to make a state transition. They were calculated using the corresponding desired delays in milliseconds divided by the time required to scan the entire keypad. 
 
-Using this mechanism, the Keypad thread can effectively keep track of the currently pressed digit, the time it has been pressed for as well as any press/release, with a time resolution of $4*\CHECKFORDIGITPRESSINTERVALMS = 100$ms (the time required to scan all rows of the keypad).\\
+Using this mechanism, the Keypad thread can effectively keep track of the currently pressed digit, the time it has been pressed for as well as any press/release, with a time resolution of $4*\CHECKFORDIGITPRESSINTERVALMS = 100$ms (the time required to scan all rows of the keypad).
+
+
+Whenever a numeric digit is entered, it enters a shift-register array, \verb|digits|, which holds up to three digits, allowing for a voltage value with 2 decimal points. Whenever the \verb|"#"| key is pressed and the float value formed by the contents of the current \verb|digits| array is valid ($0.5V \leq value \leq  2.5V$), this corresponding float value is assigned to the global \verb|target_voltage| variable, which the PWM controller then tries to match.
+
 
 The Keypad thread behaves somewhat similarly to the Display thread, as it executes a periodic task before going to sleep for a fixed delay using \verb|osDelay()|. However, the Keypad thread does not use an external signal to turn it on/off, and consequently relies on a "polling" mechanism in order to detect a key press. As will be discussed in Section \ref{section:conclusion}, this arrangement is not exactly optimal, as using a combination of an external interrupt to detect the press and a thread to count the length of the press would have been superior in terms of power efficiency.
 
 
 
-\subsection{ADC Logic}
+\subsection{ADC Component}
 
-\subsection{PWM Timer}
+Overall, the ADC component of this Lab was not much different from that of Lab 2 (See the Appendix, Section \ref{section:appendix}). One difference is that the only truly relevant measure was the RMS, and the max and min values were discarded. Another noteworthy difference in this implementation was the use of an external timer (Timer2) to trigger the ADC's conversions. As per in Lab 2, DMA was used, with one \verb|HAL_ADC_ConvCpltCallback()| ISR occurring once 50 values had been gathered.
+
+
+The ADC frequency we chose to use was 1kHz. This value was chosen because it is significantly slower than the PWM signal frequency, a requirement which was described in the section \ref{section:theory_and_hypothesis}. Given that the clock source for timer 2, the ABP2 peripheral clock, is 84\(MHz\), in order to achieve a 1kHz frequency for Timer2, its prescaler and period settings were set to 83 and 1000, respectively. 
+
+\begin{equation}
+\label{equation:timer_frequency}
+ Timer freq. = \frac{Clock freq.}{(prescaler + 1) * period}
+\end{equation}
+
+The distinction between the ADC and PWM controller components is more for sake of clarity, since they represent different logical modules. However, they are both called sequentially as part of the \verb|HAL_ADC_ConvCpltCallback()| ISR. 
+
+
+
+One other idea which was explored was to have the ADC be implemented as a thread. The ADC thread would then behave very similarly to the Display thread, as it would simply wait on a \verb|buffer_full| signal before executing the \verb|ADC_buffer_full_callback()| function. However, as will be discussed in Section\ref{section:testing_and_observations} (Testing and Observations), we ran into significant issues.\\
+
+
+
+Here is a brief breakdown of the different steps involved in the ADC/PWM controller  flow.
+\begin{enumerate}
+\item the ADC is started in DMA mode using \verb|HAL_ADC_Start_DMA(...)|.
+\item Once 50 values have been acquired, an interrupt is raised.
+\item The \verb|HAL_ADC_ConvCpltCallback()| callback is called.
+\item The 50 ADC samples are filtered, using the \verb|FIR_C()| function from Lab 1.
+\item The RMS value is calculated using the \verb|asm_math| assembly procedure written in Lab 1.
+\item The RMS value is fed to the PWM controller, which compares it to the current target value and adjusts the duty cycle of the PWM timer (Timer3) accordingly.
+\end{enumerate}
+
+
+\subsection{PWM Controller}
+
+
+
+The PWM timer was chosen to be Timer3. As previously discussed in Section \ref{section:theory_and_hypothesis}, we chose to have a PWM timer frequency of 10 kHz. To maximise our available resolution with respect to the duty cycle, which allows us to match the target voltage more closely, we opted for a \verb|prescaler| value of 0. Using Eq. \ref{equation:timer_frequency}, this gives us a \verb|period| value of 8400, which is the biggest period possible for our desired frequency of 10kHz.
+
+
+
+Figure \ref{fig:pwm_controller_logic} shows a basic representation of the PWM controller logic. 
+
+\begin{figure}[h]
+\begin{tikzpicture}[shorten >=1pt,node distance=5cm,on grid,auto] 
+	\node[state,initial above, accepting] (compare)  {compare};
+	\node[state, rectangle] [right=of compare] (increase) {Increase Duty Cycle};
+	\node[state, rectangle] [left=of compare] (decrease) {Decrease Duty Cycle};
+	%\node[fit=(digit_0) (digit_1) (digit_2), rectangle, fill=black!10, draw=black, fill opacity=0.3, label=left:\fbox{On}] (on) {};
+\path[->]
+	(compare)	edge	 [bend right] node [below] {measured < target} (increase)
+	(compare)	edge	 [bend left] node [below] {measured > target} (decrease)
+	(compare)	edge	 [loop below] node  {ABS(measured - target) < threshold} ()
+	(increase) edge [bend right] node {} (compare)
+	(decrease) edge [bend left] node {} (compare)
+;
+\end{tikzpicture}
+\caption{\label{fig:pwm_controller_logic}High-level diagram of the PWM controller logic.}
+\end{figure}
+
+
+During the implementation of this lab, two different PWM controllers were implemented. The first, shown in Figure \ref{fig:pwm_controller_1_logic}, changes the duty cycle proportionally to the difference between the current RMS voltage and target RMS values. This is the controller that was used during the demo. The second, shown in Figure \ref{fig:pwm_controller_2_logic}, is significantly more complex. It functions basically as a Successive-Approximation Register\footnote{\href{https://www.maximintegrated.com/en/app-notes/index.mvp/id/1080}{Successive Approximation Registers}}. 
+
+
+A comprehensive discussion of the performance of each controller can be found within Section \ref{section:testing_and_observations} (testing and observations).
+
+\begin{figure}[h]
+\begin{lstlisting}[language=C, basicstyle=\small, tabsize=2]
+
+/** @brief Controller which adjusts the PWM duty cycle
+* in order to match the current target RMS voltage.
+* @param current_rms: The current RMS voltage from the ADC.
+*/
+void adjust_duty_cycle(float current_rms){ 
+	extern float target_voltage;
+	// a damping constant, that limits the rate of change of the percentage.
+	static const float damping = 0.005f;
+	
+	static float current_percentage;
+	static int current_period;
+	static float difference;
+	
+	difference = current_rms - target_voltage;
+	
+	current_percentage -= damping * difference;
+	current_percentage = BOUND(current_percentage, 0.f, 1.f);
+	
+	
+	current_period = round(current_percentage * PWM_TIMER_PERIOD);
+	
+	set_pwm_duty_cycle(current_period);
+}
+\end{lstlisting}
+\caption{\label{fig:pwm_controller_1_logic} First implementation of a PWM controller. This controller adjusts the duty cycle by changing it proportionally to the difference between the current and target values.}
+\end{figure}
+
+\begin{figure}[h]
+\begin{lstlisting}[language=C, basicstyle=\small, tabsize=2, showstringspaces=false]
+
+/** @brief Controller which adjusts the PWM duty cycle
+* in order to match the current target RMS voltage.
+* @param current_rms: The current RMS voltage from the ADC.
+*/
+void adjust_duty_cycle_2(float current_rms){
+	extern float target_voltage;
+	static int pwm_period;
+	
+	static float last_target_voltage = 0.f;
+		
+	const float threshold = 0.01f;
+	
+	static int i = 1;	
+	
+	if(target_voltage != last_target_voltage){
+		printf("New target voltage detected: %1.2f\n", target_voltage);
+		// restart the 'binary-search' process.
+		i = 1;
+		last_target_voltage = target_voltage;
+	}
+	float difference = current_rms - target_voltage;
+	
+	if (ABS(difference) < threshold)
+	{
+		printf("Done. we matched. (difference is %1.5f)\n", difference);
+	}
+	else if (i >= 32)
+	{
+		printf("We can't seem to be able to match this voltage! (%1.2f)\n", target_voltage);
+		printf("Did the circuit change ?)\n"); 
+		if(ABS(difference) >= 0.20f){
+			// if the difference is large, start over.
+			printf("Starting over, maybe this will work!\n");
+			i = 1;
+		}
+	}
+	else {
+		if (difference < 0)
+		{
+			// we undershoot.
+			pwm_period += MAX(PWM_TIMER_PERIOD >> i, 1);
+			i++;
+		}
+		else
+		{
+			// we overshoot last time. We have to undo the change we did last time
+			// (reset that bit). 
+			pwm_period -= MAX(PWM_TIMER_PERIOD >> (i-1), 1);
+			pwm_period += MAX(PWM_TIMER_PERIOD >> i, 1);
+		}
+		i = BOUND(i, 1, 32);
+		pwm_period = BOUND(pwm_period, 0, PWM_TIMER_PERIOD);
+		set_pwm_duty_cycle(pwm_period);
+	
+	}
+}
+\end{lstlisting}
+\caption{\label{fig:pwm_controller_2_logic} Second implementation of the PWM controller. More complex than the first, this controller uses a "binary-search" approach, similar to a SAR.}
+\end{figure}
