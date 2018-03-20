@@ -35,7 +35,7 @@ Despite the overall system having significant complexity, its high-level behavio
 
 
 
-\begin{tabular}{ p{5cm} | p{5cm} | p{5cm}}
+\begin{tabular}{ p{0.33\textwidth} | p{0.33\textwidth} | p{0.33\textwidth}}
 Sleep & Input & Match \\
 \hline
 % Sleep state description 
@@ -57,30 +57,69 @@ The associated code for this finite state machine can be found within the \href{
 
 \def \DISPLAYREFRESHINTERVAL {8ms}
 
-The logic used in the Display thread was almost all created as part of Lab 2. The main logic can be found within the \verb|refresh_display()| function, within the \href{https://github.com/lebrice/MicroP/blob/master/Lab4/Src/display_thread.c}{display\_thread.c} file.
+The logic used in the Display thread was almost all created as part of Lab 2. A state diagram of the display FSM can be seen Figure \ref{fig:display_state_diagram}. Its main logic, as shown in Figure \ref{fig:display_thread_main_logic}, can be found within the \href{https://github.com/lebrice/MicroP/blob/master/Lab4/Src/display_thread.c}{display\_thread.c} file. \\ 
 
 
 
 \begin{figure}[h]
-\centering
-
-\begin{tikzpicture}[shorten >=1pt,node distance=3cm,on grid,auto] 
-\node[state,initial] (off)  {$Off$};
-\node[state, initial] [below=of off] (digit_0) {$Digit\_0$};
-\node[state] [below right=of digit_0] (digit_1) {$Digit\_1$};
-\node[state] [below left=of digit_0] (digit_2) {$Digit\_2$}; 
-\node[fit=(digit_0) (digit_1) (digit_2), rectangle, fill=black!10, draw=black, fill opacity=0.3, label=left:\fbox{On}] (on) {};
-\path[->]
-	(off) 		edge [bend left] node {start\_display()} (on)
-	(on) 		edge [bend left] node {stop\_display()} (off)
-	(digit_0) 	edge node {\DISPLAYREFRESHINTERVAL} (digit_1)
-	(digit_1) 	edge node {\DISPLAYREFRESHINTERVAL} (digit_2)
-	(digit_2) 	edge node {\DISPLAYREFRESHINTERVAL} (digit_0)
-	;
-\end{tikzpicture}
-\caption{Display thread state diagram}
-\label{fig:display_state_diagram}
+\begin{minipage}{0.40\textwidth}
+	\begin{tikzpicture}[shorten >=1pt,node distance=3cm,on grid,auto] 
+		\node[state,initial] (off)  {$Off$};
+		\node[state, initial] [below=of off] (digit_0) {$Digit\_0$};
+		\node[state] [below right=of digit_0] (digit_1) {$Digit\_1$};
+		\node[state] [below left=of digit_0] (digit_2) {$Digit\_2$}; 
+		\node[fit=(digit_0) (digit_1) (digit_2), rectangle, fill=black!10, draw=black, fill opacity=0.3, label=left:\fbox{On}] (on) {};
+		\path[->]
+			(off) 		edge [bend left] node {start\_display()} (on)
+			(on) 		edge [bend left] node {stop\_display()} (off)
+			(digit_0) 	edge node {\DISPLAYREFRESHINTERVAL} (digit_1)
+			(digit_1) 	edge node {\DISPLAYREFRESHINTERVAL} (digit_2)
+			(digit_2) 	edge node {\DISPLAYREFRESHINTERVAL} (digit_0)
+			;
+	\end{tikzpicture}
+	\label{fig:display_state_diagram}
+	\caption{Display thread state diagram}
+\end{minipage}\hfill
+\vrule
+\begin{minipage}{0.45\textwidth}
+	\begin{lstlisting}[
+	language=C,
+	basicstyle=\small,
+	xleftmargin={0.2cm},
+	tabsize=1,
+]
+void StartDisplayTask(void const * arguments){
+  // Which digit is currently active.
+  static uint8_t currently_active_digit = 0;
+	
+  while(true){
+    osSignalWait(display_on, osWaitForever);
+    	while(display_on){
+    	  // while the display is on, refresh it.
+    	  refresh_display(currently_active_digit);
+    	  osDelay(DISPLAY_REFRESH_INTERVAL_MS);
+    	  currently_active_digit++;
+    	  currently_active_digit %= 3;
+    	}
+    	// DISPLAY IS NOW OFF!
+    	RESET_PIN(DIGITS_0);
+    	RESET_PIN(DIGITS_1);
+    	RESET_PIN(DIGITS_2);
+  }
+}
+	\end{lstlisting}
+	\caption{Main Display thread logic}
+	\label{fig:display_thread_main_logic}
+\end{minipage}\hfill
 \end{figure}
+
+
+
+This thread calls the \verb|osSignalWait| function in order to be blocked until the \verb|display_on| variable is set externally, at which point the thread is resumed, and the refreshing cycle begins. Refreshing the display consists of setting the pin associated with the currently active digit high, along with the required segment pins for the corresponding digit of the \verb|displayed_value| variable. This variable may contain either the target value, if the system is currently in the \verb|"Input"| state, or the current RMS, when in the \verb|"match"| state. Since there is no contention for the display, the use of a synchronization variable (a semaphore, for instance) is not needed. The system may only be one of the two states at a time. After a digit is set, the thread goes to sleep for \verb|DISPLAY_REFRESH_INTERVAL_MS| (\DISPLAYREFRESHINTERVAL).
+
+
+
+
 
 
 \subsection{Keypad Thread}
