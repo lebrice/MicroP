@@ -1,2 +1,6 @@
 \section{conclusion}
+
 \label{section:conclusion}
+
+Throughout the last two lab we were able to create a system that, through user input, was able to produce a PWM signal and adjust the RMS value of a circuit connected to our on-board ADC. The ability to compute the time constant of our circuit in order to appropriately pick PWM and ADC frequency was paramount for a efficient implementation of Lab 3's requirement. This system was also implemented using a keypad and a display to give appropriate feedback to the user. The challenges we faced from the interrupt driven approach compared to the multithreaded design had to do with attempting to make the ADC interrupt a thread and running into the ADC thread blocking all other threads. This required us to make a design decision and keep our ADC buffer full callback as an interrupt. Following this hurdle we were able to make our system fully functional and successfully integrated Lab 3's keyboard and display's interrupt-driven implementations to a multithreaded one with the help of the FreeRTOS kernel to manage the two threads in our system.
+
