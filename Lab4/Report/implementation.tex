@@ -8,7 +8,7 @@ This section will describe the design and engineering processes that were used w
 
 The various requirements and corresponding program functionality of our system can be broken down into four main areas: the 7-segment display, the keypad, the ADC and the PWM controller. The keypad and display components were implemented as Threads, each behaving as a simple finite-state-machine. The ADC and PWM-related logic components were implemented as a part of an Interrupt-Service-Routine (ISR).\\
 
-Despite the overall system having significant complexity, its high-level behaviour can be broken down into a very limited number of states. The transitions between each state were also well defined (as part of the Section \ref{section:problem_statement}). By taking advantage of this fact, a very simple state machine was created, where each state manages to turn each sub-component "on" or "off". A state diagram showing the three system states, along with the name of their transitions and their outputs can be seen in Figure \ref{fig:high_level_state_diagram}.
+Despite the overall system having significant complexity, its high-level behaviour can be broken down into a very limited number of states. The transitions between each state were also well defined (as part of the Section \ref{section:problem-statement}). By taking advantage of this fact, a very simple state machine was created, where each state manages to turn each sub-component "on" or "off". A state diagram showing the three system states, along with the name of their transitions and their outputs can be seen in Figure \ref{fig:high-level-state-diagram}.
 
 
 \begin{figure}[h]
@@ -29,7 +29,7 @@ Despite the overall system having significant complexity, its high-level behavio
       {Output: [Keypad|Display|ADC|PWM]};
 \end{tikzpicture}
 \caption{System high-level state diagram}
-\label{fig:high_level_state_diagram}
+\label{fig:high-level-state-diagram}
 \end{figure}
 
 
@@ -57,8 +57,7 @@ The associated code for this finite state machine can be found within the \href{
 
 \def \DISPLAYREFRESHINTERVAL {8ms}
 
-The logic used in the Display thread was almost all created as part of Lab 2. A state diagram of the display FSM can be seen Figure \ref{fig:display_state_diagram}. Its main logic, as shown in Figure \ref{fig:display_thread_main_logic}, can be found within the \href{https://github.com/lebrice/MicroP/blob/master/Lab4/Src/display_thread.c}{display\_thread.c} file. \\ 
-
+The logic used in the Display thread was almost all created as part of Lab 2. A state diagram of the display FSM can be seen Figure \ref{fig:display-thread-state-diagram}. Its main logic, as shown in Figure \ref{fig:display-thread-main-logic}, can be found within the \href{https://github.com/lebrice/MicroP/blob/master/Lab4/Src/display_thread.c}{display\_thread.c} file. \\ 
 
 
 \begin{figure}[h]
@@ -77,8 +76,8 @@ The logic used in the Display thread was almost all created as part of Lab 2. A 
 			(digit_2) 	edge node {\DISPLAYREFRESHINTERVAL} (digit_0)
 			;
 	\end{tikzpicture}
-	\label{fig:display_state_diagram}
 	\caption{Display thread state diagram}
+	\label{fig:display-thread-state-diagram}
 \end{minipage}
 \hfill
 \vrule
@@ -110,7 +109,8 @@ void StartDisplayTask(void const * arguments){
 }
 \end{lstlisting}
 	\caption{Main Display thread logic}
-	\label{fig:display_thread_main_logic}
+	\label{fig:display-thread-main-logic}
+
 \end{minipage}
 \end{figure}
 
@@ -131,7 +131,6 @@ The keypad was without a doubt the most challenging portion of this lab. The com
 
 \begin{figure}[h]
 \begin{minipage}{0.45\textwidth}
-
 	\begin{tikzpicture}[shorten >=1pt,node distance=3cm,on grid,auto] 
 		\node[state,initial] (row_0)  {row\_0};
 		\node[state] [below right=of row_0] (row_1) {row\_1};
@@ -145,8 +144,7 @@ The keypad was without a doubt the most challenging portion of this lab. The com
 			(row_3)	edge	 node {\CHECKFORDIGITPRESSINTERVALMS} (row_0)
 			;
 	\end{tikzpicture}
-	\label{fig:keypad_state_diagram}
-	\caption{Display thread state diagram}
+	\caption{\label{fig:keypad-thread-state-diagram}Display thread state diagram}
 \end{minipage}
 \hfill
 \begin{minipage}{0.45\textwidth}
@@ -162,19 +160,25 @@ The keypad was without a doubt the most challenging portion of this lab. The com
 	\hline 
 	row\_2 & "6" & "7" & "8" \\ 
 	\hline 
-	row\_3 & "\*" & N/A & "\#" \\ 
+	row\_3 & "\verb|*|" & N/A & "\#" \\ 
 	\hline 
-	\end{tabular} 
-	\caption{Output of the keypad FSM, depending on which row is currently set, and which column read returns a '1'. Note that the '0' key on our keypad was dysfunctional.}
+	\end{tabular}
+	
+	\caption{\label{fig:keypad-thread-check-output}	
+	Output of the keypad FSM, depending on which row is currently set, and which column read returns a '1'. Note that the '0' key on our keypad was dysfunctional.}
 \end{minipage}
+\end{figure}
 
-\begin{minipage}{0.45\textwidth}
-\vspace{1cm}
-\begin{lstlisting}[
-	language=C,
-	basicstyle=\small,
-	tabsize=1,
-]
+The keypad logic shown in Figure \ref{fig:keypad-thread-main-logic} is separated into two distinct steps. First, the \linebreak \verb|check_for_digit_press()| function is called, which sets and increments the \verb|current_row| variable (represented as \verb|"row_i"| in the FSM diagram of Figure \ref{fig:keypad-thread-state-diagram}), and reports the most recently observed button press - or the absence of a press - by calling the \verb|keypad_update()| function with the corresponding character, or a whitespace character if no button press was detected in all four rows. 
+
+
+\begin{figure}[h]
+\begin{minipage}{0.45\textwidth}	
+	\begin{lstlisting}[
+		language=C,
+		basicstyle=\small,
+		tabsize=1,
+	]
 void StartKeypadTask(void const * arguments){
 	static char pressed_char = NULL;
 	while(true){
@@ -185,13 +189,16 @@ void StartKeypadTask(void const * arguments){
 		osDelay(CHECK_FOR_DIGIT_PRESS_INTERVAL_MS);
 	}
 }
-\end{lstlisting}
-	\caption{Main Keypad thread logic}
-	\label{fig:keypad_thread_main_logic}
+	\end{lstlisting}
+	\caption{\label{fig:keypad-thread-main-logic}Main Keypad thread logic}
 \end{minipage}
-
 \end{figure}
 
+Then, the \verb|keypad_update()| function keeps track of the currently pressed digit and counts the number of successive updates received for the current digit. Whenever the number of consecutive updates reaches one of the defined thresholds, the appropriate action is taken, depending on the currently pressed digit. Three thresholds were defined within the \href{https://github.com/lebrice/MicroP/blob/master/Lab4/Src/keypad_thread.h}{keypad\_thread.h} file\verb|:| \verb|min_updates_for_change|, \verb|min_updates_for_restart|, and \verb|min_updates_for_sleep|. These three constants represent the minimum number of updates that are required in order to make a state transition. They were calculated using the corresponding desired delays in milliseconds divided by the time required to scan the entire keypad.
+
+Using this mechanism, the Keypad thread can effectively keep track of the currently pressed digit, the time it has been pressed for as well as any press/release, with a time resolution of $4*\CHECKFORDIGITPRESSINTERVALMS = 100$ms (the time required to scan all rows of the keypad).\\
+
+The Keypad thread behaves somewhat similarly to the Display thread, as it executes a periodic task before going to sleep for a fixed delay using \verb|osDelay()|. However, the Keypad thread does not use an external signal to turn it on/off, and consequently relies on a "polling" mechanism in order to detect a key press. As will be discussed in Section \ref{section:conclusion}, this arrangement is not exactly optimal, as using a combination of an external interrupt to detect the press and a thread to count the length of the press would have been superior in terms of power efficiency.
 
 
 
