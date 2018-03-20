@@ -6,15 +6,18 @@ float displayed_value;
 uint32_t display_on = 0;
 
 void StartDisplayTask(void const * arguments){
-	// TODO
+	// Which digit is currently active.
+	static uint8_t currently_active_digit = 0;
+	
 	while(true){
-		// TODO: 
 		osSignalWait(display_on, osWaitForever);
 		while(display_on){
 			// while the display is on, refresh it.
-//			printf("Refreshing the display.\n");
-			refresh_display();
+			refresh_display(currently_active_digit);
 			osDelay(DISPLAY_REFRESH_INTERVAL_MS);
+			
+			currently_active_digit++;
+			currently_active_digit %= 3;
 		}
 		// DISPLAY IS NOW OFF!
 		RESET_PIN(DIGITS_0);
@@ -40,9 +43,7 @@ void start_display(){
 * @brief Function created for refreshing the display.
 *(Refreshes the display, using the functions defined in "segment_display.h" to get the required digits and segments.
 */
-void refresh_display(void){
-	// Which digit is currently active.
-	static uint8_t currently_active_digit = 0;
+void refresh_display(uint8_t currently_active_digit){
 	
 	// The resulting segments.
 	uint8_t segments[3];
@@ -68,6 +69,4 @@ void refresh_display(void){
 			SET_PIN(DIGITS_2);
 			break;
 	}	
-	currently_active_digit++;
-	currently_active_digit %= 3;
 }

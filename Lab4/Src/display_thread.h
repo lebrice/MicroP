@@ -33,7 +33,7 @@
 void StartDisplayTask(void const * arguments);
 
 // Function used to refresh the display.
-void refresh_display(void);
+void refresh_display(uint8_t currently_active_digit);
 
 void stop_display(void);
 void start_display(void);

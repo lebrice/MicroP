@@ -12,7 +12,6 @@ uint8_t digits[3];
 
 
 void StartKeypadTask(void const * arguments){
-	// TODO:
 	static char pressed_char = NULL;
 	while(true){
 		pressed_char = check_for_digit_press();
