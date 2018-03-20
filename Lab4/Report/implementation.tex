@@ -247,14 +247,14 @@ Figure \ref{fig:pwm_controller_logic} shows a basic representation of the PWM co
 
 \begin{figure}[h]
 \begin{tikzpicture}[shorten >=1pt,node distance=5cm,on grid,auto] 
-	\node[state,initial above, accepting] (compare)  {compare};
+	\node[state,initial below, accepting] (compare)  {compare};
 	\node[state, rectangle] [right=of compare] (increase) {Increase Duty Cycle};
 	\node[state, rectangle] [left=of compare] (decrease) {Decrease Duty Cycle};
 	%\node[fit=(digit_0) (digit_1) (digit_2), rectangle, fill=black!10, draw=black, fill opacity=0.3, label=left:\fbox{On}] (on) {};
 \path[->]
 	(compare)	edge	 [bend right] node [below] {measured < target} (increase)
 	(compare)	edge	 [bend left] node [below] {measured > target} (decrease)
-	(compare)	edge	 [loop below] node  {ABS(measured - target) < threshold} ()
+	(compare)	edge	 [loop above] node  {ABS(measured - target) < threshold} ()
 	(increase) edge [bend right] node {} (compare)
 	(decrease) edge [bend left] node {} (compare)
 ;
@@ -263,13 +263,13 @@ Figure \ref{fig:pwm_controller_logic} shows a basic representation of the PWM co
 \end{figure}
 
 
-During the implementation of this lab, two different PWM controllers were implemented. The first, shown in Figure \ref{fig:pwm_controller_1_logic}, changes the duty cycle proportionally to the difference between the current RMS voltage and target RMS values. This is the controller that was used during the demo. The second, shown in Figure \ref{fig:pwm_controller_2_logic}, is significantly more complex. It functions basically as a Successive-Approximation Register\footnote{\href{https://www.maximintegrated.com/en/app-notes/index.mvp/id/1080}{Successive Approximation Registers}}. 
+During the implementation of this lab, two different PWM controllers were implemented. The first, shown in Figure \ref{fig:pwm_controller_1_logic}, changes the duty cycle proportionally to the difference between the current RMS voltage and target RMS values. This is the controller that was used during the demo. The second, shown in Figure \ref{fig:pwm_controller_2_logic}, is significantly more complex. It functions basically as a Successive-Approximation Register\footnote{\href{https://www.maximintegrated.com/en/app-notes/index.mvp/id/1080}{Understanding SAR ADCs: Their Architecture and Comparison with Other ADCs}}. 
 
 
-A comprehensive discussion of the performance of each controller can be found within Section \ref{section:testing_and_observations} (testing and observations).
+A comprehensive discussion of the performance and tradeoffs associated with each controller can be found within Section~\ref{section:testing_and_observations} (testing and observations).
 
 \begin{figure}[h]
-\begin{lstlisting}[language=C, basicstyle=\small, tabsize=2]
+\begin{lstlisting}[language=C, frame=single, basicstyle=\small, tabsize=2]
 
 /** @brief Controller which adjusts the PWM duty cycle
 * in order to match the current target RMS voltage.
@@ -299,7 +299,7 @@ void adjust_duty_cycle(float current_rms){
 \end{figure}
 
 \begin{figure}[h]
-\begin{lstlisting}[language=C, basicstyle=\small, tabsize=2, showstringspaces=false]
+\begin{lstlisting}[language=C, frame=single, basicstyle=\small, tabsize=2, showstringspaces=false]
 
 /** @brief Controller which adjusts the PWM duty cycle
 * in order to match the current target RMS voltage.
@@ -307,12 +307,9 @@ void adjust_duty_cycle(float current_rms){
 */
 void adjust_duty_cycle_2(float current_rms){
 	extern float target_voltage;
-	static int pwm_period;
-	
+	static int pwm_period;	
 	static float last_target_voltage = 0.f;
-		
 	const float threshold = 0.01f;
-	
 	static int i = 1;	
 	
 	if(target_voltage != last_target_voltage){
@@ -329,7 +326,7 @@ void adjust_duty_cycle_2(float current_rms){
 	}
 	else if (i >= 32)
 	{
-		printf("We can't seem to be able to match this voltage! (%1.2f)\n", target_voltage);
+		printf("We can't match this voltage! (%1.2f)\n", target_voltage);
 		printf("Did the circuit change ?)\n"); 
 		if(ABS(difference) >= 0.20f){
 			// if the difference is large, start over.
