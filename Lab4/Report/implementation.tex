@@ -1,26 +1,32 @@
 \section{Implementation}
 
-This section will describe the design and engineering processes that were used while implementing our system, based on the requirements described above. In order to simplify and structure its description, the system will first be broken down into its different logical components.
+This section will describe the design and engineering processes that were used while implementing our system, based on the requirements described above. In order to simplify and structure its description, the system will first be broken down into its different logical components.\\
 
 
 \subsection{High-Level System Architecture}
-The various requirements and corresponding program functionality of our system can be broken down into four main areas: the 7-segment display, the keypad, the ADC and the PWM timer. Despite the overall system having significant complexity, there is a very limited number of states for the overall system, with the transition between them being very well defined. A state diagram showing the three states, along with the name of their transitions can be seen in Figure \ref{fig:high_level_state_diagram}.
+
+
+The various requirements and corresponding program functionality of our system can be broken down into four main areas: the 7-segment display, the keypad, the ADC and the PWM controller. The keypad and display components were implemented as Threads, each behaving as a simple finite-state-machine. The ADC and PWM-related logic components were implemented as a part of an Interrupt-Service-Routine (ISR).\\
+
+Despite the overall system having significant complexity, its high-level behaviour can be broken down into a very limited number of states. The transitions between each state were also well defined (as part of the Section \ref{section:problem_statement}). By taking advantage of this fact, a very simple state machine was created, where each state manages to turn each sub-component "on" or "off". A state diagram showing the three system states, along with the name of their transitions and their outputs can be seen in Figure \ref{fig:high_level_state_diagram}.
 
 
 \begin{figure}[h]
 \centering
 \begin{tikzpicture}[shorten >=1pt,node distance=4cm,on grid,auto] 
-   \node[state,initial] (sleep)  {$Sleep$}; 
-   \node[state] (input_target)	[below right=of sleep]	{$Input$}; 
-   \node[state] (match_voltage) 	[below left=of sleep]	{$Match $};
+   \node[state with output,initial] (sleep)  {$Sleep$ \nodepart{lower} $1000$}; 
+   \node[state with output] (input_target)	[below right=of sleep]	{$Input$ \nodepart{lower} $1100$}; 
+   \node[state with output] (match_voltage) 	[below left=of sleep]	{$Match$ \nodepart{lower} $1111$};
    \path[->] 
    		(sleep) edge [bend left] node {WakeUp()} (input_target)
         (input_target) edge node {Sleep()} (sleep)
         (input_target) edge [bend left] node {StartMatching()} (match_voltage)
-        (input_target) edge [loop below] node {Reset()} ()
-        (match_voltage) edge [bend left] node {Sleep()} (sleep)
+        (input_target) edge [loop right] node {Reset()} ()
+        (match_voltage) edge node {Sleep()} (sleep)
         (match_voltage) edge node {Reset()} (input_target)
     ;  
+    \draw node [below=4.5cm,midway,text width=8cm,text centered]
+      {Output: [Keypad|Display|ADC|PWM]};
 \end{tikzpicture}
 \caption{System high-level state diagram}
 \label{fig:high_level_state_diagram}
@@ -39,31 +45,39 @@ The sleep state is the initial state of the system. In this state, the only acti
 During the "input" state, the Keypad thread detects button presses and updates the target value accordingly, while the Display thread shows the current target value. The Keypad and Display threads are active, while the ADC and PWM timer are turned off. Whenever a valid voltage value is entered, the system transitions into the "match" state.
 &
 % Match state state description
-When the system enters the "match" state, 
+When the system enters the "match" state, the PWM timer and ADC are both started. After each \verb|HAL_ADC_ConvCpltCallback()| interrupt service routine, the ADC samples are filtered and their RMS is extracted. This value is fed to the PWM controller, which modifies the period of the PWM timer in order to attempt to reach the target voltage.
 \\
 \end{tabular}
 
 
+The associated code for this finite state machine can be found within the \href{https://github.com/lebrice/MicroP/blob/master/Lab4/Src/fsm.c}{fsm.c} file. Every major component of the system will now be examined individually.
+
+
 \subsection{Display Thread}
+
+\def \DISPLAYREFRESHINTERVAL {8ms}
+
+The logic used in the Display thread was almost all created as part of Lab 2. The main logic can be found within the \verb|refresh_display()| function, within the \href{https://github.com/lebrice/MicroP/blob/master/Lab4/Src/display_thread.c}{display\_thread.c} file.
+
+
 
 \begin{figure}[h]
 \centering
 
 \begin{tikzpicture}[shorten >=1pt,node distance=3cm,on grid,auto] 
 \node[state,initial] (off)  {$Off$};
-\node[state] [below=of off] (digit_1) {$Digit\_1$};
-\node[state] [left=of digit_1] (digit_0) {$Digit\_0$}; 
-\node[state] [right=of digit_1] (digit_2) {$Digit\_2$};
+\node[state, initial] [below=of off] (digit_0) {$Digit\_0$};
+\node[state] [below right=of digit_0] (digit_1) {$Digit\_1$};
+\node[state] [below left=of digit_0] (digit_2) {$Digit\_2$}; 
+\node[fit=(digit_0) (digit_1) (digit_2), rectangle, fill=black!10, draw=black, fill opacity=0.3, label=left:\fbox{On}] (on) {};
 \path[->]
-	(off) edge node {$start\_display()$} (digit_0);
-% adding a grey background
-\begin{pgfonlayer}{background}
-\filldraw [line width=4mm,join=round,black!10]
-(digit_0.north  -| digit_2.east)  rectangle (digit_2.south  -| digit_0.west);
-\end{pgfonlayer}
+	(off) 		edge [bend left] node {start\_display()} (on)
+	(on) 		edge [bend left] node {stop\_display()} (off)
+	(digit_0) 	edge node {\DISPLAYREFRESHINTERVAL} (digit_1)
+	(digit_1) 	edge node {\DISPLAYREFRESHINTERVAL} (digit_2)
+	(digit_2) 	edge node {\DISPLAYREFRESHINTERVAL} (digit_0)
+	;
 \end{tikzpicture}
-
-
 \caption{Display thread state diagram}
 \label{fig:display_state_diagram}
 \end{figure}
