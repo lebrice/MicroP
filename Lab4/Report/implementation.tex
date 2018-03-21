@@ -9,7 +9,7 @@ This section will describe the design and engineering processes that were used w
 The various requirements and corresponding program functionality of our system can be broken down into four main areas: the 7-segment display, the keypad, the ADC and the PWM controller. The keypad and display components were implemented as Threads, each behaving as a simple finite-state-machine. The ADC and PWM-related logic components were implemented as a part of an Interrupt-Service-Routine (ISR).
 
 
-Despite the overall system having significant complexity, its high-level behaviour can be broken down into a very limited number of states. The transitions between each state were also well defined (as part of the Section \ref{section:problem-statement}). By taking advantage of this fact, a very simple state machine was created, where each state manages to turn each sub-component "on" or "off". A state diagram showing the three system states, along with the name of their transitions and their outputs can be seen in Figure \ref{fig:high-level-state-diagram}.
+Despite the overall system having significant complexity, its high-level behaviour can be broken down into a very limited number of states. The transitions between each state were also well defined (as part of the \nameref{section:problem-statement} section). By taking advantage of this fact, a very simple state machine was created, where each state manages to turn each sub-component "on" or "off". A state diagram showing the three system states, along with the name of their transitions and their outputs can be seen in Figure \ref{fig:high-level-state-diagram}.
 
 
 \begin{figure}[h]
@@ -200,27 +200,26 @@ Using this mechanism, the Keypad thread can effectively keep track of the curren
 Whenever a numeric digit is entered, it enters a shift-register array, \verb|digits|, which holds up to three digits, allowing for a voltage value with 2 decimal points. Whenever the \verb|"#"| key is pressed and the float value formed by the contents of the current \verb|digits| array is valid ($0.5V \leq value \leq  2.5V$), this corresponding float value is assigned to the global \verb|target_voltage| variable, which the PWM controller then tries to match.
 
 
-The Keypad thread behaves somewhat similarly to the Display thread, as it executes a periodic task before going to sleep for a fixed delay using \verb|osDelay()|. However, the Keypad thread does not use an external signal to turn it on/off, and consequently relies on a "polling" mechanism in order to detect a key press. As will be discussed in Section \ref{section:conclusion}, this arrangement is not exactly optimal, as using a combination of an external interrupt to detect the press and a thread to count the length of the press would have been superior in terms of power efficiency.
+The Keypad thread behaves somewhat similarly to the Display thread, as it executes a periodic task before going to sleep for a fixed delay using \verb|osDelay()|. However, the Keypad thread does not use an external signal to turn it on/off, and consequently relies on a "polling" mechanism in order to detect a key press. As will be discussed in the \nameref{section:testing_and_observations} section, this arrangement is not exactly optimal, as using a combination of an external interrupt to detect the press and a thread to count the length of the press would have been superior in terms of power efficiency.
 
 
 
 \subsection{ADC Component}
 
-Overall, the ADC component of this Lab was not much different from that of Lab 2 (See the Appendix, Section \ref{section:appendix}). One difference is that the only truly relevant measure was the RMS, and the max and min values were discarded. Another noteworthy difference in this implementation was the use of an external timer (Timer2) to trigger the ADC's conversions. As per in Lab 2, DMA was used, with one \verb|HAL_ADC_ConvCpltCallback()| ISR occurring once 50 values had been gathered.
+Overall, the ADC component of this Lab was not much different from that of Lab 2 (See the \nameref{section:appendix}). One difference is that the only truly relevant measure was the RMS, and the max and min values were discarded. Another noteworthy difference in this implementation was the use of an external timer (Timer2) to trigger the ADC's conversions. As per in Lab 2, DMA was used, with one \verb|HAL_ADC_ConvCpltCallback()| ISR occurring once 50 values had been gathered.
 
 
-The ADC frequency we chose to use was 1kHz. This value was chosen because it is significantly slower than the PWM signal frequency, a requirement which was described in the section \ref{section:theory_and_hypothesis}. Given that the clock source for timer 2, the ABP2 peripheral clock, is 84\(MHz\), in order to achieve a 1kHz frequency for Timer2, its prescaler and period settings were set to 83 and 1000, respectively. 
+The ADC frequency we chose to use was 1kHz. This value was chosen because it is significantly slower than the PWM signal frequency, a requirement which was described in the \nameref{section:theory_and_hypothesis} section. Given that the clock source for timer 2, the ABP2 peripheral clock, is 84\(MHz\), in order to achieve a 1kHz frequency for Timer2, its prescaler and period settings were set to 83 and 1000, respectively. 
 
-\begin{equation}
-\label{equation:timer_frequency}
- Timer freq. = \frac{Clock freq.}{(prescaler + 1) * period}
-\end{equation}
+%\begin{equation}
+% Timer freq. = \frac{Clock freq.}{(prescaler + 1) * period}
+%\end{equation}
 
 The distinction between the ADC and PWM controller components is more for sake of clarity, since they represent different logical modules. However, they are both called sequentially as part of the \verb|HAL_ADC_ConvCpltCallback()| ISR. 
 
 
 
-One other idea which was explored was to have the ADC be implemented as a thread. The ADC thread would then behave very similarly to the Display thread, as it would simply wait on a \verb|buffer_full| signal before executing the \verb|ADC_buffer_full_callback()| function. However, as will be discussed in Section\ref{section:testing_and_observations} (Testing and Observations), we ran into significant issues.\\
+One other idea which was explored was to have the ADC be implemented as a thread. The ADC thread would then behave very similarly to the Display thread, as it would simply wait on a \verb|buffer_full| signal before executing the \verb|ADC_buffer_full_callback()| function. However, as will be discussed in the \nameref{section:testing_and_observations} section, we ran into significant issues.\\
 
 
 
@@ -239,7 +238,7 @@ Here is a brief breakdown of the different steps involved in the ADC/PWM control
 
 
 
-The PWM timer was chosen to be Timer3. As previously discussed in Section \ref{section:theory_and_hypothesis}, we chose to have a PWM timer frequency of 10 kHz. To maximise our available resolution with respect to the duty cycle, which allows us to match the target voltage more closely, we opted for a \verb|prescaler| value of 0. Using Eq. \ref{equation:timer_frequency}, this gives us a \verb|period| value of 8400, which is the biggest period possible for our desired frequency of 10kHz.
+The PWM timer was chosen to be Timer3. As previously discussed in the\nameref{section:theory_and_hypothesis} section, we chose to have a PWM timer frequency of 10 kHz. To maximise our available resolution with respect to the duty cycle, which allows us to match the target voltage more closely, we opted for a \verb|prescaler| value of 0. Using Eq. \ref{equation:timer_frequency}, this gives us a \verb|period| value of 8400, which is the biggest period possible for our desired frequency of 10kHz.
 
 
 
@@ -266,7 +265,7 @@ Figure \ref{fig:pwm_controller_logic} shows a basic representation of the PWM co
 During the implementation of this lab, two different PWM controllers were implemented. The first, shown in Figure \ref{fig:pwm_controller_1_logic}, changes the duty cycle proportionally to the difference between the current RMS voltage and target RMS values. This is the controller that was used during the demo. The second, shown in Figure \ref{fig:pwm_controller_2_logic}, is significantly more complex. It functions basically as a Successive-Approximation Register\footnote{\href{https://www.maximintegrated.com/en/app-notes/index.mvp/id/1080}{Understanding SAR ADCs: Their Architecture and Comparison with Other ADCs}}. 
 
 
-A comprehensive discussion of the performance and tradeoffs associated with each controller can be found within Section~\ref{section:testing_and_observations} (testing and observations).
+A comprehensive discussion of the performance and tradeoffs associated with each controller can be found within the \nameref{section:testing_and_observations} section.
 
 \begin{figure}[h]
 \begin{lstlisting}[language=C, frame=single, basicstyle=\small, tabsize=2]
