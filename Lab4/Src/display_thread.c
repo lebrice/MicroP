@@ -15,7 +15,7 @@ void StartDisplayTask(void const * arguments){
 			// while the display is on, refresh it.
 			refresh_display(currently_active_digit);
 			osDelay(DISPLAY_REFRESH_INTERVAL_MS);
-			
+			printf("Display thread\n");
 			currently_active_digit++;
 			currently_active_digit %= 3;
 		}

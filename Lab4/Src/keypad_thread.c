@@ -18,6 +18,7 @@ void StartKeypadTask(void const * arguments){
 		if(pressed_char != NULL){
 			keypad_update(pressed_char);
 		}
+		printf("Keypad thread\n");
 		osDelay(CHECK_FOR_DIGIT_PRESS_INTERVAL_MS);
 	}
 }

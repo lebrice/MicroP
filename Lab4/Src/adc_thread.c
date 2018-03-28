@@ -39,7 +39,10 @@ void StartAdcTask(void const * arguments){
 			
 			// wait until the ADC is full.
 			osSignalWait(adc_buffer_full, osWaitForever);
+			printf("ADC Thread\n");
 			adc_buffer_full_callback();
+			
+			
 			
 			HAL_ADC_Stop_DMA(&hadc1);
 			HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
@@ -55,16 +58,16 @@ void StartAdcTask(void const * arguments){
 
 
 void start_adc(){
-	HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
+//	HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
 	
 	
-//	adc_on = 1;
-//	osSignalSet(adcTaskHandle, adc_on);
+	adc_on = 1;
+	osSignalSet(adcTaskHandle, adc_on);
 }
 
 void stop_adc(){
-	HAL_ADC_Stop_DMA(&hadc1);
-//	adc_on = 0;
+//	HAL_ADC_Stop_DMA(&hadc1);
+	adc_on = 0;
 }
 
 

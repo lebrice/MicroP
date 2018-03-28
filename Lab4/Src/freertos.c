@@ -133,8 +133,8 @@ void MX_FREERTOS_Init(void) {
 	keypadTaskHandle = osThreadCreate(osThread(keypadTask), NULL);
 	
 	// TODO: the ADC thread is misbehaving. Shutting it off for now.
-//	osThreadDef(adcTask, StartAdcTask, osPriorityNormal, 0, 128);
-//	adcTaskHandle = osThreadCreate(osThread(adcTask), NULL);
+	osThreadDef(adcTask, StartAdcTask, osPriorityNormal, 0, 128);
+	adcTaskHandle = osThreadCreate(osThread(adcTask), NULL);
 	
 	
 	// TODO: not sure if the ADC should be a thread, since its being called with an interrupt whenever the buffer is full anyway...
