@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=C:/Users/Fabrice/repos/MicroP/Lab4/Inc
+HeaderPath=C:/Users/morin/OneDrive/Documents/Microprocessor Lab/G20_LAB1/MicroP/Lab4/Inc
 HeaderFiles=gpio.h;adc.h;dac.h;dma.h;FreeRTOSConfig.h;tim.h;stm32f4xx_it.h;stm32f4xx_hal_conf.h;main.h;
-SourcePath=C:/Users/Fabrice/repos/MicroP/Lab4/Src
+SourcePath=C:/Users/morin/OneDrive/Documents/Microprocessor Lab/G20_LAB1/MicroP/Lab4/Src
 SourceFiles=gpio.c;adc.c;dac.c;dma.c;freertos.c;tim.c;stm32f4xx_it.c;stm32f4xx_hal_msp.c;stm32f4xx_hal_timebase_TIM.c;main.c;
 
 [PreviousLibFiles]

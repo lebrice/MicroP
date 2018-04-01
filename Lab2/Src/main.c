@@ -225,7 +225,15 @@ void FIR_C(int Input, float* Output){
 }
 	
 
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* AdcHandle)
+{
+		//run energy frame over buffer 0 -> size/2
+		//place start index when energy threshold is met
+		printf("DMA Half CONV COMPLETE\n");
+		//Run PCM on 1st half of ADCBuffer..
 
+
+}
 
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
@@ -239,7 +247,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 		HAL_ADC_Stop_DMA(&hadc1);
 		HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
 	}
-	
+
 	
 }
 
