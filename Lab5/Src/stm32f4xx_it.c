@@ -175,6 +175,7 @@ void PendSV_Handler(void)
 /**
 * @brief This function handles System tick timer.
 */
+extern int MyFlag;
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
@@ -183,7 +184,7 @@ void SysTick_Handler(void)
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
   /* USER CODE BEGIN SysTick_IRQn 1 */
-
+	MyFlag++;
   /* USER CODE END SysTick_IRQn 1 */
 }
 
