@@ -24,6 +24,6 @@
 "lab5\lis3dsh.o"
 "lab5\system_stm32f4xx.o"
 --library_type=microlib --strict --scatter "Lab5\Lab5.sct"
---summary_stderr --info summarysizes --map --xref --callgraph --symbols
+--diag_suppress=L6329 --summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
 --list "./Lab5/\Lab5.map" -o Lab5\Lab5.axf
