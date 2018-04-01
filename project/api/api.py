@@ -9,7 +9,7 @@ app = Flask(__name__)
 api = Api(app)
 from flask_restful import reqparse
 
-from speech_model import get_model
+from speech_model import get_dummy_model
 
 
 accelerometer_data = {}
@@ -35,7 +35,7 @@ class Accelerometer(Resource):
         # _x = data["x"]
         # _y = data["y"]
         # _z = data["z"]
-        graph, input_tensor, output_tensor = get_model()
+        graph, input_tensor, output_tensor = get_dummy_model()
         with tf.Session(graph=graph) as session:
             session.run(tf.global_variables_initializer())
 
@@ -47,7 +47,7 @@ class Accelerometer(Resource):
             )
             print("Prediction:", prediction)
             return {
-                "result": int(result)
+                "result": int(prediction)
             }
         # parser = reqparse.RequestParser()
         # parser.add_argument('x', type=List[float], help='X-axis accelerometer values')
