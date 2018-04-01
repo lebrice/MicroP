@@ -49,18 +49,13 @@ def train_input_fn():
     return my_input_pipeline(f"{current_dir}/spectrograms")
 
 
+
+
 def get_dummy_model():
     x = tf.placeholder(tf.int32, name="input_x")
     x2 = tf.square(x)
     graph = tf.get_default_graph()
     return graph, x, x2
-
-def get_speech_model():
-    x = tf.placeholder(tf.int32, name="input_x")
-    x2 = tf.square(x)
-    graph = tf.get_default_graph()
-    return graph, x, x2
-
 
 def get_model():
     classifier = tf.estimator.Estimator(
@@ -82,7 +77,6 @@ def my_input_pipeline(spectrograms_dir, batch_size=BATCH_SIZE):
 
     file_names = tf.constant(input_files, name="file_names")
     # f_labels = tf.constant(file_labels, name="file_labels")
-
     filename_queue = tf.train.string_input_producer(file_names, shuffle=False)
     images, f_labels = read_image_file(filename_queue)
 
@@ -95,7 +89,6 @@ def my_input_pipeline(spectrograms_dir, batch_size=BATCH_SIZE):
         min_after_dequeue=min_after_dequeue
     )
     return image_batch, label_batch
-
 
 def read_image_file(filename_queue):
     with tf.name_scope("image_reader"):
