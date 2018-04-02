@@ -24,7 +24,7 @@ def make_spectrogram_from_wav_file(audio_file_path, saved_spectrogram_path, inpu
     """
     #Read the audio file
     sample_rate, samples = wav.read(audio_file_path)
-    
+
     # Set the options on pyplot such that the figure has only one box.
     
 
@@ -32,7 +32,7 @@ def make_spectrogram_from_wav_file(audio_file_path, saved_spectrogram_path, inpu
     spectrum, frequencies, times, image = plt.specgram(
         samples,
         Fs=sample_rate,
-        cmap="gray"
+        cmap="gray_r"
     )
     # Create a buffer for holding the bytes of the spectrogram before it is resized.
     buffer = BytesIO()
@@ -44,7 +44,7 @@ def make_spectrogram_from_wav_file(audio_file_path, saved_spectrogram_path, inpu
 
     #Resize the image
     resized_image = resize(spectrogram, input_size, mode='constant')
-
+    resized_image = resized_image[:,:,0]
     #Save it at the required path.
     plt.imshow(resized_image)
     mpimage.imsave(saved_spectrogram_path, resized_image)
@@ -74,9 +74,9 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 2, 
     if iteration == total: 
         print('\r')
 
+num_classes = 10
 
-
-audio_dir = """C:\\Users\\Fabrice\\repos\\free-spoken-digit-dataset\\recordings"""
+audio_dir = """C:\\Users\\Fabrice\\repos\\free-spoken-digit-dataset\\recordings\\"""
 
 spectrograms_dir = f"{current_dir}/spectrograms/"
 
@@ -84,27 +84,71 @@ wav_files = os.listdir(audio_dir)
 num_files = len(wav_files)
 
 wav_files = sorted(wav_files)
-print("Creating 64x64 spectrogram images for all", num_files, "files.")
 
 fig = plt.figure(frameon=False)
+plt.set_cmap("gray_r")
 ax = plt.Axes(fig, [0., 0., 1., 1.])
 ax.set_axis_off()
 fig.add_axes(ax)
 
-skipped_count = 0
-for i, file_name in enumerate(wav_files):
-    printProgressBar(i, num_files)
-    audio_path = f"{audio_dir}/{file_name}"
-    spect_path = f"{spectrograms_dir}/{file_name.replace('.wav','.png')}"
 
-    try:
-        #Check if we created the spectrogram for this file, if so, we can skip the next step.
-        if not os.path.isfile(spect_path):
-            make_spectrogram_from_wav_file(audio_path, spect_path)
-            plt.clf()
-    except:
-        pass
-        skipped_count += 1
-        # print(f"Error in file '{audio_path}', skipping it.")
+get_label = lambda filename : int(filename.split("_")[0])
 
-print("Created", num_files-skipped_count, "/", num_files, "spectrographs.")
+
+validation_ratio = 0.2
+
+files_per_label = dict(zip(range(num_classes), [[] for _ in range(num_classes)]))
+
+for filename in wav_files:
+    label = get_label(filename)
+    files_per_label[label].append(filename)
+
+train_files = []
+valid_files = []
+
+np.random.seed(12345678)
+#Create training and validation sets.
+for label, files in files_per_label.items():
+    # First shuffle the file names
+    np.random.shuffle(files)
+
+    # figure out where we will cut the list into valid and train set.
+    num_files = len(files)
+    cutoff_index = int(validation_ratio * num_files)
+    
+    valid_files.extend(files[:cutoff_index])
+    train_files.extend(files[cutoff_index:])
+
+
+np.random.shuffle(train_files)
+np.random.shuffle(valid_files)
+
+train_dir = f"{current_dir}/spectrograms/train"
+valid_dir = f"{current_dir}/spectrograms/valid"
+
+def make_spectrograms_dir(input_files, output_dir):
+    file_count = len(input_files)
+    skipped_count = 0
+    created_count = 0
+    for i, file_name in enumerate(input_files):        
+        printProgressBar(i, file_count)
+        audio_path = audio_dir + file_name
+        spect_path = f"{output_dir}/{file_name.replace('.wav','.png')}"
+
+        try:
+            #Check if we created the spectrogram for this file, if so, we can skip the next step.
+            if not os.path.exists(spect_path):
+                make_spectrogram_from_wav_file(audio_path, spect_path)
+                plt.clf()
+        except KeyboardInterrupt:
+            exit()
+        except (wav.WavFileWarning, ValueError):
+            skipped_count += 1
+            # print(f"Error in file '{audio_path}', skipping it.")
+        else:
+            created_count += 1
+
+    print("Created:", created_count, ", skipped: ", skipped_count, "out of ", num_files, f"spectrograms in {output_dir}")
+
+make_spectrograms_dir(train_files, train_dir)
+make_spectrograms_dir(valid_files, valid_dir)
