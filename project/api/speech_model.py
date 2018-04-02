@@ -48,26 +48,59 @@ def main():
             output_dir=classifier.model_dir,
             scaffold=tf.train.Scaffold(),
             summary_op=tf.summary.merge_all()
-        ),
-        tf.train.CheckpointSaverHook(classifier.model_dir, save_steps=100),
-        tf.train.ProfilerHook(save_steps=100, output_dir=classifier.model_dir)
-    ]
-    for i in range(10):
-        tf.estimator.train_and_evaluate(
-            classifier,
-            train_spec=tf.estimator.TrainSpec(
-                input_fn=train_input_fn,
-                max_steps=10000,
-                hooks=hooks
-            ),
-            eval_spec=tf.estimator.EvalSpec(
-                input_fn=valid_input_fn,
-                steps=100,
-                hooks=hooks,
-                name="Validation",
-                start_delay_secs=30
-            )   
         )
+    ]
+    # tf.estimator.train_and_evaluate(
+    #     classifier,
+    #     train_spec=tf.estimator.TrainSpec(
+    #         input_fn=train_input_fn,
+    #         max_steps=2000,
+    #         hooks=hooks
+    #     ),
+    #     eval_spec=tf.estimator.EvalSpec(
+    #         input_fn=valid_input_fn,
+    #         steps=1000,
+    #         hooks=hooks,
+    #         name="Validation",
+    #         start_delay_secs=30,
+    #         throttle_secs=30
+    #     )   
+    # )
+    classifier.train(
+        input_fn=train_input_fn,
+        max_steps=1000,
+        hooks=hooks
+    )
+    classifier.export_savedmodel(
+        f"{current_dir}/ml_model",
+        serving_input_receiver_fn=serving_input_receiver_fn
+    )
+    classifier.evaluate(
+        input_fn=valid_input_fn,
+        steps=100,
+        hooks=hooks,
+        name="Validation"
+    )
+
+
+def serving_input_receiver_fn():
+    """An input receiver that expects a serialized tf.Example."""
+    # example = tf.placeholder(tf.uint8, shape=(64,64,1), name="input_example_tensor")
+    # receiver_tensors = {'x': example}
+    # return tf.estimator.export.ServingInputReceiver(, receiver_tensors)
+
+    feature_spec = {
+        'x': tf.FixedLenFeature(dtype=tf.string, shape=[64,64,1])
+    }
+
+    serialized_tf_example = tf.placeholder(dtype=tf.string,
+                                            shape=[BATCH_SIZE],
+                                            name='input_example_tensor')
+    receiver_tensors = serialized_tf_example
+    features = tf.parse_example(serialized_tf_example, feature_spec)
+    return tf.estimator.export.ServingInputReceiver(features, receiver_tensors)
+
+
 
 def train_input_fn():
     return my_input_pipeline(f"{current_dir}/spectrograms/train")
@@ -138,7 +171,7 @@ def speech_model_function(features, labels, mode):
     """
     # Input Layer
     with tf.name_scope("input_layer"):
-        input_layer = tf.reshape(features, [-1, 64, 64, 1])
+        input_layer = tf.reshape(features, [-1, 64, 64, 1], name="x")
         tf.summary.image("input_image", input_layer)
 
     with tf.name_scope("conv_layer_1"):
@@ -148,7 +181,8 @@ def speech_model_function(features, labels, mode):
             filters=64,
             kernel_size=[5, 5],
             padding="same",
-            activation=tf.nn.relu)
+            activation=tf.nn.relu
+        )
         # Pooling Layer #1
         pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], strides=2)
         tf.summary.image("out_1", pool1[...,:1])
@@ -160,7 +194,8 @@ def speech_model_function(features, labels, mode):
             filters=128,
             kernel_size=[5, 5],
             padding="same",
-            activation=tf.nn.relu)
+            activation=tf.nn.relu
+        )
         pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2], strides=2)
         tf.summary.image("out_2", pool2[...,:1])
 
@@ -171,8 +206,13 @@ def speech_model_function(features, labels, mode):
             filters=128,
             kernel_size=[3, 3],
             padding="same",
-            activation=tf.nn.relu)
-        pool3 = tf.layers.max_pooling2d(inputs=conv3, pool_size=[2, 2], strides=2)
+            activation=tf.nn.relu
+        )
+        pool3 = tf.layers.max_pooling2d(
+            inputs=conv3,
+            pool_size=[2, 2],
+            strides=2
+        )
         tf.summary.image("out_3", pool3[...,:1])
 
     with tf.name_scope("flatten"):
@@ -209,7 +249,16 @@ def speech_model_function(features, labels, mode):
         }
 
     if mode == tf.estimator.ModeKeys.PREDICT:
-        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
+        output = tf.estimator.export.ClassificationOutput(
+            scores=probabilities,
+            classes=classes
+        )
+
+        return tf.estimator.EstimatorSpec(
+            mode=mode,
+            predictions=predictions,
+            export_outputs={"prediction": output}
+        )
 
     # Calculate Loss (for both TRAIN and EVAL modes)
     # loss = tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits)
@@ -220,19 +269,30 @@ def speech_model_function(features, labels, mode):
             onehot_labels=onehot_labels, logits=logits
         )
         tf.summary.scalar("Loss", loss)
-    
+
+    with tf.name_scope("Accuracy"):
+        accuracy = tf.metrics.accuracy(labels=labels, predictions=predictions["classes"])
+        tf.summary.scalar("accuracy", accuracy[0])
+
+   
+
     # Configure the Training Op (for TRAIN mode)
     if mode == tf.estimator.ModeKeys.TRAIN:
         optimizer = tf.train.AdamOptimizer(learning_rate=0.001)
         train_op = optimizer.minimize(
             loss=loss,
-            global_step=tf.train.get_global_step())
-        return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
+            global_step=tf.train.get_global_step()
+        )
+        return tf.estimator.EstimatorSpec(
+            mode=mode,
+            loss=loss,
+            train_op=train_op
+        )
 
-    # Add evaluation metrics (for EVAL mode)
+     # Add evaluation metrics
     eval_metric_ops = {
-        "accuracy": tf.metrics.accuracy(
-            labels=labels, predictions=predictions["classes"])}
+        "accuracy": accuracy
+    }
     return tf.estimator.EstimatorSpec(
         mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
 
