@@ -18,38 +18,6 @@ except:
 
 SAMPLING_FREQ = 8000
 
-def make_spectrogram_from_wav_file(audio_file_path, saved_spectrogram_path, input_size=(64,64)):
-    """
-    Generates a 64x64 spectrogram image from the given audio file.
-    """
-    #Read the audio file
-    sample_rate, samples = wav.read(audio_file_path)
-
-    # Set the options on pyplot such that the figure has only one box.
-    
-
-
-    spectrum, frequencies, times, image = plt.specgram(
-        samples,
-        Fs=sample_rate,
-        cmap="gray_r"
-    )
-    # Create a buffer for holding the bytes of the spectrogram before it is resized.
-    buffer = BytesIO()
-    # Save the figure in the buffer.
-    plt.savefig(buffer)
-    #Read the image back
-    buffer.seek(0)
-    spectrogram = mpimage.imread(buffer)
-
-    #Resize the image
-    resized_image = resize(spectrogram, input_size, mode='constant')
-    resized_image = resized_image[:,:,0]
-    #Save it at the required path.
-    plt.imshow(resized_image)
-    mpimage.imsave(saved_spectrogram_path, resized_image)
-    plt.clf()
-    return resized_image
 
 
 # Print iterations progress
@@ -91,6 +59,41 @@ ax = plt.Axes(fig, [0., 0., 1., 1.])
 ax.set_axis_off()
 fig.add_axes(ax)
 
+def preprocess(samples: np.ndarray, sampling_rate=8000, input_size=(64,64)) -> np.ndarray:    
+    # Set the options on pyplot such that the figure has only one box.
+    spectrum, frequencies, times, image = plt.specgram(
+        samples,
+        Fs=sampling_rate,
+        cmap="gray_r"
+    )
+    # Create a buffer for holding the bytes of the spectrogram before it is resized.
+    buffer = BytesIO()
+    
+    # Save the figure in the buffer.
+    plt.savefig(buffer, frameon=False, format="png")
+    #Read the image back
+    buffer.seek(0)
+    spectrogram = mpimage.imread(buffer)
+
+    #Resize the image
+    resized_image = resize(spectrogram, input_size, mode='constant')
+    resized_image = resized_image[:,:,0]
+    return resized_image
+   
+def make_spectrogram_from_wav_file(audio_file_path, saved_spectrogram_path=None, input_size=(64,64)):
+    """
+    Generates a 64x64 spectrogram image from the given audio file.
+    """
+        
+    #Read the audio file
+    sample_rate, samples = wav.read(audio_file_path)
+
+    resized_image = preprocess(samples, sample_rate, input_size)
+    #Save it at the required path.    
+    if saved_spectrogram_path != None:
+        plt.imshow(resized_image)
+        mpimage.imsave(saved_spectrogram_path, resized_image)
+    return resized_image
 
 get_label = lambda filename : int(filename.split("_")[0])
 
@@ -137,9 +140,10 @@ def make_spectrograms_dir(input_files, output_dir):
 
         try:
             #Check if we created the spectrogram for this file, if so, we can skip the next step.
-            if not os.path.exists(spect_path):
-                make_spectrogram_from_wav_file(audio_path, spect_path)
-                plt.clf()
+            # if not os.path.exists(spect_path):
+            make_spectrogram_from_wav_file(audio_path, spect_path)
+            if(i >= 2):
+                exit()
         except KeyboardInterrupt:
             exit()
         except (wav.WavFileWarning, ValueError):
@@ -150,5 +154,17 @@ def make_spectrograms_dir(input_files, output_dir):
 
     print("Created:", created_count, ", skipped: ", skipped_count, "out of ", num_files, f"spectrograms in {output_dir}")
 
-make_spectrograms_dir(train_files, train_dir)
-make_spectrograms_dir(valid_files, valid_dir)
+def check_no_duplicate_files():
+    train_files = set(os.listdir(train_dir))
+    valid_files = set(os.listdir(valid_dir))
+    # assert that there is no intersection, meaning that no files are both in training and testing directories.
+    assert train_files.intersection(valid_files) == set()
+
+def main():
+    make_spectrograms_dir(train_files, train_dir)
+    make_spectrograms_dir(valid_files, valid_dir)
+    check_no_duplicate_files()
+
+
+if __name__ == '__main__':
+    main()
