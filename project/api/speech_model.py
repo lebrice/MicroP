@@ -245,11 +245,10 @@ def speech_model_function(features, labels, mode):
         
         classes = tf.argmax(input=logits, axis=1)
         tf.summary.histogram("classes", classes)
-        str_classes = tf.cast(classes, tf.string)
         probabilities = tf.nn.softmax(logits, name="softmax_tensor")
         predictions = {
             # Generate predictions (for PREDICT and EVAL mode)
-            "classes": str_classes,
+            "classes": classes,
             # Add `softmax_tensor` to the graph. It is used for PREDICT and by the
             # `logging_hook`.
             "probabilities": probabilities
@@ -257,6 +256,7 @@ def speech_model_function(features, labels, mode):
 
 
     if mode == tf.estimator.ModeKeys.PREDICT:
+        str_classes = tf.as_string(classes)
         output = tf.estimator.export.ClassificationOutput(
             scores=probabilities,
             classes=str_classes
