@@ -68,12 +68,12 @@ def main():
     # )
     classifier.train(
         input_fn=train_input_fn,
-        max_steps=1000,
+        max_steps=2000,
         hooks=hooks
     )
     classifier.export_savedmodel(
         f"{current_dir}/ml_model",
-        serving_input_receiver_fn=serving_input_receiver_fn
+        serving_input_receiver_fn=serving_input_receiver_fn()
     )
     classifier.evaluate(
         input_fn=valid_input_fn,
@@ -82,23 +82,26 @@ def main():
         name="Validation"
     )
 
+#  feature_spec = {
+#         'x': tf.FixedLenFeature(dtype=tf.string, shape=[64,64,1])
+#     }
+
+#     serialized_tf_example = tf.placeholder(dtype=tf.string,
+#                                             shape=[BATCH_SIZE],
+#                                             name='input_example_tensor')
+#     receiver_tensors = serialized_tf_example
+#     features = tf.parse_example(serialized_tf_example, feature_spec)
+#     return tf.estimator.export.ServingInputReceiver(features, receiver_tensors)
+
 
 def serving_input_receiver_fn():
     """An input receiver that expects a serialized tf.Example."""
-    # example = tf.placeholder(tf.uint8, shape=(64,64,1), name="input_example_tensor")
-    # receiver_tensors = {'x': example}
-    # return tf.estimator.export.ServingInputReceiver(, receiver_tensors)
+    image_feature_column = tf.feature_column.numeric_column("x", shape=(64,64,1))
+    # image_feature = tf.FixedLenFeature(dtype=tf.uint8, shape=[64,64,1])
 
-    feature_spec = {
-        'x': tf.FixedLenFeature(dtype=tf.string, shape=[64,64,1])
-    }
-
-    serialized_tf_example = tf.placeholder(dtype=tf.string,
-                                            shape=[BATCH_SIZE],
-                                            name='input_example_tensor')
-    receiver_tensors = serialized_tf_example
-    features = tf.parse_example(serialized_tf_example, feature_spec)
-    return tf.estimator.export.ServingInputReceiver(features, receiver_tensors)
+    image_spec = tf.feature_column.make_parse_example_spec([image_feature_column])
+    export_input_fn = tf.estimator.export.build_parsing_serving_input_receiver_fn(image_spec)
+    return export_input_fn
 
 
 
@@ -118,7 +121,11 @@ def get_dummy_model():
 def get_model():
     classifier = tf.estimator.Estimator(
         model_fn=speech_model_function,
-        model_dir=saved_model_dir
+        model_dir=saved_model_dir,
+        config=tf.estimator.RunConfig(
+            save_checkpoints_steps=500,
+            keep_checkpoint_max=3
+        )
     )
     return classifier
 
@@ -146,7 +153,7 @@ def my_input_pipeline(spectrograms_dir, batch_size=BATCH_SIZE):
             capacity=capacity,
             min_after_dequeue=min_after_dequeue
         )
-        return image_batch, label_batch
+        return {"x": image_batch}, label_batch
 
 def read_image_file(filename_queue):
     with tf.name_scope("image_reader"):
@@ -171,7 +178,7 @@ def speech_model_function(features, labels, mode):
     """
     # Input Layer
     with tf.name_scope("input_layer"):
-        input_layer = tf.reshape(features, [-1, 64, 64, 1], name="x")
+        input_layer = tf.reshape(features["x"], [-1, 64, 64, 1], name="x")
         tf.summary.image("input_image", input_layer)
 
     with tf.name_scope("conv_layer_1"):
@@ -238,20 +245,21 @@ def speech_model_function(features, labels, mode):
         
         classes = tf.argmax(input=logits, axis=1)
         tf.summary.histogram("classes", classes)
-        
+        str_classes = tf.cast(classes, tf.string)
         probabilities = tf.nn.softmax(logits, name="softmax_tensor")
         predictions = {
             # Generate predictions (for PREDICT and EVAL mode)
-            "classes": classes,
+            "classes": str_classes,
             # Add `softmax_tensor` to the graph. It is used for PREDICT and by the
             # `logging_hook`.
             "probabilities": probabilities
         }
 
+
     if mode == tf.estimator.ModeKeys.PREDICT:
         output = tf.estimator.export.ClassificationOutput(
             scores=probabilities,
-            classes=classes
+            classes=str_classes
         )
 
         return tf.estimator.EstimatorSpec(
