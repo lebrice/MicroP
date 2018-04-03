@@ -1,4 +1,4 @@
-package com.project.ecse426.microp;
+package com.ecse426.project.featureTest;
 
 import org.junit.Test;
 

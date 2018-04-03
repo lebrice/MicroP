@@ -1,4 +1,4 @@
-package com.project.ecse426.microp.client;
+package com.ecse426.project.app;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
@@ -32,7 +32,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import com.project.ecse426.microp.R;
+import com.ecse426.project.utils.GattUtils;
+import com.ecse426.project.microp.R;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,14 +62,14 @@ public class ClientActivity extends AppCompatActivity {
     private boolean enableConnection;
     private List<String> listAddress = new ArrayList<String>();
 
-    private final UUID SERVICE_UUID = Utils.getServiceUuid();
-    private final UUID CHARACTERISTIC_UUID = Utils.getCharacteristicUuid();
-    private final UUID CONTROL_POINT_UUID = Utils.getControlPointCharUuid();
-    private final UUID CLIENT_CHARACTERISTIC_CONFIG_UUID = Utils.getClientCharacteristicConfigUuid();
-    private final String NUCLEO_MAC_ADDRESS = Utils.getNucleoMacAddress();
+    private final UUID SERVICE_UUID = GattUtils.getServiceUuid();
+    private final UUID CHARACTERISTIC_UUID = GattUtils.getCharacteristicUuid();
+    private final UUID CONTROL_POINT_UUID = GattUtils.getControlPointCharUuid();
+    private final UUID CLIENT_CHARACTERISTIC_CONFIG_UUID = GattUtils.getClientCharacteristicConfigUuid();
+    private final String NUCLEO_MAC_ADDRESS = GattUtils.getNucleoMacAddress();
+
     private String selectedAddress;
     private BluetoothDevice selectedDevice;
-    public static final String PREFS_NAME = "MAC_Address";
     private ProgressBar progressBar;
     private ListView listView;
     private ArrayAdapter<String> arrayAdapter;
@@ -76,8 +77,8 @@ public class ClientActivity extends AppCompatActivity {
     private ToggleButton toggleConnection;
     private Button startScanButton;
     private Button stopScanButton;
+    private TextView textNucleoAddress;
 
-    // ==================== LIFECYCLE ====================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,6 +97,10 @@ public class ClientActivity extends AppCompatActivity {
         startScanButton = findViewById(R.id.start_scan_button);
         stopScanButton = findViewById(R.id.stop_scan_button);
         textAddress = findViewById(R.id.device_address);
+        textNucleoAddress = findViewById(R.id.nucleo_address);
+
+        textNucleoAddress.setText("Nucleo MAC Address: " + NUCLEO_MAC_ADDRESS);
+        textNucleoAddress.invalidate();
 
         // Hid progress bar by default
         progressBar.setVisibility(View.GONE);
@@ -120,7 +125,7 @@ public class ClientActivity extends AppCompatActivity {
         listView.setOnItemClickListener((parent, view, position, id) -> {
             selectedAddress = listAddress.get(position);
             Toast.makeText(this, "Address " + selectedAddress + " selected", Toast.LENGTH_SHORT).show();
-            textAddress.setText("Device Address: " + selectedAddress);
+            textAddress.setText("Device MAC Address: " + selectedAddress);
             textAddress.invalidate();
             selectedDevice = mScanResults.get(selectedAddress);
         });
@@ -244,10 +249,16 @@ public class ClientActivity extends AppCompatActivity {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             // Add filter to connect to specific MAC address
-            if (result.getDevice().getAddress() == NUCLEO_MAC_ADDRESS) {
-                nucleoDevice = result.getDevice();
-                Log.i(TAG, "=====NUCLEO DEVICE FOUND=====");
-                connectDevice(nucleoDevice);
+//            if (result.getDevice().getAddress() == NUCLEO_MAC_ADDRESS) {
+//                nucleoDevice = result.getDevice();
+//                Log.i(TAG, "=====NUCLEO DEVICE FOUND=====");
+//                connectDevice(nucleoDevice);
+//            }
+            BluetoothDevice device = result.getDevice();
+            String deviceAddress = device.getAddress();
+            if (deviceAddress == NUCLEO_MAC_ADDRESS) {
+                toggleConnection.setChecked(true);
+                connectDevice(device);
             }
             addScanResult(result);
         }
@@ -275,16 +286,9 @@ public class ClientActivity extends AppCompatActivity {
                 arrayAdapter.notifyDataSetChanged();
             }
             Log.i(TAG, "=====RESULT ADDED=====");
-//            if (deviceAddress == NUCLEO_MAC_ADDRESS) {
-//                connectDevice(device);
-//                stopScan();
-//            }
+            Log.i(TAG, "Device Address: " + deviceAddress);
             //connectDevice(device);
         }
-
-//        public Map<String, BluetoothDevice> getmScanResults() {
-//            return mScanResults;
-//        }
     }
 
     /*
@@ -321,7 +325,8 @@ public class ClientActivity extends AppCompatActivity {
 
     /**
      * Handles callbacks from the GATT server
-     * Will either go into a CONNECTED/DISCONNECTED STATE upon GATT_SUCCESS/GATT_FAILURE
+     * This is where to get characteristics (data) from services
+     * Each service has its own UUID, to get a specific category of data. Have to specify the service that contains it and the characteristics
      */
     private class GattClientCallback extends BluetoothGattCallback {
         @Override
@@ -345,7 +350,7 @@ public class ClientActivity extends AppCompatActivity {
         }
 
         /**
-         * Handler for when services are discovered
+         * Handler for discovered services
          * @param gatt
          * @param status
          */
@@ -368,6 +373,12 @@ public class ClientActivity extends AppCompatActivity {
             gatt.writeDescriptor(descriptor);
         }
 
+        /**
+         * Writing to descriptor of characteristic
+         * @param gatt
+         * @param descriptor
+         * @param status
+         */
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status){
 
@@ -381,7 +392,8 @@ public class ClientActivity extends AppCompatActivity {
         }
 
         /**
-         * For reading data from the gatt server
+         * Reading data/characteristic
+         * All updates from the sensor on characteristic value changes will be posted on this next callback
          * @param gatt
          * @param characteristic
          */

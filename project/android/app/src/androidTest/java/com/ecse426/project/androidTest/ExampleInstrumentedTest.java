@@ -1,4 +1,4 @@
-package com.project.ecse426.microp;
+package com.ecse426.project.androidTest;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
