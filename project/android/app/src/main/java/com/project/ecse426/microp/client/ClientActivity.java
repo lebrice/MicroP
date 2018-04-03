@@ -24,11 +24,10 @@ import android.os.ParcelUuid;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -43,7 +42,6 @@ import java.util.UUID;
 
 public class ClientActivity extends AppCompatActivity {
 
-    // Required UUIDs
     private final String TAG = this.getClass().getName();
     private Map<String, BluetoothDevice> mScanResults;
     private BtleScanCallback mScanCallback;
@@ -61,7 +59,7 @@ public class ClientActivity extends AppCompatActivity {
     private char[] bytes;
     private boolean mEchoInitialized;
     private boolean enableConnection;
-    private List<String> spinnerArray = new ArrayList<String>();
+    private List<String> listAddress = new ArrayList<String>();
 
     private final UUID SERVICE_UUID = Utils.getServiceUuid();
     private final UUID CHARACTERISTIC_UUID = Utils.getCharacteristicUuid();
@@ -69,8 +67,15 @@ public class ClientActivity extends AppCompatActivity {
     private final UUID CLIENT_CHARACTERISTIC_CONFIG_UUID = Utils.getClientCharacteristicConfigUuid();
     private final String NUCLEO_MAC_ADDRESS = Utils.getNucleoMacAddress();
     private String selectedAddress;
-    private BluetoothDevice deviceSelected;
+    private BluetoothDevice selectedDevice;
     public static final String PREFS_NAME = "MAC_Address";
+    private ProgressBar progressBar;
+    private ListView listView;
+    private ArrayAdapter<String> arrayAdapter;
+    private TextView textAddress;
+    private ToggleButton toggleConnection;
+    private Button startScanButton;
+    private Button stopScanButton;
 
     // ==================== LIFECYCLE ====================
     @Override
@@ -84,71 +89,54 @@ public class ClientActivity extends AppCompatActivity {
         mBluetoothAdapter = bluetoothManager.getAdapter();
         Log.d(TAG, "BLE Set up");
 
-        // Fancy progress bar lmao
-        final ProgressBar progressBar = findViewById(R.id.progress_bar);
+        // Getting Views from Layout
+        listView = findViewById(R.id.list_address);
+        progressBar = findViewById(R.id.progress_bar);
+        toggleConnection = findViewById(R.id.toggle_connection);
+        startScanButton = findViewById(R.id.start_scan_button);
+        stopScanButton = findViewById(R.id.stop_scan_button);
+        textAddress = findViewById(R.id.device_address);
+
+        // Hid progress bar by default
         progressBar.setVisibility(View.GONE);
 
-        // Start and stop scanning buttons
-        final Button start_scan_button = findViewById(R.id.start_scan_button);
-        start_scan_button.setOnClickListener(v -> {
+        // Click Listeners for start and stop scan buttons
+        startScanButton.setOnClickListener(v -> {
             startScan();
             Log.d(TAG, "Start Scan button clicked");
             progressBar.setVisibility(View.VISIBLE);
         });
-        final Button stop_scan_button = findViewById(R.id.stop_scan_button);
-        stop_scan_button.setOnClickListener(v -> {
+        stopScanButton.setOnClickListener(v -> {
             stopScan();
             Log.d(TAG, "Stop Scan button clicked");
             progressBar.setVisibility(View.GONE);
         });
 
-        // Populate spinner with addresses
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, spinnerArray);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        Spinner spinnerAddress = findViewById(R.id.address_spinner);
-        spinnerAddress.setAdapter(adapter);
+        // Populate ListView
+        arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, listAddress);
+        listView.setAdapter(arrayAdapter);
 
-        // selecting item from spinner
-        try {
-            TextView deviceAddress = findViewById(R.id.device_address);
-            Map<String, BluetoothDevice> scanResults = mScanCallback.getmScanResults();
-            spinnerAddress.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                                                 @Override
-                                                 public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                                                     selectedAddress = spinnerAddress.getItemAtPosition(i).toString();
-                                                     deviceAddress.setText(selectedAddress);
-                                                     deviceAddress.invalidate();
-                                                 }
+        // On Item Click Listener for list view
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            selectedAddress = listAddress.get(position);
+            Toast.makeText(this, "Address " + selectedAddress + " selected", Toast.LENGTH_SHORT).show();
+            textAddress.setText("Device Address: " + selectedAddress);
+            textAddress.invalidate();
+            selectedDevice = mScanResults.get(selectedAddress);
+        });
 
-                                                 @Override
-                                                 public void onNothingSelected(AdapterView<?> adapterView) {
-                                                 }
-                                             }
-            );
-            if (selectedAddress != null) {
-                deviceSelected = scanResults.get(selectedAddress);
-            }
-            else {
-                // Default address
-                String address = NUCLEO_MAC_ADDRESS;
-                deviceSelected = scanResults.get(address);
-            }
-
-        } catch (NullPointerException e) {
-            Log.e(TAG, e.getMessage());
-        }
-
-        TextView resultsText = findViewById(R.id.results_text);
-        resultsText.setText("Results Found: " + spinnerArray.size());
-        resultsText.invalidate();
-
-        ToggleButton toggleConnection = (ToggleButton) findViewById(R.id.toggle_button);
+        // On Checked Listener for toggle connection button
         toggleConnection.setOnCheckedChangeListener((compoundButton, isChecked) -> {
-            if (isChecked && deviceSelected != null) {
-                connectDevice(deviceSelected);
+            if (selectedDevice != null && selectedAddress != null) {
+                if (isChecked) {
+                    connectDevice(selectedDevice);
+                }
+                else {
+                    disconnectGattServer();
+                }
             }
             else {
-                disconnectGattServer();
+                Toast.makeText(this, "Need to select address", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -166,7 +154,7 @@ public class ClientActivity extends AppCompatActivity {
             return;
         }
         Log.d(TAG, "=====SCAN STARTED=====");
-        spinnerArray.clear();
+        listAddress.clear();
         List<ScanFilter> filters = new ArrayList<>();
         ScanFilter filter = new ScanFilter.Builder()
                 .setServiceUuid(new ParcelUuid(SERVICE_UUID))
@@ -182,9 +170,9 @@ public class ClientActivity extends AppCompatActivity {
         mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
         mBluetoothLeScanner.startScan(filters, settings, mScanCallback);
         mScanning = true;
-        Toast.makeText(this, "Scanning", Toast.LENGTH_SHORT);
+        Toast.makeText(this, "Scanning", Toast.LENGTH_SHORT).show();
 
-        // Handler delays scanning to save power, otherwise scans forever
+        // Handler delays scanning to save power, otherwise scans forever4
         mHandler = new Handler();
         mHandler.postDelayed(this::stopScan, SCAN_PERIOD);
     }
@@ -199,7 +187,8 @@ public class ClientActivity extends AppCompatActivity {
         mScanCallback = null;
         mScanning = false;
         mHandler = null;
-        Toast.makeText(this, "Scanning Stopped", Toast.LENGTH_SHORT);
+        Toast.makeText(this, "Scanning Stopped", Toast.LENGTH_SHORT).show();
+        progressBar.setVisibility(View.GONE);
     }
 
     // Performs any actions using the results, for now simply logs
@@ -246,8 +235,7 @@ public class ClientActivity extends AppCompatActivity {
      */
     private class BtleScanCallback extends ScanCallback {
 
-        // A scan result contains the device address and the device itself
-        private Map<String, BluetoothDevice> mScanResults;
+
 
         public BtleScanCallback(Map<String, BluetoothDevice> scanResults) {
             mScanResults = scanResults;
@@ -282,15 +270,21 @@ public class ClientActivity extends AppCompatActivity {
             BluetoothDevice device = result.getDevice();
             String deviceAddress = device.getAddress();
             mScanResults.put(deviceAddress, device);
-            if (!spinnerArray.contains(deviceAddress)) {
-                spinnerArray.add(deviceAddress);
+            if (!listAddress.contains(deviceAddress)) {
+                listAddress.add(deviceAddress);
+                arrayAdapter.notifyDataSetChanged();
             }
             Log.i(TAG, "=====RESULT ADDED=====");
+//            if (deviceAddress == NUCLEO_MAC_ADDRESS) {
+//                connectDevice(device);
+//                stopScan();
+//            }
+            //connectDevice(device);
         }
 
-        public Map<String, BluetoothDevice> getmScanResults() {
-            return mScanResults;
-        }
+//        public Map<String, BluetoothDevice> getmScanResults() {
+//            return mScanResults;
+//        }
     }
 
     /*
@@ -301,6 +295,7 @@ public class ClientActivity extends AppCompatActivity {
         GattClientCallback gattClientCallback = new GattClientCallback();
         mGatt = device.connectGatt(this, false, gattClientCallback);
         Log.d(TAG, "=====GATT SERVER CONNECTED=====");
+        Toast.makeText(this, "Connected to " + selectedAddress, Toast.LENGTH_SHORT).show();
     }
 
     // To fully disconnect from server
@@ -310,6 +305,7 @@ public class ClientActivity extends AppCompatActivity {
             mGatt.disconnect();
             mGatt.close();
             Log.d(TAG, "=====GATT SERVER DISCONNECTED=====");
+            Toast.makeText(this, "Disconnected from " + selectedAddress, Toast.LENGTH_SHORT).show();
         }
     }
 

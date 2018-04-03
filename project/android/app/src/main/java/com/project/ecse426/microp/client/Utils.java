@@ -4,6 +4,7 @@ import java.util.UUID;
 
 /**
  * Created by matth on 02-Apr-18.
+ * Contains GATT service and characteristic UUIDs. Contains Nucleo board's MAC address
  */
 
 public class Utils {
