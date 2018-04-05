@@ -51,7 +51,7 @@ def record():
         # Print a nice progress bar so its easy to follow.
         audio_frames.append(stream.read(CHUNK_SIZE))
 
-    print("Finished recording.")
+    print("Finished recording.", end="\r")
     
 
     # stop Recording
@@ -135,52 +135,69 @@ def record_some_test_samples(person_recording="FABRICE"):
     TODO: change the name of the person recording so we can identify the sound clips.
     """
     import random
-    import time
+    from time import sleep
+    
+    from collections import Counter
     rd = random.Random()
+
+    get_label = lambda filename : int(filename.split("_")[0])
 
     def get_next_counts(sound_dir=SOUND_DIR):
         """
         Returns the number of samples of this type that are present in SOUND_DIR.
         """
-        from collections import Counter
-                
         sound_files = os.listdir(sound_dir)
-        get_label = lambda filename : int(filename.split("_")[0])
-        
         return Counter([get_label(f) for f in sound_files])
 
-    next_counts = get_next_counts()
+    def get_least_represented_number(counts, expected_labels=list(range(10))):
+        """
+        Returns the label with the least number of training examples.
+        Once all training examples have the same number of training samples, returns a random number.
+        """
+        # print(counts.items())
+        result = min(expected_labels, key=lambda label: counts[label])
+        # print("The least represented is ", result)
+        return result
+
+    counts = get_next_counts()
+    
+    print("Starting sample counts per label: ")
+    for label, count in counts.items():
+        print(f"'{label}'", ":", count)
+
+
+    number_to_record = get_least_represented_number(counts)
 
     while True:
-        number_to_record = rd.randint(0,9)
-        count = next_counts[number_to_record]
+        count = counts[number_to_record]
 
-        print("Next Number to record:", number_to_record)
-        print("Press ENTER to start recording. There is a 0.5 second delay. Enter anything else to exit.", end="\r")
+        print("Next Number: \t-->\t", number_to_record, "\t<--")
+        print("Press ENTER to start recording.", end="\r")
         start = input() == ""
         if not start:
             break
-        time.sleep(0.5)
+        sleep(0.5)
 
         sample_width, audio_frames = record()
         play_sound_data(sample_width, audio_frames)
-        user_input = input("\r\r\rKeep sample? (y/n) -->")
+        print("Keep sample? (y/n)\t", end="")
+        user_input = input()
         if user_input == "y":
-
             save_path = f"{SOUND_DIR}/{number_to_record}_{person_recording}_{count}.wav"
 
 
             write_to_file(sample_width, audio_frames, save_path)
-            next_counts[number_to_record] += 1
+            counts[number_to_record] += 1
 
             print("\rSaved at ", save_path)
+            number_to_record = get_least_represented_number(counts)
         elif user_input == "n":
             continue
         else:
             break
 
     print("DONE. Current sample counts per label: ")
-    for label, count in next_counts.items():
+    for label, count in counts.items():
         print(f"'{label}'", ":", count)
 
 def main():
