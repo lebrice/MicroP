@@ -128,7 +128,7 @@ public class ClientActivity extends AppCompatActivity {
         });
 
         // Populate ListView
-        arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, listAddress);
+        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, listAddress);
         listView.setAdapter(arrayAdapter);
 
         // On Item Click Listener for list view
@@ -255,9 +255,7 @@ public class ClientActivity extends AppCompatActivity {
      */
     private class BtleScanCallback extends ScanCallback {
 
-
-
-        public BtleScanCallback(Map<String, BluetoothDevice> scanResults) {
+        BtleScanCallback(Map<String, BluetoothDevice> scanResults) {
             mScanResults = scanResults;
         }
 
@@ -348,6 +346,9 @@ public class ClientActivity extends AppCompatActivity {
         // Send message
         characteristic.setValue(messageBytes);
         boolean messageSuccess = mGatt.writeCharacteristic(characteristic);
+        if (messageSuccess) {
+            Log.i(TAG, "Message sent successfully!");
+        }
     }
 
 
@@ -380,8 +381,8 @@ public class ClientActivity extends AppCompatActivity {
 
         /**
          * Handler for discovered services
-         * @param gatt
-         * @param status
+         * @param gatt Gatt session
+         * @param status Status
          */
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             super.onServicesDiscovered(gatt, status);
@@ -417,9 +418,9 @@ public class ClientActivity extends AppCompatActivity {
         /**
          * Writing to descriptor of characteristic. Need to write to Characteristic to tell the sensor to start
          * streaming data. Write a simple byte array that contains {1,1} that serves as a data streaming command.
-         * @param gatt
-         * @param descriptor
-         * @param status
+         * @param gatt Gatt session
+         * @param descriptor Descriptor written to
+         * @param status Status
          */
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status){
@@ -436,8 +437,8 @@ public class ClientActivity extends AppCompatActivity {
         /**
          * Reading notification from server
          * All updates from the sensor on characteristic value changes will be posted on this next callback
-         * @param gatt
-         * @param characteristic
+         * @param gatt Gatt session
+         * @param characteristic Characteristic of service
          */
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
