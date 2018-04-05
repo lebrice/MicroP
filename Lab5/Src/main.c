@@ -41,6 +41,19 @@
 #include "lis3dsh.h"
 
 
+#define STATE_NOTHING 0
+#define STATE_TAP 1
+#define STATE_DOUBLETAP 2
+#define STATE_SINGLETAP 3
+
+#define X_THRESH 100
+#define Y_THRESH 100
+#define Z_THRESH 30
+
+#define ACC_SAMPLE_PERIOD_MS 1
+#define FSM_FREQUENCY_MS 50
+#define BUF_LENGTH FSM_FREQUENCY_MS / ACC_SAMPLE_PERIOD_MS
+
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
@@ -55,6 +68,8 @@ uint8_t status;
 float Buffer[3];
 float accX, accY, accZ;
 uint8_t MyFlag = 0;
+uint8_t state = STATE_NOTHING;
+uint32_t click_timer = 0;
 LIS3DSH_InitTypeDef 		Acc_instance;
 
 /* Private function prototypes -----------------------------------------------*/
@@ -68,6 +83,10 @@ static void MX_SPI1_Init(void);
 
 void initializeACC			(void);
 
+uint8_t detected_tap(float *, int);
+
+float buf[BUF_LENGTH];
+uint8_t buf_index = 0;
 
 int main(void)
 {
@@ -90,12 +109,17 @@ int main(void)
 	float lastZ = 0.0;
 	float lastY = 0.0;
 	float lastX = 0.0;
+	float minZ, maxZ;
+	float maxDrop, minDrop;
+	minZ = 100000.0f;
+	maxZ = 100.0f;
+	maxDrop = minDrop = 0;
   while (1)
   {
  
-		if (MyFlag/50)
+		if (MyFlag)
 		{
-			HAL_GPIO_TogglePin(GPIOD, LD6_Pin);
+			//HAL_GPIO_TogglePin(GPIOD, LD6_Pin);
 			MyFlag = 0;
 			//Reading the accelerometer status register
 				LIS3DSH_Read (&status, LIS3DSH_STATUS, 1);
@@ -107,22 +131,62 @@ int main(void)
 					accX = (float)Buffer[0];
 					accY = (float)Buffer[1];
 					accZ = (float)Buffer[2];
-					if(accZ - lastZ > 50 || lastZ - accZ > 50) HAL_GPIO_TogglePin(GPIOD, LD3_Pin);
-					if(accX - lastX > 50 || lastX - accX > 50) HAL_GPIO_TogglePin(GPIOD, LD4_Pin);
-					if(accY - lastY > 50 || lastY - accY > 50) HAL_GPIO_TogglePin(GPIOD, LD5_Pin);
+				}
+				
+				buf[(buf_index++) % BUF_LENGTH] = accZ;
 
-					lastZ = accZ;
+				if(accZ > maxZ) maxZ = accZ;
+				else if(accZ < minZ) minZ = accZ;
+				
+				if(click_timer/100) {
+					click_timer = 0;
+					HAL_GPIO_TogglePin(GPIOD, LD4_Pin);
+					float deltaZ = maxZ - minZ;
+					maxZ = -5.0f;
+					minZ = 100000.0f;
+					maxDrop = minDrop = 0;
+					//MyFlag = 0;
+					uint8_t tap = detected_tap(buf, BUF_LENGTH);
+					
+					switch(state) {
+						case STATE_NOTHING:
+							if(tap) state = STATE_TAP;
+							break;
+						case STATE_TAP:
+							if(tap) state = STATE_DOUBLETAP;
+							else state = STATE_SINGLETAP;
+							break;
+						case STATE_DOUBLETAP:
+							HAL_GPIO_TogglePin(GPIOD, LD3_Pin);
+							state = STATE_NOTHING;
+							break;
+						case STATE_SINGLETAP:
+							HAL_GPIO_TogglePin(GPIOD, LD6_Pin);
+							state = STATE_NOTHING;
+							break;
+						default:
+							break;
+					}
 					lastX = accX;
 					lastY = accY;
-
-					printf("X: %4f     Y: %4f     Z: %4f \n", accX, accY, accZ);
-				}
+					lastZ = accZ;
 			}
-			
+		}
   }
+}
 
-	
-
+uint8_t detected_tap(float *samples, int num_samples) {
+	float max = samples[0];
+	int c;
+	for(c = 1; c < num_samples; c++) {
+		if(samples[c] > max) {
+			max = samples[c];
+		}
+	}
+	if(max - samples[0] > Z_THRESH && max - samples[num_samples - 1] > Z_THRESH) {
+		return 1;
+	}
+	return 0;
 }
 
 /** System Clock Configuration
