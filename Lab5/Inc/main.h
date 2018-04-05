@@ -113,10 +113,6 @@
 #define MEMS_INT2_Pin GPIO_PIN_1
 #define MEMS_INT2_GPIO_Port GPIOE
 
-#define BLUE_BUTTON_Pin GPIO_PIN_0
-#define BLUE_BUTTON_GPIO_Port GPIOA
-#define BLUE_BUTTON_EXTI_IRQn EXTI0_IRQn
-
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

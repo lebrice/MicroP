@@ -3,8 +3,8 @@
  * Auto generated Run-Time-Environment Component Configuration File
  *      *** Do not modify ! ***
  *
- * Project: 'Lab5' 
- * Target:  'Lab5' 
+ * Project: 'FinalPrj' 
+ * Target:  'FinalPrj' 
  */
 
 #ifndef RTE_COMPONENTS_H
