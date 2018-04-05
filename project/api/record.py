@@ -1,9 +1,5 @@
 """
-
-
-TAKEN FROM https://stackoverflow.com/questions/892199/detect-record-audio-in-python
-
-
+Module for recording and playing audio .wav files.
 """
 
 

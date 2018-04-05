@@ -62,12 +62,16 @@ num_files = len(wav_files)
 wav_files = sorted(wav_files)
 
 fig = plt.figure(frameon=False)
-plt.set_cmap("gray_r")
-ax = plt.Axes(fig, [0., 0., 1., 1.])
-ax.set_axis_off()
-fig.add_axes(ax)
-
 def preprocess(samples: np.ndarray, sampling_rate=8000, input_size=(64,64)) -> np.ndarray:    
+
+
+        
+   
+    plt.set_cmap("gray_r")
+    ax = plt.Axes(fig, [0., 0., 1., 1.])
+    ax.set_axis_off()
+    fig.add_axes(ax)
+
     # Set the options on pyplot such that the figure has only one box.
     spectrum, frequencies, times, image = plt.specgram(
         samples,
@@ -101,6 +105,8 @@ def make_spectrogram_from_wav_file(audio_file_path, saved_spectrogram_path=None,
     if saved_spectrogram_path != None:
         plt.imshow(resized_image)
         mpimage.imsave(saved_spectrogram_path, resized_image)
+
+    plt.cla()
     return resized_image
 
 get_label = lambda filename : int(os.path.split(filename)[-1].split("_")[0])
