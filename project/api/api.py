@@ -35,32 +35,52 @@ class Speech(Resource):
     def post(self):
         request_data = request.get_json()
         import matplotlib.image as mpimage
-        image = mpimage.imread(request.files["image"])
-        # import matplotlib.pyplot as plt
-        # plt.imshow(image)
-        # plt.show()
 
-        # data = request_data["data"]
-        # _x = data["x"]
-        # _y = data["y"]
-        # _z = data["z"]
-        if self.classifier == None:
+
+        # Read the image file from the request
+        image = mpimage.imread(request.files["image"])
+        
+        # load up a classifier
+        if self.classifier is None:
             self.classifier = speech_model.get_model()
         
-        image = mpimage.imread(f"{current_dir}/spectrograms/valid/0_jackson_6.png")
-
-        def predict_input_fn():
-            return {
-                "x": np.reshape(image[...,0], (64,64,1))
-            }
-
-        result = next(self.classifier.predict(predict_input_fn))
-        print(result)
-        return {
-            "classes": int(result["classes"]),
-            "probabilities": result["probabilities"].tolist()
-
+        flattened_image = np.reshape(image[...,0], (1, 64*64))
+        
+        print(image.shape)
+        predict_x = {
+            "x": flattened_image.astype(np.float32)
         }
+
+        def eval_input_fn(features, labels=None, batch_size=1):
+            """An input function for evaluation or prediction"""
+            features=dict(features)
+            # plt.imshow(np.reshape(features["x"], (64,64)))
+            # plt.show()
+            if labels is None:
+                # No labels, use only features.
+                inputs = features
+            else:
+                inputs = (features, labels)
+
+            # Convert the inputs to a Dataset.
+            dataset = tf.data.Dataset.from_tensor_slices(inputs)
+            # Batch the examples
+            dataset = dataset.batch(batch_size)
+            # Return the dataset.
+            return dataset
+        
+
+        predictions = self.classifier.predict(lambda: eval_input_fn(predict_x))
+        results = []
+        for pred_dict in predictions:
+            
+            result = {
+                "classes": int(pred_dict["classes"]),
+                "probabilities": pred_dict["probabilities"].tolist()
+            }
+            results.append(result)
+        predictions.close()
+        return results
 
 
 class Accelerometer(Resource):
