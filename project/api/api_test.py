@@ -95,6 +95,13 @@ def test_with_live_recording():
     # record_to_file(test_audio_path)
     make_spectrogram_from_wav_file(test_audio_path, test_img_path)
 
+    import matplotlib.image as mpimage
+    import matplotlib.pyplot as plt
+    image = mpimage.imread(test_img_path)
+    plt.imshow(image, cmap="gray")
+    plt.show()
+
+
     pred_label, pred_probabilities = send_to_api(test_img_path)
     print(f"The API thinks that that was a \t", pred_label, f"\t with {pred_probabilities[pred_label]:2.3%} certainty")
 

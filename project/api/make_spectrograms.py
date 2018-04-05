@@ -44,11 +44,19 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 2, 
 
 num_classes = 10
 
-audio_dir = """C:\\Users\\Fabrice\\repos\\free-spoken-digit-dataset\\recordings\\"""
+# A free dataset of 1500 examples of spoken digits.
+audio_dir_1 = """C:\\Users\\Fabrice\\repos\\free-spoken-digit-dataset\\recordings\\"""
+# Our own training data.
+audio_dir_2 = f"{current_dir}/sounds"
+
+audio_dirs = [audio_dir_1, audio_dir_2]
+
 
 spectrograms_dir = f"{current_dir}/spectrograms/"
 
-wav_files = os.listdir(audio_dir)
+wav_files = []
+for audio_dir in audio_dirs:
+    wav_files.extend([audio_dir +"/"+ f_name for f_name in os.listdir(audio_dir)])
 num_files = len(wav_files)
 
 wav_files = sorted(wav_files)
@@ -95,8 +103,7 @@ def make_spectrogram_from_wav_file(audio_file_path, saved_spectrogram_path=None,
         mpimage.imsave(saved_spectrogram_path, resized_image)
     return resized_image
 
-get_label = lambda filename : int(filename.split("_")[0])
-
+get_label = lambda filename : int(os.path.split(filename)[-1].split("_")[0])
 
 validation_ratio = 0.2
 
@@ -129,21 +136,22 @@ np.random.shuffle(valid_files)
 train_dir = f"{current_dir}/spectrograms/train"
 valid_dir = f"{current_dir}/spectrograms/valid"
 
-def make_spectrograms_dir(input_files, output_dir):
-    file_count = len(input_files)
+def make_spectrograms_dir(input_file_paths, output_dir):
+    file_count = len(input_file_paths)
     skipped_count = 0
     created_count = 0
-    for i, file_name in enumerate(input_files):        
+    for i, file_path in enumerate(input_file_paths):        
         printProgressBar(i, file_count)
-        audio_path = audio_dir + file_name
-        spect_path = f"{output_dir}/{file_name.replace('.wav','.png')}"
+
+
+
+        spect_path = f"{output_dir}/{os.path.split(file_path)[-1].replace('.wav','.png')}"
 
         try:
             #Check if we created the spectrogram for this file, if so, we can skip the next step.
             # if not os.path.exists(spect_path):
-            make_spectrogram_from_wav_file(audio_path, spect_path)
-            if(i >= 2):
-                exit()
+            make_spectrogram_from_wav_file(file_path, spect_path)
+
         except KeyboardInterrupt:
             exit()
         except (wav.WavFileWarning, ValueError):
@@ -158,7 +166,9 @@ def check_no_duplicate_files():
     train_files = set(os.listdir(train_dir))
     valid_files = set(os.listdir(valid_dir))
     # assert that there is no intersection, meaning that no files are both in training and testing directories.
-    assert train_files.intersection(valid_files) == set()
+    intersection = train_files.intersection(valid_files)
+    if intersection != set():
+        raise RuntimeError("There is an intersection between the training and testing sets!!", intersection)
 
 def main():
     make_spectrograms_dir(train_files, train_dir)
