@@ -9,4 +9,7 @@
     <string name="device_address">Device MAC Address:</string>
     <string name="mac_address">MAC Address</string>
     <string name="nucleo_address">Nucleo MAC Address:</string>
+    <string name="message">Message</string>
+    <string name="text_message">Message</string>
+    <string name="send">Send</string>
 </resources>

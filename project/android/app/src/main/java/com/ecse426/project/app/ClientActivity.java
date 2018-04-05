@@ -26,15 +26,17 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import com.ecse426.project.utils.GattUtils;
 import com.ecse426.project.microp.R;
+import com.ecse426.project.utils.GattUtils;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,23 +52,21 @@ public class ClientActivity extends AppCompatActivity {
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothManager bluetoothManager;
     private BluetoothGatt mGatt;
-    public BluetoothDevice nucleoDevice;
 
     private Handler mHandler;
     private long SCAN_PERIOD = 10000;
     private boolean mConnected;
     private boolean mScanning;
     private boolean mInitialized;
-    private char[] bytes;
-    private boolean mEchoInitialized;
-    private boolean enableConnection;
     private List<String> listAddress = new ArrayList<String>();
+    private String message = "message";
 
-    private final UUID SERVICE_UUID = GattUtils.getServiceUuid();
-    private final UUID CHARACTERISTIC_UUID = GattUtils.getCharacteristicUuid();
-    private final UUID CONTROL_POINT_UUID = GattUtils.getControlPointCharUuid();
-    private final UUID CLIENT_CHARACTERISTIC_CONFIG_UUID = GattUtils.getClientCharacteristicConfigUuid();
-    private final String NUCLEO_MAC_ADDRESS = GattUtils.getNucleoMacAddress();
+    private final UUID CUSTOM_SERVICE_023_UUID = GattUtils.CUSTOM_SERVICE_023_UUID;
+    private final UUID CUSTOM_SERVICE_428_UUID = GattUtils.CUSTOM_SERVICE_428_UUID;
+    private final UUID CHARACTERISTIC1_023_UUID = GattUtils.CHARACTERISTIC1_023_UUID;
+    private final UUID CONTROL_POINT_UUID = GattUtils.CONTROL_POINT_CHAR_UUID;
+    private final UUID CLIENT_CHARACTERISTIC_CONFIG_UUID = GattUtils.CLIENT_CHARACTERISTIC_CONFIG_UUID;
+    private final String NUCLEO_MAC_ADDRESS = GattUtils.NUCLEO_MAC_ADDRESS;
 
     private String selectedAddress;
     private BluetoothDevice selectedDevice;
@@ -78,6 +78,9 @@ public class ClientActivity extends AppCompatActivity {
     private Button startScanButton;
     private Button stopScanButton;
     private TextView textNucleoAddress;
+    private EditText textMessage;
+    private Button sendButton;
+    private Context clientActivityContext = this;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,7 +90,7 @@ public class ClientActivity extends AppCompatActivity {
         // Setup BLE in Activity
         Log.d(TAG, "BLE Setting up");
         bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        mBluetoothAdapter = bluetoothManager.getAdapter();
+        mBluetoothAdapter = bluetoothManager != null ? bluetoothManager.getAdapter() : null;
         Log.d(TAG, "BLE Set up");
 
         // Getting Views from Layout
@@ -98,23 +101,30 @@ public class ClientActivity extends AppCompatActivity {
         stopScanButton = findViewById(R.id.stop_scan_button);
         textAddress = findViewById(R.id.device_address);
         textNucleoAddress = findViewById(R.id.nucleo_address);
+        textMessage = findViewById(R.id.text_message);
+        sendButton = findViewById(R.id.send_button);
 
-        textNucleoAddress.setText("Nucleo MAC Address: " + NUCLEO_MAC_ADDRESS);
+        String textSet = "Nucleo MAC Address: " + NUCLEO_MAC_ADDRESS;
+        textNucleoAddress.setText(textSet);
         textNucleoAddress.invalidate();
 
         // Hid progress bar by default
-        progressBar.setVisibility(View.GONE);
+        progressBar.setVisibility(View.INVISIBLE);
 
         // Click Listeners for start and stop scan buttons
         startScanButton.setOnClickListener(v -> {
             startScan();
             Log.d(TAG, "Start Scan button clicked");
-            progressBar.setVisibility(View.VISIBLE);
+            //progressBar.setVisibility(View.VISIBLE);
         });
         stopScanButton.setOnClickListener(v -> {
             stopScan();
             Log.d(TAG, "Stop Scan button clicked");
-            progressBar.setVisibility(View.GONE);
+            //progressBar.setVisibility(View.INVISIBLE);
+        });
+        sendButton.setOnClickListener(view -> {
+            message = textMessage.getText().toString();
+            sendMessage(message);
         });
 
         // Populate ListView
@@ -125,7 +135,8 @@ public class ClientActivity extends AppCompatActivity {
         listView.setOnItemClickListener((parent, view, position, id) -> {
             selectedAddress = listAddress.get(position);
             Toast.makeText(this, "Address " + selectedAddress + " selected", Toast.LENGTH_SHORT).show();
-            textAddress.setText("Device MAC Address: " + selectedAddress);
+            String deviceText = "Device MAC Address: " + selectedAddress;
+            textAddress.setText(deviceText);
             textAddress.invalidate();
             selectedDevice = mScanResults.get(selectedAddress);
         });
@@ -134,6 +145,9 @@ public class ClientActivity extends AppCompatActivity {
         toggleConnection.setOnCheckedChangeListener((compoundButton, isChecked) -> {
             if (selectedDevice != null && selectedAddress != null) {
                 if (isChecked) {
+                    String deviceText = "Device MAC Address: " + selectedAddress;
+                    textAddress.setText(deviceText);
+                    textAddress.invalidate();
                     connectDevice(selectedDevice);
                 }
                 else {
@@ -162,7 +176,7 @@ public class ClientActivity extends AppCompatActivity {
         listAddress.clear();
         List<ScanFilter> filters = new ArrayList<>();
         ScanFilter filter = new ScanFilter.Builder()
-                .setServiceUuid(new ParcelUuid(SERVICE_UUID))
+                .setServiceUuid(new ParcelUuid(CUSTOM_SERVICE_023_UUID))
                 .build();
         ScanSettings settings = new ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
@@ -176,8 +190,9 @@ public class ClientActivity extends AppCompatActivity {
         mBluetoothLeScanner.startScan(filters, settings, mScanCallback);
         mScanning = true;
         Toast.makeText(this, "Scanning", Toast.LENGTH_SHORT).show();
+        progressBar.setVisibility(View.VISIBLE);
 
-        // Handler delays scanning to save power, otherwise scans forever4
+        // Handler stops the scan after 10 seconds in order to save power
         mHandler = new Handler();
         mHandler.postDelayed(this::stopScan, SCAN_PERIOD);
     }
@@ -193,7 +208,7 @@ public class ClientActivity extends AppCompatActivity {
         mScanning = false;
         mHandler = null;
         Toast.makeText(this, "Scanning Stopped", Toast.LENGTH_SHORT).show();
-        progressBar.setVisibility(View.GONE);
+        progressBar.setVisibility(View.INVISIBLE);
     }
 
     // Performs any actions using the results, for now simply logs
@@ -202,9 +217,9 @@ public class ClientActivity extends AppCompatActivity {
             return;
         }
         for (String deviceAddress : mScanResults.keySet()) {
-            Log.d(TAG, "=====SCAN COMPLETE=====");
             Log.d(TAG, "Found device: " + deviceAddress);
         }
+        Log.d(TAG, "=====SCAN COMPLETE=====");
     }
 
     // To check for permissions, and ask to enable them if disabled
@@ -256,9 +271,14 @@ public class ClientActivity extends AppCompatActivity {
 //            }
             BluetoothDevice device = result.getDevice();
             String deviceAddress = device.getAddress();
-            if (deviceAddress == NUCLEO_MAC_ADDRESS) {
+            if (deviceAddress.equals(NUCLEO_MAC_ADDRESS)) {
+                Log.i(TAG, "=====FOUND NUCLEO DEVICE=====");
+                Log.i(TAG, "Connecting automatically to nucleo device");
+                stopScan();
+                selectedAddress = deviceAddress;
+                selectedDevice = device;
                 toggleConnection.setChecked(true);
-                connectDevice(device);
+                //connectDevice(device);
             }
             addScanResult(result);
         }
@@ -287,7 +307,6 @@ public class ClientActivity extends AppCompatActivity {
             }
             Log.i(TAG, "=====RESULT ADDED=====");
             Log.i(TAG, "Device Address: " + deviceAddress);
-            //connectDevice(device);
         }
     }
 
@@ -299,7 +318,7 @@ public class ClientActivity extends AppCompatActivity {
         GattClientCallback gattClientCallback = new GattClientCallback();
         mGatt = device.connectGatt(this, false, gattClientCallback);
         Log.d(TAG, "=====GATT SERVER CONNECTED=====");
-        Toast.makeText(this, "Connected to " + selectedAddress, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Connecting to " + selectedAddress, Toast.LENGTH_SHORT).show();
     }
 
     // To fully disconnect from server
@@ -309,24 +328,34 @@ public class ClientActivity extends AppCompatActivity {
             mGatt.disconnect();
             mGatt.close();
             Log.d(TAG, "=====GATT SERVER DISCONNECTED=====");
-            Toast.makeText(this, "Disconnected from " + selectedAddress, Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, "Disconnected from " + selectedAddress, Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void sendMessage() {
-        if (!mConnected || !mEchoInitialized) {
+    private void sendMessage(String message) {
+        if (mConnected && mInitialized) {
             return;
         }
-        BluetoothGattService service = mGatt.getService(SERVICE_UUID);
-        BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHARACTERISTIC_UUID);
-        //String message = mBinding.messageEditText.getText().toString();
+        BluetoothGattService service = mGatt.getService(CUSTOM_SERVICE_023_UUID);
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHARACTERISTIC1_023_UUID);
+        byte[] messageBytes = new byte[0];
+        // convert message to byte array
+        try {
+            messageBytes = message.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            Log.e(TAG, "Failed to convert message string to byte array");
+        }
+        // Send message
+        characteristic.setValue(messageBytes);
+        boolean messageSuccess = mGatt.writeCharacteristic(characteristic);
     }
 
 
     /**
      * Handles callbacks from the GATT server
      * This is where to get characteristics (data) from services
-     * Each service has its own UUID, to get a specific category of data. Have to specify the service that contains it and the characteristics
+     * Each service has its own UUID, to get a specific category of data. Have to specify the service that contains
+     * it and the characteristics
      */
     private class GattClientCallback extends BluetoothGattCallback {
         @Override
@@ -343,7 +372,7 @@ public class ClientActivity extends AppCompatActivity {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 mConnected = true;
                 gatt.discoverServices();
-                Log.i(TAG, "Connected to Bluetooth Device");
+                Log.i(TAG, "=====Connected to Bluetooth Device=====");
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 disconnectGattServer();
             }
@@ -357,24 +386,37 @@ public class ClientActivity extends AppCompatActivity {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             super.onServicesDiscovered(gatt, status);
             if (status != BluetoothGatt.GATT_SUCCESS) {
+                Log.d(TAG, "Bluetooth discover services failed");
                 return;
             }
-            BluetoothGattService service = gatt.getService(SERVICE_UUID);
-            BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHARACTERISTIC_UUID);
+            BluetoothGattService service = gatt.getService(CUSTOM_SERVICE_023_UUID);
+            BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHARACTERISTIC1_023_UUID);
             characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+            // signifies that our characteristic is fully ready to use
             mInitialized = gatt.setCharacteristicNotification(characteristic, true);
+            Log.i(TAG, "Bluetooth services discovered! Successfully connected!");
 
-            BluetoothGattDescriptor descriptor =
-                    characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
-
-            descriptor.setValue(
-                    BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-
-            gatt.writeDescriptor(descriptor);
+            // Enable notification value descriptor for the characteristic
+//            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+//            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+//            gatt.writeDescriptor(descriptor);
         }
 
+//        /**
+//         *
+//         * @param gatt
+//         * @param characteristic
+//         */
+//        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+//            super.onCharacteristicChanged(gatt, characteristic);
+//            byte[] messageBytes = characteristic.getValue();
+//            String messageString = null;
+//            messageString = new String(bytes);
+//        }
+
         /**
-         * Writing to descriptor of characteristic
+         * Writing to descriptor of characteristic. Need to write to Characteristic to tell the sensor to start
+         * streaming data. Write a simple byte array that contains {1,1} that serves as a data streaming command.
          * @param gatt
          * @param descriptor
          * @param status
@@ -383,8 +425,8 @@ public class ClientActivity extends AppCompatActivity {
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status){
 
             BluetoothGattCharacteristic characteristic =
-                    gatt.getService(SERVICE_UUID)
-                            .getCharacteristic(CONTROL_POINT_UUID);
+                    gatt.getService(CUSTOM_SERVICE_023_UUID)
+                            .getCharacteristic(CHARACTERISTIC1_023_UUID);
 
             characteristic.setValue(new byte[]{1, 1});
             gatt.writeCharacteristic(characteristic);
@@ -392,7 +434,7 @@ public class ClientActivity extends AppCompatActivity {
         }
 
         /**
-         * Reading data/characteristic
+         * Reading notification from server
          * All updates from the sensor on characteristic value changes will be posted on this next callback
          * @param gatt
          * @param characteristic
@@ -401,7 +443,11 @@ public class ClientActivity extends AppCompatActivity {
             super.onCharacteristicChanged(gatt, characteristic);
             byte[] messageBytes = characteristic.getValue();
             String messageString = null;
-            messageString = new String(bytes);
+            try {
+                messageString = new String(messageBytes, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                Log.e(TAG, "Unable to convert message bytes to string");
+            }
             Log.d(TAG, "Received message: " + messageString);
         }
     }
