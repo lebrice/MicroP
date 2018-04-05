@@ -24,47 +24,83 @@ try:
 except:
     current_dir = os.getcwd()
 import numpy as np
-np.random.seed(123123)
 
-image_files = os.listdir(f"{current_dir}/spectrograms/valid")
-np.random.shuffle(image_files)
+DEFAULT_URL = "http://localhost:5000/speech/"
 
-total = 100
-test_files = image_files[:total]
-
-print("testing with filenames:", test_files)
-
-get_label = lambda filename : int(filename.split("_")[0])
-success = 0
-fail = 0
-
-import time
-
-start_time = time.time()
-for i, file_name in enumerate(test_files):
+# np.random.seed(123123)
+def send_to_api(image_path, url=DEFAULT_URL):
     files = {
-        "image": open(f"{current_dir}/spectrograms/valid/"+file_name, "rb")
+        "image": open(image_path, "rb")
     }
-    url = 'http://localhost:5000/speech/'
 
     response = requests.post(url, files=files)
-
-    true_label = get_label(file_name)
-
     response_data = response.json()[0]
 
     pred_label = response_data["classes"]
     pred_probabilities = response_data["probabilities"]
+    return pred_label, pred_probabilities
 
 
-    print("File",file_name,"true Label:", true_label, "Predicted label:", pred_label, "confidence:", pred_probabilities[pred_label])
+def test_with_validation_images(test_count=100):
+    image_files = os.listdir(f"{current_dir}/spectrograms/valid")
+    np.random.shuffle(image_files)
+    test_files = image_files[:test_count]
 
-    if true_label == pred_label:
-        success += 1
-    else:
-        fail += 1
+    print("testing with filenames:", test_files)
 
-total_time = time.time() - start_time
+    get_label = lambda filename : int(filename.split("_")[0])
+    success = 0
+    fail = 0
 
-print(f"Succeeded: {success}/{total}, failed {fail}/{total}")
-print("seconds per image: ", total_time / total)
+    import time
+
+    start_time = time.time()
+    for i, file_name in enumerate(test_files):
+        true_label = get_label(file_name)
+        pred_label, pred_probabilities = send_to_api(f"{current_dir}/spectrograms/valid/"+file_name)
+
+        print("File",file_name,"true Label:", true_label, "Predicted label:", pred_label, "confidence:", pred_probabilities[pred_label])
+
+        if true_label == pred_label:
+            success += 1
+        else:
+            fail += 1
+
+    total_time = time.time() - start_time
+
+    print(f"Succeeded: {success}/{test_count}, failed {fail}/{test_count}")
+    print(f"Accuracy: {success/test_count:2.3%}")
+    print(f"seconds per image: {total_time / test_count:2.3}")
+
+
+def test_with_live_recording():
+    """
+    Test the API by recording a digit using the microphone and then preprocessing it, sending the spectrogram and awaiting the result.
+    """
+    from time import sleep
+    from make_spectrograms import make_spectrogram_from_wav_file
+    from record import record_to_file, play_sound_data, record, write_to_file
+
+    test_audio_path = f"{current_dir}/tmp/api_test.wav"
+    test_img_path = f"{current_dir}/tmp/api_test.png"
+    
+    # do a quick countdown before recording.
+    for i in reversed(range(3)):
+        print(f"\rRecording in {i}", end="\r")
+        sleep(1)
+    
+    sample_width, audio_frames = record()
+    play_sound_data(sample_width, audio_frames)
+    write_to_file(sample_width, audio_frames, test_audio_path)
+    # record_to_file(test_audio_path)
+    make_spectrogram_from_wav_file(test_audio_path, test_img_path)
+
+    pred_label, pred_probabilities = send_to_api(test_img_path)
+    print(f"The API thinks that that was a \t", pred_label, f"\t with {pred_probabilities[pred_label]:2.3%} certainty")
+
+def main():
+    # test_with_validation_images()
+    test_with_live_recording()
+
+if __name__ == '__main__':
+    main()

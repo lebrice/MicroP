@@ -50,8 +50,6 @@ def record():
     for _ in tqdm(range(int(RATE / CHUNK_SIZE * RECORD_SECONDS))):
         # Print a nice progress bar so its easy to follow.
         audio_frames.append(stream.read(CHUNK_SIZE))
-
-    print("Finished recording.", end="\r")
     
 
     # stop Recording
@@ -128,11 +126,14 @@ def play_sound_data(sample_width, data):
     p.terminate()
 
 
-def record_some_test_samples(person_recording="FABRICE"):
+from getpass import getuser
+
+CURRENT_USER = getuser().upper()
+
+
+def record_some_test_samples(person_recording=CURRENT_USER):
     """
     Utility method used to record some test samples.
-
-    TODO: change the name of the person recording so we can identify the sound clips.
     """
     import random
     from time import sleep
@@ -180,6 +181,9 @@ def record_some_test_samples(person_recording="FABRICE"):
 
         sample_width, audio_frames = record()
         play_sound_data(sample_width, audio_frames)
+        print("Re-Playing Audio...", end="\r")
+
+
         print("Keep sample? (y/n)\t", end="")
         user_input = input()
         if user_input == "y":
