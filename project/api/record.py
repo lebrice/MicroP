@@ -24,26 +24,25 @@ CHUNK_SIZE = 1024
 FORMAT = pyaudio.paInt16
 RATE = 8000
 
-def record():
+def record(recording_length_secs=1, sampling_freq=RATE):
     """
     Record a word or words from the microphone and 
     return the data as an array of signed shorts.
     """
     audio = pyaudio.PyAudio()
 
-    RECORD_SECONDS = 1
 
     stream = audio.open(
         format=FORMAT,
         channels=1,
-        rate=RATE,
+        rate=sampling_freq,
         input=True,
         frames_per_buffer=CHUNK_SIZE
     )
 
     audio_frames = []
     print("Recording...")
-    for _ in tqdm(range(int(RATE / CHUNK_SIZE * RECORD_SECONDS))):
+    for _ in tqdm(range(int(sampling_freq / CHUNK_SIZE * recording_length_secs))):
         # Print a nice progress bar so its easy to follow.
         audio_frames.append(stream.read(CHUNK_SIZE))
     
@@ -57,23 +56,22 @@ def record():
     
     return sample_width, audio_frames
 
-def write_to_file(sample_width, audio_frames, path):
-    "Records from the microphone and outputs the resulting data to 'path'"
-    waveFile = wave.open(path, 'wb')
-    waveFile.setnchannels(1)
-    waveFile.setsampwidth(sample_width)
-    waveFile.setframerate(RATE)
-    waveFile.writeframes(b''.join(audio_frames))
-    waveFile.close()
+def write_to_file(sample_width, audio_frames, path, sample_rate=RATE):
+    """Writes the given audio data to a given path"""
+    with wave.open(path, 'wb') as waveFile:
+        waveFile.setnchannels(1)
+        waveFile.setsampwidth(sample_width)
+        waveFile.setframerate(sample_rate)
+        waveFile.writeframes(b''.join(audio_frames))
 
 SOUND_DIR = f"{current_dir}/sounds"
 
-def record_to_file(path):
+def record_to_file(path, recording_length_secs=3, sampling_freq=RATE):
     """
     Records a one second clip of sound, then saves it as a .wav file at the given path.
     """
-    sample_width, audio_frames = record()
-    write_to_file(sample_width, audio_frames, path)
+    sample_width, audio_frames = record(recording_length_secs=3, sampling_freq=sampling_freq)
+    write_to_file(sample_width, audio_frames, path, sample_rate=sampling_freq)
 
 
 def play_sound_file(path):

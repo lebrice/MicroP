@@ -12,6 +12,10 @@ import speech_model
 from speech_model import get_dummy_model
 from io import StringIO, BytesIO
 
+import matplotlib.image as mpimage
+from make_spectrograms import make_spectrogram_from_wav_file
+
+import google_speech_api
 accelerometer_data = {}
 
 
@@ -32,17 +36,39 @@ class Home(Resource):
 class Speech(Resource):
     def __init__(self):
         self.classifier = None
+        self.use_custom_model
 
     def post(self):
+        """
+        Method that handles the incoming data.
+        """
         request_data = request.get_json()
-        import matplotlib.image as mpimage
-
-        from make_spectrograms import make_spectrogram_from_wav_file
 
         # Read the image file from the request
         audio_file = BytesIO()
         request.files["audio"].save(audio_file)
         audio_file.seek(0)
+
+
+        # NOTE: Uncomment the next line to switch between the custom model and Google Speech API. 
+        # result = self.use_custom_model(audio_file)
+        result = self.use_google_model(audio_file)
+
+        return {"result": result}
+
+    def use_google_model(self, audio_file):
+        """ Uses the Google Speech API to determine which digit is spoken in the audio clip. """
+        string_result = google_speech_api.transcribe_audio(audio_file.read())
+        print("Google Speech API result: ", string_result)
+        result = 0
+        try:
+            result = int(string_result)
+        finally:
+            return result
+        return string_result
+
+    def use_custom_model(self, audio_file):
+        """ Uses the TensorFlow model to determine which digit is spoken in the audio clip. """
         spectrogram = make_spectrogram_from_wav_file(audio_file)
 
         
@@ -76,16 +102,16 @@ class Speech(Resource):
         
 
         predictions = self.classifier.predict(lambda: eval_input_fn(predict_x))
-        results = []
-        for pred_dict in predictions:
-            
-            result = {
-                "classes": int(pred_dict["classes"]),
-                "probabilities": pred_dict["probabilities"].tolist()
-            }
-            results.append(result)
+        pred_dict = next(predictions)
         predictions.close()
-        return results
+            
+        #TODO: figure out the common format we will use.
+        # result = {
+        #     "classes": int(pred_dict["classes"]),
+        #     "probabilities": pred_dict["probabilities"].tolist()
+        # }
+        result = int(pred_dict["classes"])
+        return str(result)
 
 
 class Accelerometer(Resource):

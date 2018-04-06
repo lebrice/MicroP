@@ -78,7 +78,8 @@ def preprocess(samples: np.ndarray, sampling_rate=8000, input_size=(64,64)) -> n
     spectrum, frequencies, times, image = plt.specgram(
         samples,
         Fs=sampling_rate,
-        cmap="gray_r"
+        cmap="gray_r",
+        noverlap=16
     )
     # Create a buffer for holding the bytes of the spectrogram before it is resized.
     buffer = BytesIO()

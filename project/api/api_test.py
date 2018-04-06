@@ -34,11 +34,13 @@ def send_to_api(file_path, url=DEFAULT_URL):
     }
 
     response = requests.post(url, files=files)
-    response_data = response.json()[0]
+    response_data = response.json()
 
-    pred_label = response_data["classes"]
-    pred_probabilities = response_data["probabilities"]
-    return pred_label, pred_probabilities
+    # pred_label = response_data["classes"]
+    # pred_probabilities = response_data["probabilities"]
+    # return pred_label, pred_probabilities
+    result = response_data["result"]
+    return result
 
 
 def test_with_validation_images(test_count=100):
@@ -57,11 +59,13 @@ def test_with_validation_images(test_count=100):
     start_time = time.time()
     for i, file_name in enumerate(test_files):
         true_label = get_label(file_name)
-        pred_label, pred_probabilities = send_to_api(f"{current_dir}/spectrograms/valid/"+file_name)
+        result = send_to_api(f"{current_dir}/spectrograms/valid/"+file_name)
 
-        print("File",file_name,"true Label:", true_label, "Predicted label:", pred_label, "confidence:", pred_probabilities[pred_label])
+        print("File",file_name,"true Label:", true_label, "Predicted label:", result)
+        # pred_label, pred_probabilities = send_to_api(f"{current_dir}/spectrograms/valid/"+file_name)
+        # print("File",file_name,"true Label:", true_label, "Predicted label:", pred_label, "confidence:", pred_probabilities[pred_label])
 
-        if true_label == pred_label:
+        if true_label == result:
             success += 1
         else:
             fail += 1
@@ -105,9 +109,22 @@ def test_with_live_recording():
     pred_label, pred_probabilities = send_to_api(test_audio_path)
     print(f"The API thinks that that was a \t", pred_label, f"\t with {pred_probabilities[pred_label]:2.3%} certainty")
 
+def test_with_recording():
+    import wave
+    from record import record_to_file, play_sound_file
+        
+    test_audio_file = f"{current_dir}/tmp/api_test.wav"
+    if not os.path.isfile(test_audio_file):
+        record_to_file(test_audio_file, sampling_freq=16000)
+    play_sound_file(test_audio_file)
+    result = send_to_api(test_audio_file)
+    print(result)
+
 def main():
     # test_with_validation_images()
-    test_with_live_recording()
+    # test_with_live_recording()
+    test_with_recording()
+
 
 if __name__ == '__main__':
     main()
