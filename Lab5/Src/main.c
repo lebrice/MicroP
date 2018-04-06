@@ -54,6 +54,8 @@
 #define FSM_FREQUENCY_MS 50
 #define BUF_LENGTH FSM_FREQUENCY_MS / ACC_SAMPLE_PERIOD_MS
 
+#define ADC_BUFFER_SIZE 8400
+
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
@@ -81,12 +83,16 @@ static void MX_TIM2_Init(void);
 static void MX_UART4_Init(void);
 static void MX_SPI1_Init(void);
 
-void initializeACC			(void);
+void initializeACC (void);
+void start_adc(void);
+void stop_adc(void);
 
 uint8_t detected_tap(float *, int);
 
 float buf[BUF_LENGTH];
 uint8_t buf_index = 0;
+
+uint32_t ADCBufferDMA[ADC_BUFFER_SIZE];
 
 int main(void)
 {
@@ -550,6 +556,22 @@ void initializeACC(void){
 	
 	LIS3DSH_DataReadyInterruptConfig(&ACC_Interrupt_Config);
 	*/
+}
+
+void start_adc(void) {
+	HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
+}
+
+void stop_adc(void) {
+	HAL_ADC_Stop_DMA(&hadc1);
+}
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
+	stop_adc();
+
+	/* SEND DATA */
+//	char send[9];
+	HAL_UART_Transmit(&huart4, (uint8_t *) ADCBufferDMA, ADC_BUFFER_SIZE * sizeof(uint32_t), 1000);
 }
 
 /* USER CODE END 4 */
