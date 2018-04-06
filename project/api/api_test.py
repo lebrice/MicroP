@@ -28,9 +28,9 @@ import numpy as np
 DEFAULT_URL = "http://localhost:5000/speech/"
 
 # np.random.seed(123123)
-def send_to_api(image_path, url=DEFAULT_URL):
+def send_to_api(file_path, url=DEFAULT_URL):
     files = {
-        "image": open(image_path, "rb")
+        "audio": open(file_path, "rb")
     }
 
     response = requests.post(url, files=files)
@@ -85,7 +85,7 @@ def test_with_live_recording():
     test_img_path = f"{current_dir}/tmp/api_test.png"
     
     # do a quick countdown before recording.
-    for i in reversed(range(3)):
+    for i in reversed(range(4)):
         print(f"\rRecording in {i}", end="\r")
         sleep(1)
     
@@ -93,16 +93,16 @@ def test_with_live_recording():
     play_sound_data(sample_width, audio_frames)
     write_to_file(sample_width, audio_frames, test_audio_path)
     # record_to_file(test_audio_path)
-    make_spectrogram_from_wav_file(test_audio_path, test_img_path)
+    # make_spectrogram_from_wav_file(test_audio_path, test_img_path)
 
-    import matplotlib.image as mpimage
-    import matplotlib.pyplot as plt
-    image = mpimage.imread(test_img_path)
-    plt.imshow(image, cmap="gray")
-    plt.show()
+    # import matplotlib.image as mpimage
+    # import matplotlib.pyplot as plt
+    # image = mpimage.imread(test_img_path)
+    # plt.imshow(image, cmap="gray")
+    # plt.show()
 
 
-    pred_label, pred_probabilities = send_to_api(test_img_path)
+    pred_label, pred_probabilities = send_to_api(test_audio_path)
     print(f"The API thinks that that was a \t", pred_label, f"\t with {pred_probabilities[pred_label]:2.3%} certainty")
 
 def main():

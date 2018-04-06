@@ -10,6 +10,7 @@ api = Api(app)
 from flask_restful import reqparse
 import speech_model
 from speech_model import get_dummy_model
+from io import StringIO, BytesIO
 
 accelerometer_data = {}
 
@@ -36,31 +37,35 @@ class Speech(Resource):
         request_data = request.get_json()
         import matplotlib.image as mpimage
 
+        from make_spectrograms import make_spectrogram_from_wav_file
 
         # Read the image file from the request
-        image = mpimage.imread(request.files["image"])
+        audio_file = BytesIO()
+        request.files["audio"].save(audio_file)
+        audio_file.seek(0)
+        spectrogram = make_spectrogram_from_wav_file(audio_file)
+
+        
         
         # load up a classifier
         if self.classifier is None:
             self.classifier = speech_model.get_model()
         
-        flattened_image = np.reshape(image[...,0], (1, 64*64))
-        
-        print(image.shape)
-        predict_x = {
-            "x": flattened_image.astype(np.float32)
-        }
+        # flatten the spectrogram into a one-row vector.
+        predict_x = np.reshape(spectrogram, (1, 64*64))
 
-        def eval_input_fn(features, labels=None, batch_size=1):
+        def eval_input_fn(spectrogram, batch_size=1):
             """An input function for evaluation or prediction"""
-            features=dict(features)
+
+            spectrogram = tf.reshape(spectrogram, (1, 64*64))
+            spectrogram = tf.cast(spectrogram, tf.float32)
+
+            features={
+                "x": spectrogram
+            }
             # plt.imshow(np.reshape(features["x"], (64,64)))
             # plt.show()
-            if labels is None:
-                # No labels, use only features.
-                inputs = features
-            else:
-                inputs = (features, labels)
+            inputs = features
 
             # Convert the inputs to a Dataset.
             dataset = tf.data.Dataset.from_tensor_slices(inputs)

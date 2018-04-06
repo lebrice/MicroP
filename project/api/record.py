@@ -13,12 +13,12 @@ from tqdm import tqdm
 
 
 
-import os
+from os import path, getcwd, listdir
 current_dir = ""
 try:
-    current_dir = os.path.dirname(__file__)
+    current_dir = path.dirname(__file__)
 except:
-    current_dir = os.getcwd()
+    current_dir = getcwd()
 
 CHUNK_SIZE = 1024
 FORMAT = pyaudio.paInt16
@@ -143,7 +143,7 @@ def record_some_test_samples(person_recording=CURRENT_USER):
         """
         Returns the number of samples of this type that are present in SOUND_DIR.
         """
-        sound_files = os.listdir(sound_dir)
+        sound_files = listdir(sound_dir)
         return Counter([get_label(f) for f in sound_files])
 
     def get_least_represented_number(counts, expected_labels=list(range(10))):
@@ -202,14 +202,6 @@ def record_some_test_samples(person_recording=CURRENT_USER):
 
 def main():
     record_some_test_samples()
-
-
-import os
-current_dir = ""
-try:
-    current_dir = os.path.dirname(__file__)
-except:
-    current_dir = os.getcwd()
 
 if __name__ == '__main__':
     main()

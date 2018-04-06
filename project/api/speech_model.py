@@ -43,12 +43,12 @@ def main():
     tf.logging.set_verbosity("INFO")
 
     hooks = [
-        tf.train.SummarySaverHook(
-            save_steps = 100,
-            output_dir=classifier.model_dir,
-            scaffold=tf.train.Scaffold(),
-            summary_op=tf.summary.merge_all()
-        )
+    #     tf.train.SummarySaverHook(
+    #         save_steps = 100,
+    #         output_dir=classifier.model_dir,
+    #         scaffold=tf.train.Scaffold(),
+    #         summary_op=tf.summary.merge_all()
+    #     )
     ]
     # tf.estimator.train_and_evaluate(
     #     classifier,
@@ -66,21 +66,22 @@ def main():
     #         throttle_secs=30
     #     )   
     # )
-    classifier.train(
-        input_fn=train_input_fn,
-        max_steps=2000,
-        hooks=hooks
-    )
-    classifier.export_savedmodel(
-        f"{current_dir}/ml_model",
-        serving_input_receiver_fn=serving_input_receiver_fn()
-    )
-    classifier.evaluate(
-        input_fn=valid_input_fn,
-        steps=100,
-        hooks=hooks,
-        name="Validation"
-    )
+    for i in range(100):
+        classifier.train(
+            input_fn=train_input_fn,
+            steps=1000,
+            hooks=hooks
+        )
+        classifier.evaluate(
+            input_fn=valid_input_fn,
+            steps=100,
+            hooks=hooks,
+            name="Validation"
+        )
+        classifier.export_savedmodel(
+            classifier.model_dir,
+            serving_input_receiver_fn=serving_input_receiver_fn()
+        )
 
 #  feature_spec = {
 #         'x': tf.FixedLenFeature(dtype=tf.string, shape=[64,64,1])
@@ -119,19 +120,22 @@ def get_dummy_model():
     return graph, x, x2
 
 def get_model():
+    # tf.saved_model.loader.load(sess, [tag_constants.TRAINING], export_dir)
+    # tf.saved_model.loader.
     classifier = tf.estimator.Estimator(
         model_fn=speech_model_function,
         model_dir=saved_model_dir,
         config=tf.estimator.RunConfig(
             save_checkpoints_steps=500,
-            keep_checkpoint_max=3
+            keep_checkpoint_max=3,
+            save_summary_steps=100,
         )
     )
     return classifier
 
 
 def my_input_pipeline(spectrograms_dir, batch_size=BATCH_SIZE):
-    with tf.name_scope("input_pipeline"):
+    with tf.variable_scope("input_pipeline"):
             
         i_files = os.listdir(spectrograms_dir)
         input_files = [f"{spectrograms_dir}/{filename}" for filename in i_files]
@@ -156,7 +160,7 @@ def my_input_pipeline(spectrograms_dir, batch_size=BATCH_SIZE):
         return {"x": image_batch}, label_batch
 
 def read_image_file(filename_queue):
-    with tf.name_scope("image_reader"):
+    with tf.variable_scope("image_reader"):
         reader = tf.WholeFileReader()
         file_path, file_str = reader.read(filename_queue)
 
@@ -177,11 +181,11 @@ def speech_model_function(features, labels, mode):
     Taken and adapted from https://www.tensorflow.org/tutorials/layers
     """
     # Input Layer
-    with tf.name_scope("input_layer"):
+    with tf.variable_scope("input_layer"):
         input_layer = tf.reshape(features["x"], [-1, 64, 64, 1], name="x")
         tf.summary.image("input_image", input_layer)
 
-    with tf.name_scope("conv_layer_1"):
+    with tf.variable_scope("conv_layer_1"):
         # Convolutional Layer #1
         conv1 = tf.layers.conv2d(
             inputs=input_layer,
@@ -194,7 +198,7 @@ def speech_model_function(features, labels, mode):
         pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], strides=2)
         tf.summary.image("out_1", pool1[...,:1])
     
-    with tf.name_scope("conv_layer_2"):
+    with tf.variable_scope("conv_layer_2"):
         # Convolutional Layer #2 and Pooling Layer #2
         conv2 = tf.layers.conv2d(
             inputs=pool1,
@@ -206,7 +210,7 @@ def speech_model_function(features, labels, mode):
         pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2], strides=2)
         tf.summary.image("out_2", pool2[...,:1])
 
-    with tf.name_scope("conv_layer_3"):
+    with tf.variable_scope("conv_layer_3"):
         # Convolutional Layer #3 and Pooling Layer #3
         conv3 = tf.layers.conv2d(
             inputs=pool2,
@@ -222,24 +226,24 @@ def speech_model_function(features, labels, mode):
         )
         tf.summary.image("out_3", pool3[...,:1])
 
-    with tf.name_scope("flatten"):
+    with tf.variable_scope("flatten"):
         # Dense Layer
         pool3_flat = tf.reshape(pool3, [-1, 8 * 8 * 128])
 
-    with tf.name_scope("dense_layer_1"):
+    with tf.variable_scope("dense_layer_1"):
         dense = tf.layers.dense(
             inputs=pool3_flat,
             units=1024,
             activation=tf.nn.relu
         )
-    with tf.name_scope("dropout"):
+    with tf.variable_scope("dropout"):
         dropout = tf.layers.dropout(
             inputs=dense,
             rate=0.4,
             training=mode == tf.estimator.ModeKeys.TRAIN
         )
 
-    with tf.name_scope("output_layer"):
+    with tf.variable_scope("output_layer"):
         # Logits Layer
         logits = tf.layers.dense(inputs=dropout, units=10)
         
@@ -270,7 +274,7 @@ def speech_model_function(features, labels, mode):
 
     # Calculate Loss (for both TRAIN and EVAL modes)
     # loss = tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits)
-    with tf.name_scope("Loss"):
+    with tf.variable_scope("Loss"):
 
         onehot_labels = tf.one_hot(indices=tf.reshape(labels, [-1]), depth=num_classes)
         loss = tf.losses.softmax_cross_entropy(
@@ -278,7 +282,7 @@ def speech_model_function(features, labels, mode):
         )
         tf.summary.scalar("Loss", loss)
 
-    with tf.name_scope("Accuracy"):
+    with tf.variable_scope("Accuracy"):
         accuracy = tf.metrics.accuracy(labels=labels, predictions=predictions["classes"])
         tf.summary.scalar("accuracy", accuracy[0])
 

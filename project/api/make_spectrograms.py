@@ -49,7 +49,10 @@ audio_dir_1 = """C:\\Users\\Fabrice\\repos\\free-spoken-digit-dataset\\recording
 # Our own training data.
 audio_dir_2 = f"{current_dir}/sounds"
 
-audio_dirs = [audio_dir_1, audio_dir_2]
+audio_dirs = [
+    audio_dir_1,
+    audio_dir_2
+]
 
 
 spectrograms_dir = f"{current_dir}/spectrograms/"
@@ -63,10 +66,9 @@ wav_files = sorted(wav_files)
 
 fig = plt.figure(frameon=False)
 def preprocess(samples: np.ndarray, sampling_rate=8000, input_size=(64,64)) -> np.ndarray:    
-
-
-        
-   
+    """
+    Creates a spectrogram for the given image, contained in "samples".
+    """
     plt.set_cmap("gray_r")
     ax = plt.Axes(fig, [0., 0., 1., 1.])
     ax.set_axis_off()
@@ -105,8 +107,8 @@ def make_spectrogram_from_wav_file(audio_file_path, saved_spectrogram_path=None,
     if saved_spectrogram_path != None:
         plt.imshow(resized_image)
         mpimage.imsave(saved_spectrogram_path, resized_image)
-
-    plt.cla()
+        plt.cla()
+    
     return resized_image
 
 get_label = lambda filename : int(os.path.split(filename)[-1].split("_")[0])
@@ -155,8 +157,8 @@ def make_spectrograms_dir(input_file_paths, output_dir):
 
         try:
             #Check if we created the spectrogram for this file, if so, we can skip the next step.
-            # if not os.path.exists(spect_path):
-            make_spectrogram_from_wav_file(file_path, spect_path)
+            if not os.path.exists(spect_path):
+                make_spectrogram_from_wav_file(file_path, spect_path)
 
         except KeyboardInterrupt:
             exit()
@@ -174,7 +176,17 @@ def check_no_duplicate_files():
     # assert that there is no intersection, meaning that no files are both in training and testing directories.
     intersection = train_files.intersection(valid_files)
     if intersection != set():
-        raise RuntimeError("There is an intersection between the training and testing sets!!", intersection)
+        # raise RuntimeError("There is an intersection between the training and testing sets!!", intersection)
+
+        from os import remove
+        print("There is an intersection between the training and testing sets. Will remove these files:", intersection)
+        for file in intersection:
+            remove(train_dir + "/" + file)
+            remove(valid_dir + "/" + file)
+    
+            
+
+
 
 def main():
     make_spectrograms_dir(train_files, train_dir)
