@@ -114,12 +114,10 @@ public class ClientActivity extends AppCompatActivity {
         startScanButton.setOnClickListener(v -> {
             startScan();
             Log.d(TAG, "Start Scan button clicked");
-            //progressBar.setVisibility(View.VISIBLE);
         });
         stopScanButton.setOnClickListener(v -> {
             stopScan();
             Log.d(TAG, "Stop Scan button clicked");
-            //progressBar.setVisibility(View.INVISIBLE);
         });
         sendButton.setOnClickListener(view -> {
             message = textMessage.getText().toString();
