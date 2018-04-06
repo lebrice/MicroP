@@ -80,7 +80,6 @@ public class ClientActivity extends AppCompatActivity {
     private TextView textNucleoAddress;
     private EditText textMessage;
     private Button sendButton;
-    private Context clientActivityContext = this;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -261,12 +260,6 @@ public class ClientActivity extends AppCompatActivity {
 
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
-            // Add filter to connect to specific MAC address
-//            if (result.getDevice().getAddress() == NUCLEO_MAC_ADDRESS) {
-//                nucleoDevice = result.getDevice();
-//                Log.i(TAG, "=====NUCLEO DEVICE FOUND=====");
-//                connectDevice(nucleoDevice);
-//            }
             BluetoothDevice device = result.getDevice();
             String deviceAddress = device.getAddress();
             if (deviceAddress.equals(NUCLEO_MAC_ADDRESS)) {
@@ -276,7 +269,6 @@ public class ClientActivity extends AppCompatActivity {
                 selectedAddress = deviceAddress;
                 selectedDevice = device;
                 toggleConnection.setChecked(true);
-                //connectDevice(device);
             }
             addScanResult(result);
         }
@@ -326,7 +318,6 @@ public class ClientActivity extends AppCompatActivity {
             mGatt.disconnect();
             mGatt.close();
             Log.d(TAG, "=====GATT SERVER DISCONNECTED=====");
-            //Toast.makeText(this, "Disconnected from " + selectedAddress, Toast.LENGTH_SHORT).show();
         }
     }
 
