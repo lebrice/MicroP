@@ -70,7 +70,7 @@ def record_to_file(path, recording_length_secs=3, sampling_freq=RATE):
     """
     Records a one second clip of sound, then saves it as a .wav file at the given path.
     """
-    sample_width, audio_frames = record(recording_length_secs=3, sampling_freq=sampling_freq)
+    sample_width, audio_frames = record(recording_length_secs=recording_length_secs, sampling_freq=sampling_freq)
     write_to_file(sample_width, audio_frames, path, sample_rate=sampling_freq)
 
 
@@ -91,7 +91,7 @@ def play_sound_file(path):
     play_sound_data(sample_width, data)
 
 
-def play_sound_data(sample_width, data):
+def play_sound_data(sample_width, data, sampling_rate=RATE):
     """
     Plays some sound data.
     """
@@ -101,7 +101,7 @@ def play_sound_data(sample_width, data):
     # open stream (2)
     stream = p.open(format=p.get_format_from_width(sample_width),
                     channels=1,
-                    rate=RATE,
+                    rate=sampling_rate,
                     output=True)
 
     # read data

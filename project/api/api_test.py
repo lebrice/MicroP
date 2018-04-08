@@ -77,15 +77,15 @@ def test_with_validation_images(test_count=100):
     print(f"seconds per image: {total_time / test_count:2.3}")
 
 
-def test_with_live_recording():
+def test_with_live_recording(duration=1, sampling_rate=16000):
     """
     Test the API by recording a digit using the microphone and then preprocessing it, sending the spectrogram and awaiting the result.
     """
     from time import sleep
     from make_spectrograms import make_spectrogram_from_wav_file
-    from record import record_to_file, play_sound_data, record, write_to_file
+    from record import record_to_file, play_sound_file, record, write_to_file
 
-    test_audio_path = f"{current_dir}/tmp/api_test.wav"
+    test_audio_file = f"{current_dir}/tmp/api_test.wav"
     test_img_path = f"{current_dir}/tmp/api_test.png"
     
     # do a quick countdown before recording.
@@ -93,21 +93,10 @@ def test_with_live_recording():
         print(f"\rRecording in {i}", end="\r")
         sleep(1)
     
-    sample_width, audio_frames = record()
-    play_sound_data(sample_width, audio_frames)
-    write_to_file(sample_width, audio_frames, test_audio_path)
-    # record_to_file(test_audio_path)
-    # make_spectrogram_from_wav_file(test_audio_path, test_img_path)
-
-    # import matplotlib.image as mpimage
-    # import matplotlib.pyplot as plt
-    # image = mpimage.imread(test_img_path)
-    # plt.imshow(image, cmap="gray")
-    # plt.show()
-
-
-    pred_label, pred_probabilities = send_to_api(test_audio_path)
-    print(f"The API thinks that that was a \t", pred_label, f"\t with {pred_probabilities[pred_label]:2.3%} certainty")
+    record_to_file(test_audio_file, recording_length_secs=duration,sampling_freq=16000)
+    play_sound_file(test_audio_file)
+    result = send_to_api(test_audio_file)
+    print(result)
 
 def test_with_recording():
     import wave
@@ -122,8 +111,8 @@ def test_with_recording():
 
 def main():
     # test_with_validation_images()
-    # test_with_live_recording()
-    test_with_recording()
+    test_with_live_recording()
+    # test_with_recording()
 
 
 if __name__ == '__main__':
