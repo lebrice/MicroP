@@ -4,22 +4,114 @@ import matplotlib.pyplot as plt
 import json
 import tensorflow as tf
 from typing import List, Dict, Tuple
-
+import numpy as np
 app = Flask(__name__)
 api = Api(app)
 from flask_restful import reqparse
-
+import speech_model
 from speech_model import get_dummy_model
+from io import StringIO, BytesIO
 
+import matplotlib.image as mpimage
+from make_spectrograms import make_spectrogram_from_wav_file
 
+import google_speech_api
 accelerometer_data = {}
+
+
+import os
+current_dir = ""
+try:
+    current_dir = os.path.dirname(__file__)
+except:
+    current_dir = os.getcwd()
+
+saved_model_dir = f"{current_dir}/saved_model/"
+
 
 class Home(Resource):
     def get(self):
         return {'hello': 'world'}
 
 class Speech(Resource):
-    pass
+    def __init__(self):
+        self.classifier = None
+        self.use_custom_model
+
+    def post(self):
+        """
+        Method that handles the incoming data.
+        """
+        request_data = request.get_json()
+
+        # Read the image file from the request
+        audio_file = BytesIO()
+        request.files["audio"].save(audio_file)
+        audio_file.seek(0)
+
+
+        # NOTE: Uncomment the next line to switch between the custom model and Google Speech API. 
+        # result = self.use_custom_model(audio_file)
+        result = self.use_google_model(audio_file)
+
+        return {"result": result}
+
+    def use_google_model(self, audio_file):
+        """ Uses the Google Speech API to determine which digit is spoken in the audio clip. """
+        string_result = google_speech_api.transcribe_audio(audio_file.read())
+        print("Google Speech API result: ", string_result)
+        result = 0
+        try:
+            result = int(string_result)
+        finally:
+            return result
+        return string_result
+
+    def use_custom_model(self, audio_file):
+        """ Uses the TensorFlow model to determine which digit is spoken in the audio clip. """
+        spectrogram = make_spectrogram_from_wav_file(audio_file)
+
+        
+        
+        # load up a classifier
+        if self.classifier is None:
+            self.classifier = speech_model.get_model()
+        
+        # flatten the spectrogram into a one-row vector.
+        predict_x = np.reshape(spectrogram, (1, 64*64))
+
+        def eval_input_fn(spectrogram, batch_size=1):
+            """An input function for evaluation or prediction"""
+
+            spectrogram = tf.reshape(spectrogram, (1, 64*64))
+            spectrogram = tf.cast(spectrogram, tf.float32)
+
+            features={
+                "x": spectrogram
+            }
+            # plt.imshow(np.reshape(features["x"], (64,64)))
+            # plt.show()
+            inputs = features
+
+            # Convert the inputs to a Dataset.
+            dataset = tf.data.Dataset.from_tensor_slices(inputs)
+            # Batch the examples
+            dataset = dataset.batch(batch_size)
+            # Return the dataset.
+            return dataset
+        
+
+        predictions = self.classifier.predict(lambda: eval_input_fn(predict_x))
+        pred_dict = next(predictions)
+        predictions.close()
+            
+        #TODO: figure out the common format we will use.
+        # result = {
+        #     "classes": int(pred_dict["classes"]),
+        #     "probabilities": pred_dict["probabilities"].tolist()
+        # }
+        result = int(pred_dict["classes"])
+        return str(result)
 
 
 class Accelerometer(Resource):
@@ -28,27 +120,21 @@ class Accelerometer(Resource):
     def get(self):
         return accelerometer_data
 
-    def put(self, id):
-        request_data = request.get_json()
-        print(request_data)
-        data = request_data["data"]
-        # _x = data["x"]
-        # _y = data["y"]
-        # _z = data["z"]
-        graph, input_tensor, output_tensor = get_dummy_model()
-        with tf.Session(graph=graph) as session:
-            session.run(tf.global_variables_initializer())
+    
 
-            prediction = session.run(
-                output_tensor,
-                feed_dict={
-                    input_tensor: data
-                }
-            )
-            print("Prediction:", prediction)
-            return {
-                "result": int(prediction)
-            }
+        # with tf.Session(graph=graph) as session:
+        #     session.run(tf.global_variables_initializer())
+
+        #     prediction = session.run(
+        #         output_tensor,
+        #         feed_dict={
+        #             input_tensor: data
+        #         }
+        #     )
+        #     print("Prediction:", prediction)
+        #     return {
+        #         "result": int(prediction)
+        #     }
         # parser = reqparse.RequestParser()
         # parser.add_argument('x', type=List[float], help='X-axis accelerometer values')
         # parser.add_argument('y', type=List[float], help='Y-axis accelerometer values')
@@ -66,6 +152,7 @@ class Accelerometer(Resource):
 
 api.add_resource(Home, '/')
 api.add_resource(Accelerometer, '/accelerometer/<int:id>')
+api.add_resource(Speech, '/speech/')
 
 if __name__ == '__main__':
     app.run(debug=True)

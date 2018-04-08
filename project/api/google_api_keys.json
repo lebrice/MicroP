@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "maximal-boulder-132923",
+  "private_key_id": "4ce49e16bc5fde721a48d01c71ba2804c229d396",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDAbzszim5JEl+d\nKzQrtFfMisK3Bty+X2dtBAFu2/NMMul65MEOHEyZoYl7d6M2qTT4OHhLGdfYF6of\n3MEK9LlgLXlhQ7bqZZAM+fe8nQ+cHfvXEiCSO1mrrkYFo6H+Dhb/XmDmAIIMVZbh\n/9cndodUAzClYZDa8jzUWTCKTSpCpfEC7202jQkNDe9yeFFaA81l7MjqktxKFo4S\nGnLkXM8wYU08fqilyBipsaH3oEzUrUHFtH18/1hElbf6zOtI+1Ca/bx2S/7AjIcb\nnWoPUGLRAYkchiFOvMmYOWMx47RVg8WO6gOAU9nPa66axn7/FFsqFpH746F5jxNE\nzeqLQrxfAgMBAAECggEAQKe+wOD0kBmbxX9kHoEP9Nn0dTFZjp8YbXDomFpPYx1C\nBDgCw15vwDidrD20uWNduD6k8DrFIkZFM0JlG+zAshdlTnBFb3jjTvDXs2gj/AS4\n/niJOAi35q59uVxSy7zpLjEEJpMqHsHNGa7vl8ND0c7mk9J1rJKyLHixDe7CUbTA\nXQEP4f4loDxWGRR6xK/OD/VR0k2KzenhpwY1O2LbPfynbmQMB4GKbf+0j7Vx4UpC\nOsLV6vx6CoYiVgDmQEIpyYdtSXxjmYTeLNG+b9rjCSDpJKvESkx/si6GFHnspY4w\nm8VbCIg70V84m82WYfappZ7X6ZhQWwkswK1bApp9yQKBgQD5aS1nG9brWJLMyqnx\njrpNaITCr1mn+27eLUwqrm/DRDygKxfKrr/vqOnZIzyV7hS5e/64bHC32L1Hju/s\nMRJAbA4cJpxLwuh/oFy+j7OB5vJxTZbJvUHHjvWMVf2SxGbTn7J/jAbU+n5iwhfz\naZ/0izoxnw7MqZrWcxtKS+6MxwKBgQDFhLW1FOpbOcS0/mDyGC/TpGGUi2R8pSUa\nOJK6/OG1rSSShnENaoY6Y60IQDQlOTh6Rz6bPfPKXL291PRMRWpxesaxaI1rM3DR\n6wPN9PxY46RZ2uM3bt9G5qtKbYVmoDkYfKX1n6MEwUROURE/knFpY9vUYTkwIYWq\nIobUE6rLqQKBgAUkNOpmOYT6e3Q7TUuMfKyx1eLJiJic50kvN929YNJuqq1GliP4\nfD5thfyS7GHO2aCFPNgCbERt9GDwQmPlExI+5/+OkDRDnVVcMe0/uxyXbTIGvnAE\nNcHuYYN2FlcbM19zcFOOyGlFjKtugt3itIhvAlEZjU2MxYNcNhjO/ejrAoGAfQbA\nLluK7SvoA9lxbE07GPDYg7qoZO30SmC9IHeqN+HdYJKRRTjEtnkZsjtRxq4tvdkT\nHBlfFB0YTe1aplzaP/LDitDvk4gARiBJTDli8rFF+0q+wPwBgVPJ4VbqNkf9XC6q\nrovaGMxtfFV8YY1FFL0NDaZtGLZfcY5hYiUA2+ECgYEArJkrx5Gcbd2m4ur/GMqL\nBWrCYAMvr1ldwzFqFWB2oSbrJZHRqbGgrjWtySgAqwYG8QW7omIHj3RalRiCPuDH\nfsydKyRCGICZtFl3HurEwhudTxmfFzxCDnuwElqbMZkWLMA5oLIPUvJxx6Ef6aQT\nmGYagGPnI24fmLSuwbQRSp0=\n-----END PRIVATE KEY-----\n",
+  "client_email": "fabriceserviceaccount@maximal-boulder-132923.iam.gserviceaccount.com",
+  "client_id": "112107000618447799439",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://accounts.google.com/o/oauth2/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/fabriceserviceaccount%40maximal-boulder-132923.iam.gserviceaccount.com"
+}
