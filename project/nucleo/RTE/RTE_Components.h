@@ -3,14 +3,18 @@
  * Auto generated Run-Time-Environment Component Configuration File
  *      *** Do not modify ! ***
  *
- * Project: 'BLE_SampleProject' 
- * Target:  'Application' 
+ * Project: 'Lab3' 
+ * Target:  'Lab3' 
  */
 
 #ifndef RTE_COMPONENTS_H
 #define RTE_COMPONENTS_H
 
-#define RTE_Compiler_IO_STDOUT          /* Compiler I/O: STDOUT */
-          #define RTE_Compiler_IO_STDOUT_ITM      /* Compiler I/O: STDOUT ITM */
+
+/*
+ * Define the Device Header File: 
+ */
+#define CMSIS_device_header "stm32f4xx.h"
+
 
 #endif /* RTE_COMPONENTS_H */

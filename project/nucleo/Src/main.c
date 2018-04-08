@@ -71,6 +71,25 @@ uint8_t bnrg_expansion_board = IDB04A1; /* at startup, suppose the X-NUCLEO-IDB0
 void UART_Init(void);
 UART_HandleTypeDef huart2;
 
+
+const int ACC_BUFFER_SIZE = 10000;
+const int VOICE_DATA_SAMPLE_LENGTH = 16000;
+
+typedef struct {
+	uint8_t x[ACC_BUFFER_SIZE];
+	uint8_t y[ACC_BUFFER_SIZE];
+	uint8_t z[ACC_BUFFER_SIZE];
+} AccelerometerData;
+
+typedef struct{
+	uint16_t data[VOICE_DATA_SAMPLE_LENGTH];
+} MicData;
+
+
+AccelerometerData acc_data;
+MicData mic_data;
+
+
 /**
  * @}
  */
@@ -312,6 +331,8 @@ void User_Process(AxesRaw_t* p_axes)
   }
 }
 
+
+
 void UART_Init(void) {
 	huart2.Instance = USART2;
   huart2.Init.BaudRate = 115200;
@@ -322,6 +343,62 @@ void UART_Init(void) {
   huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart2.Init.OverSampling = UART_OVERSAMPLING_16;
 }
+
+AccelerometerData wait_for_accelerometer_data(){
+	AccelerometerData result;
+	HAL_UART_Receive(&huart2, result.x, sizeof(result.x), HAL_MAX_DELAY);
+	HAL_UART_Receive(&huart2, result.y, sizeof(result.y), HAL_MAX_DELAY);
+	HAL_UART_Receive(&huart2, result.z, sizeof(result.z), HAL_MAX_DELAY);
+	return result;
+}
+
+void wait_for_mic_data(){
+	HAL_UART_Receive(
+		&huart2,
+		(uint8_t*)&mic_data.data,
+		sizeof(mic_data.data) * sizeof(uint16_t) / sizeof(uint8_t),
+		HAL_MAX_DELAY
+	);
+		//	NOTE: no need for this code here. Way too fancy for what we need.
+//	for(int i=0; i< sizeof(throw_away); i += 3){
+//		// Copy over data from 12 bits (encoded within throw_away buffer, into voice_data.
+//		// TODO: make sure this works. Has great potential to mess up.
+//		mic_data.data[i] =  ((0xFFFF | throw_away[i]) << 4);
+//		mic_data.data[i] += (0xF0 & throw_away[i+1]);
+//		
+//		mic_data.data[i+1] = (((uint16_t)(0x0F & throw_away[i+1])) << 8);
+//		mic_data.data[i+1] +=  throw_away[i+2];		
+//	}
+}
+
+void send_acc_data(AccelerometerData * data){
+	// TODO: Send the 'data' object over bluetooth.
+}
+
+void send_mic_data(VoiceData * data){
+	// TODO: Send the 'data' object over bluetooth.
+}
+
+
+void UART_Receiver(){
+	char mode;
+	HAL_UART_Receive(&huart2, (uint8_t*)&mode, sizeof(mode), HAL_MAX_DELAY);
+	switch(mode){
+		case 'A':
+			acc_data = wait_for_accelerometer_data();
+			send_acc_data(&acc_data);
+			break;
+		case 'M':
+			wait_for_mic_data();
+			send_mic_data(&mic_data);
+			break;
+		default:
+			printf("Error, there is an unknown character inside the UART_Receiver()\n");
+			
+	}
+}
+	
+
 
 /**
  * @}
