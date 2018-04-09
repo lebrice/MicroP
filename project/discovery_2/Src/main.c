@@ -79,15 +79,6 @@ static void MX_NVIC_Init(void);
 
 /* USER CODE BEGIN 0 */
 
-
-void HAL_UART_RxCompltCallback(UART_HandleTypeDef *huart){
-//	if(huart->Instance == huart4)
-	HAL_GPIO_WritePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin, GPIO_PIN_SET);
-}
-
-
-
-
 /* USER CODE END 0 */
 
 /**

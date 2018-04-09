@@ -81,6 +81,8 @@ void MX_SPI1_Init(void)
 
 }
 
+
+
 void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
 {
 
@@ -109,6 +111,9 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
   /* USER CODE END SPI1_MspInit 1 */
   }
 }
+
+
+
 
 void HAL_SPI_MspDeInit(SPI_HandleTypeDef* spiHandle)
 {
