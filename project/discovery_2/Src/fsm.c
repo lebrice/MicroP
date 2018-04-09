@@ -110,6 +110,8 @@ void single_tap(){
 	
 	// Wait on the mic_buffer_full signal, which will be set by the ADC callback once the buffer has been filled.
 	osSignalWait(mic_buffer_full_signal, osWaitForever);
+	HAL_ADC_Stop_DMA(&hadc1);
+	
 	
 	// Set the GPIO pin to let the nucleo board known that we want to transmit some Microphone data.
 	SET_PIN(IS_MIC_DATA);
@@ -119,7 +121,6 @@ void single_tap(){
 	HAL_UART_Transmit(&huart4, (uint8_t*) mic_buffer, bytes_to_send, HAL_MAX_DELAY);	
 	
 	// Wait for the response (might take very, very long time. Therefore, we use interrupt mode.)
-	// We
 	uint8_t spoken_digit;
 	HAL_UART_Receive_IT(&huart4, &spoken_digit, 1);
 	
@@ -211,6 +212,8 @@ void double_tap(){
 
 	// Send the Roll array over.
 	HAL_UART_Transmit(&huart4, (uint8_t*) pitch_roll_buffer[1], bytes_to_send, HAL_MAX_DELAY);	
+	
+	printf("Done with double-tap.\n");
 }
 
 
