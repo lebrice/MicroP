@@ -9,7 +9,6 @@
 
   <project>
     <PathAndName>.\Lab1\LAB1.uvprojx</PathAndName>
-    <NodeIsActive>1</NodeIsActive>
   </project>
 
   <project>
@@ -26,10 +25,17 @@
 
   <project>
     <PathAndName>.\project\discovery\MDK-ARM\FinalPrj.uvprojx</PathAndName>
+    <NodeIsExpanded>1</NodeIsExpanded>
   </project>
 
   <project>
     <PathAndName>.\project\nucleo\BLE_SampleProject.uvprojx</PathAndName>
+  </project>
+
+  <project>
+    <PathAndName>.\project\discovery_2\MDK-ARM\discovery_2.uvprojx</PathAndName>
+    <NodeIsActive>1</NodeIsActive>
+    <NodeIsExpanded>1</NodeIsExpanded>
   </project>
 
 </ProjectWorkspace>
