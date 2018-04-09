@@ -51,7 +51,7 @@ def transcribe_audio(audio_sample):
         # The first alternative is the most likely one for this portion.
         print('Transcript: {}'.format(result.alternatives[0].transcript))
         results.append(result.alternatives[0].transcript)
-    return results[0]
+    return results[0] if len(results) != 0 else ""
 
 def main():
 
