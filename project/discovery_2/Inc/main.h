@@ -59,6 +59,8 @@
 
 /* Private define ------------------------------------------------------------*/
 
+#define MIC_IN_Pin GPIO_PIN_0
+#define MIC_IN_GPIO_Port GPIOA
 #define IS_MIC_DATA_Pin GPIO_PIN_9
 #define IS_MIC_DATA_GPIO_Port GPIOD
 #define LED_GREEN_Pin GPIO_PIN_12
