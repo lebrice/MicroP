@@ -41,10 +41,18 @@
 #include "lis3dsh.h"
 
 
-#define STATE_NOTHING 0
-#define STATE_TAP 1
-#define STATE_DOUBLETAP 2
-#define STATE_SINGLETAP 3
+
+typedef enum {
+	STATE_IDLE,
+	STATE_TAP_RECENT,
+	STATE_SINGLETAP,
+	STATE_DOUBLETAP,
+	STATE_RECORDING_ACC,
+	STATE_RECORDING_MIC,
+	STATE_WAITING_REPLY,
+} STATE;
+
+
 
 #define X_THRESH 100
 #define Y_THRESH 100
@@ -70,7 +78,7 @@ uint8_t status;
 float Buffer[3];
 float accX, accY, accZ;
 uint8_t MyFlag = 0;
-uint8_t state = STATE_NOTHING;
+STATE state = STATE_IDLE;
 uint32_t click_timer = 0;
 LIS3DSH_InitTypeDef 		Acc_instance;
 
@@ -93,6 +101,15 @@ float buf[BUF_LENGTH];
 uint8_t buf_index = 0;
 
 uint32_t ADCBufferDMA[ADC_BUFFER_SIZE];
+
+
+void blink_n_times(uint8_t times){
+	// TODO: use threads (maybe) to blink N times. Otherwise, the state machine could be messy.
+	for(int i=0; i<times; i++){
+//		HAL_GPIO_WritePin(
+	}
+}
+
 
 int main(void)
 {
@@ -155,21 +172,46 @@ int main(void)
 					uint8_t tap = detected_tap(buf, BUF_LENGTH);
 					
 					switch(state) {
-						case STATE_NOTHING:
-							if(tap) state = STATE_TAP;
+						case STATE_IDLE:
+							if(tap){
+								state = STATE_TAP_RECENT;
+							}
 							break;
-						case STATE_TAP:
-							if(tap) state = STATE_DOUBLETAP;
-							else state = STATE_SINGLETAP;
+						case STATE_TAP_RECENT:
+							state = (tap) ? STATE_DOUBLETAP : STATE_SINGLETAP;
 							break;
 						case STATE_DOUBLETAP:
 							HAL_GPIO_TogglePin(GPIOD, LD3_Pin);
-							state = STATE_NOTHING;
+							state = STATE_RECORDING_ACC;
 							break;
 						case STATE_SINGLETAP:
 							HAL_GPIO_TogglePin(GPIOD, LD6_Pin);
-							state = STATE_NOTHING;
+							state = STATE_RECORDING_MIC;;
 							break;
+						case STATE_RECORDING_ACC:
+							// TODO: wait for 10 seconds on Accelerometer data, then send it via UART to the Nucleo board, with a 'A' before.
+							// data = record_acc(...)
+							// send('A')
+							// HAL_Delay(0.010);
+							// send(data.x)
+							// HAL_Delay(0.010);
+							// send(data.y)
+							// HAL_Delay(0.010);
+							// send(data.z)
+							break;
+						case STATE_RECORDING_MIC:
+							// TODO: setup DMA with the ADC for the mic recording, then send to the Nucleo board with 'M' before.
+							// data = record_mic(...)
+							// send('M')
+							// HAL_Delay(0.010);
+							// send(data)
+							break;
+						case STATE_WAITING_REPLY:
+							// Wait for the reply from the Nucleo board ( The digit that was said ).
+							uint8_t spoken_digit;
+							HAL_UART_Receive(&huart4, &spoken_digit, sizeof(spoken_digit), HAL_MAX_DELAY);
+							printf("We received a '%c'!\n", spoken_digit);
+							blink_n_times(spoken_digit);
 						default:
 							break;
 					}
@@ -180,6 +222,8 @@ int main(void)
 		}
   }
 }
+
+
 
 uint8_t detected_tap(float *samples, int num_samples) {
 	float max = samples[0];
