@@ -76,9 +76,9 @@ const int ACC_BUFFER_SIZE = 10000;
 const int VOICE_DATA_SAMPLE_LENGTH = 16000;
 
 typedef struct {
-	uint8_t x[ACC_BUFFER_SIZE];
-	uint8_t y[ACC_BUFFER_SIZE];
-	uint8_t z[ACC_BUFFER_SIZE];
+	float x[ACC_BUFFER_SIZE];
+	float y[ACC_BUFFER_SIZE];
+	float z[ACC_BUFFER_SIZE];
 } AccelerometerData;
 
 typedef struct{
@@ -346,9 +346,9 @@ void UART_Init(void) {
 
 AccelerometerData wait_for_accelerometer_data(){
 	AccelerometerData result;
-	HAL_UART_Receive(&huart2, result.x, sizeof(result.x), HAL_MAX_DELAY);
-	HAL_UART_Receive(&huart2, result.y, sizeof(result.y), HAL_MAX_DELAY);
-	HAL_UART_Receive(&huart2, result.z, sizeof(result.z), HAL_MAX_DELAY);
+	HAL_UART_Receive(&huart2, (uint8_t*) result.x, sizeof(result.x) * sizeof(float) / sizeof(uint8_t), HAL_MAX_DELAY);
+	HAL_UART_Receive(&huart2, (uint8_t*) result.y, sizeof(result.y) * sizeof(float) / sizeof(uint8_t), HAL_MAX_DELAY);
+	HAL_UART_Receive(&huart2, (uint8_t*) result.z, sizeof(result.z) * sizeof(float) / sizeof(uint8_t), HAL_MAX_DELAY);
 	return result;
 }
 
@@ -375,7 +375,7 @@ void send_acc_data(AccelerometerData * data){
 	// TODO: Send the 'data' object over bluetooth.
 }
 
-void send_mic_data(VoiceData * data){
+void send_mic_data(MicData * data){
 	// TODO: Send the 'data' object over bluetooth.
 }
 
