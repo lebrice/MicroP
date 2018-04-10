@@ -44,14 +44,6 @@ def send_to_accelerometer_api(file_path, url=ACCELEROMETER_URL):
         response = requests.post(url, files=files)
         # response_data = response.json()
         image = mpimage.imread(BytesIO(response.content), format="png")
-        plt.imshow(image)
-        plt.show()
-        # print(response_data)
-        # image = response.files
-        # print(image)
-        # pred_label = response_data["classes"]
-        # pred_probabilities = response_data["probabilities"]
-        # return pred_label, pred_probabilities
         return image
 
 def test_with_validation_images(test_count=100):
@@ -126,7 +118,6 @@ def test_accelerometer():
     pitch = np.sin(t)
     roll = np.sin(2*t)
     stacked = np.stack([pitch, roll]).T
-    print(stacked.shape)
 
     # fig, ax = plt.subplots()
     # ax.fill(t, pitch, 'b', t, roll, 'r', alpha=0.3)
@@ -136,6 +127,9 @@ def test_accelerometer():
     np.savetxt(test_acc_file, stacked, delimiter=",")
     image = send_to_accelerometer_api(test_acc_file, url=ACCELEROMETER_URL)
     mpimage.imsave(f"{current_dir}/tmp/api_test_acc.png", image)
+
+
+
     return
 
 

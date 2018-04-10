@@ -122,38 +122,26 @@ class Accelerometer(Resource):
         csv_file.seek(0)
 
         data = np.genfromtxt(csv_file, delimiter=",", dtype=float)
-        print(data.shape)
         data = np.reshape(data, (10000, 2))
         
         t = np.linspace(0, 10, 10000)
-        pitch = data[:, 0]
-        roll = data[:, 1]
-        print(t.shape, pitch.shape, roll.shape)
-        
-        # fig, ax = plt.subplots()
-
+        pitch = data[:10000, 0]
+        roll = data[:10000, 1]
         
         from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
         from matplotlib.figure import Figure
-        fig = Figure()
+        fig = Figure(dpi=600)
         axis = fig.add_subplot(1, 1, 1)
         axis.plot(t, pitch, 'b', label="pitch")
         axis.plot(t, roll, 'r', label="roll")
-        fig.legend(loc="upper right")
+        fig.legend()
+        
         canvas = FigureCanvas(fig)
         output = BytesIO()
         canvas.print_png(output)
         response = make_response(output.getvalue())
         response.mimetype = 'image/png'
         return response
-
-
-        # # # image_path = f"{current_dir}/temp_image.png"
-        # # image_path = StringIO()
-        # # # plt.savefig(image_path)
-        # output.seek(0)
-        # flask.send_file(output, attachment_filename="image.png")
-        
 
 
 
