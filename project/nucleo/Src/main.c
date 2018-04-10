@@ -66,29 +66,33 @@
 extern volatile uint8_t set_connectable;
 extern volatile int connected;
 extern AxesRaw_t axes_data;
+
+
+extern uint16_t accCharHandle, customAccServHandle, customAccCharHandle, customVoiceServHandle;
+
+
 uint8_t bnrg_expansion_board = IDB04A1; /* at startup, suppose the X-NUCLEO-IDB04A1 is used */
 
 void UART_Init(void);
 UART_HandleTypeDef huart2;
 
-
-const int ACC_BUFFER_SIZE = 10000;
-const int VOICE_DATA_SAMPLE_LENGTH = 16000;
+#define MIC_SAMPLE_COUNT 16000
+#define ACC_SAMPLE_COUNT 10000
+#define VOICE_DATA_SAMPLE_LENGTH 16000
+#define BLUETOOTH_BATCH_SIZE 200
 
 typedef struct {
-	float x[ACC_BUFFER_SIZE];
-	float y[ACC_BUFFER_SIZE];
-	float z[ACC_BUFFER_SIZE];
-} AccelerometerData;
+	float pitch[ACC_SAMPLE_COUNT];
+	float roll[ACC_SAMPLE_COUNT];
+} AccData;
 
 typedef struct{
 	uint16_t data[VOICE_DATA_SAMPLE_LENGTH];
 } MicData;
 
 
-AccelerometerData acc_data;
-MicData mic_data;
 
+void UART_Receiver(void);
 
 /**
  * @}
@@ -128,7 +132,7 @@ void User_Process(AxesRaw_t* p_axes);
  */
 int main(void)
 {
-  const char *name = "BlueNRG";
+  const char *name = "B123NRG";
   uint8_t SERVER_BDADDR[] = {0x12, 0x34, 0x00, 0xE1, 0x80, 0x03};
   uint8_t bdaddr[BDADDR_SIZE];
   uint16_t service_handle, dev_name_char_handle, appearance_char_handle;
@@ -250,6 +254,18 @@ int main(void)
   else
     PRINTF("Error while adding Acc service.\n");
   
+	
+	// ------------ OUR CUSTOM SERVICE ----------------
+	ret = Add_Custom_Acc_Service();
+  
+  if(ret == BLE_STATUS_SUCCESS)
+    PRINTF("CUSTOM Acc service added successfully.\n");
+  else
+    PRINTF("Error while adding CUSTOM Acc service.\n");
+	
+	// ------------------------------------------------
+  
+	
   ret = Add_Environmental_Sensor_Service();
   
   if(ret == BLE_STATUS_SUCCESS)
@@ -287,6 +303,8 @@ int main(void)
   {
     HCI_Process();
     User_Process(&axes_data);
+		UART_Receiver();
+		
 #if NEW_SERVICES
     Update_Time_Characteristics();
 #endif
@@ -309,7 +327,7 @@ void User_Process(AxesRaw_t* p_axes)
   if(set_connectable){
     setConnectable();
     set_connectable = FALSE;
-  }  
+  }
 
   /* Check if the user has pushed the button */
   if(BSP_PB_GetState(BUTTON_KEY) == RESET)
@@ -344,57 +362,94 @@ void UART_Init(void) {
   huart2.Init.OverSampling = UART_OVERSAMPLING_16;
 }
 
-AccelerometerData wait_for_accelerometer_data(){
-	AccelerometerData result;
-	HAL_UART_Receive(&huart2, (uint8_t*) result.x, sizeof(result.x) * sizeof(float) / sizeof(uint8_t), HAL_MAX_DELAY);
-	HAL_UART_Receive(&huart2, (uint8_t*) result.y, sizeof(result.y) * sizeof(float) / sizeof(uint8_t), HAL_MAX_DELAY);
-	HAL_UART_Receive(&huart2, (uint8_t*) result.z, sizeof(result.z) * sizeof(float) / sizeof(uint8_t), HAL_MAX_DELAY);
-	return result;
+void wait_for_accelerometer_data(AccData * acc_data){
+	int bytes_to_receive = ACC_SAMPLE_COUNT * sizeof(float) / sizeof(uint8_t);
+	HAL_UART_Receive(&huart2, (uint8_t*) acc_data->pitch, bytes_to_receive, HAL_MAX_DELAY);
+	HAL_UART_Receive(&huart2, (uint8_t*) acc_data->roll, bytes_to_receive, HAL_MAX_DELAY);
 }
 
-void wait_for_mic_data(){
-	HAL_UART_Receive(
-		&huart2,
-		(uint8_t*)&mic_data.data,
-		sizeof(mic_data.data) * sizeof(uint16_t) / sizeof(uint8_t),
-		HAL_MAX_DELAY
-	);
-		//	NOTE: no need for this code here. Way too fancy for what we need.
-//	for(int i=0; i< sizeof(throw_away); i += 3){
-//		// Copy over data from 12 bits (encoded within throw_away buffer, into voice_data.
-//		// TODO: make sure this works. Has great potential to mess up.
-//		mic_data.data[i] =  ((0xFFFF | throw_away[i]) << 4);
-//		mic_data.data[i] += (0xF0 & throw_away[i+1]);
-//		
-//		mic_data.data[i+1] = (((uint16_t)(0x0F & throw_away[i+1])) << 8);
-//		mic_data.data[i+1] +=  throw_away[i+2];		
-//	}
+void wait_for_mic_data(MicData * mic_data){
+	
+	uint32_t buffer[MIC_SAMPLE_COUNT];	
+	
+	// The bytes are sent with DMA from the discovery board, and it seems like it sends it as 32-bit words.
+	// Therefore, we need to shrink down the data, to uint16_t, to save some bandwidth.
+	
+	int bytes_to_receive = MIC_SAMPLE_COUNT * sizeof(uint32_t) / sizeof(uint8_t);
+	
+	HAL_UART_Receive(&huart2, (uint8_t*) buffer, bytes_to_receive, HAL_MAX_DELAY);
+
+	for(int i=0; i<MIC_SAMPLE_COUNT; i += 4){
+		// for every four bytes we received in buffer, keep only the lowest two.
+		mic_data->data[i] = 0x0000FFFF | buffer[i];
+	}
 }
 
-void send_acc_data(AccelerometerData * data){
-	// TODO: Send the 'data' object over bluetooth.
+void send_acc_data(AccData * data){
+	// TODO: send the pitch and roll correctly via Bluetooth.
+	// TODO: I HAVE NO CLUE WHAT I'M DOING.
+  tBleStatus ret; 
+	float buffer[BLUETOOTH_BATCH_SIZE];
+	
+	if(set_connectable){
+    setConnectable();
+    set_connectable = FALSE;
+  }
+	if(connected)
+	{
+		const int bytes_to_send = ACC_SAMPLE_COUNT * sizeof(float) / sizeof(uint8_t);
+		const int number_of_batches = bytes_to_send / BLUETOOTH_BATCH_SIZE;
+		const int samples_per_batch = BLUETOOTH_BATCH_SIZE / sizeof(float);
+		int offset = 0;
+				
+		// TODO: Figure out how to send data in batches.
+		for(int batch_i=0; batch_i<number_of_batches;){
+			
+			// TODO: Send one batch of data.
+			ret = aci_gatt_update_char_value(customAccServHandle, customAccCharHandle, 0, BLUETOOTH_BATCH_SIZE, (uint8_t*) &buffer[offset]);
+			if (ret == BLE_STATUS_SUCCESS){
+				// We successfully (I think) sent data using bluetooth.
+				batch_i += 1;
+				offset += samples_per_batch;
+			}else {
+				PRINTF("Error while updating CUSTOM ACC characteristic.\n") ;
+			}	
+		}
+		
+	}
 }
 
 void send_mic_data(MicData * data){
-	// TODO: Send the 'data' object over bluetooth.
+	// TODO: send the mic data correctly via Bluetooth.
+	if(set_connectable){
+    setConnectable();
+    set_connectable = FALSE;
+  }
+	
+	// TODO:
+	
+	
+	
 }
 
 
 void UART_Receiver(){
-	char mode;
-	HAL_UART_Receive(&huart2, (uint8_t*)&mode, sizeof(mode), HAL_MAX_DELAY);
-	switch(mode){
-		case 'A':
-			acc_data = wait_for_accelerometer_data();
-			send_acc_data(&acc_data);
-			break;
-		case 'M':
-			wait_for_mic_data();
-			send_mic_data(&mic_data);
-			break;
-		default:
-			printf("Error, there is an unknown character inside the UART_Receiver()\n");
-			
+	
+	// TODO: Read a GPIO pin which determines if the data is accelerometer data or microphone data.
+	BOOL is_mic_data = FALSE;
+	//	is_mic_data = HAL_GPIO_ReadPin(GPIOx, IS_MIC_DATA_Pin);
+	
+	
+	if(is_mic_data){
+		PRINTF("Received Microphone data!\n");
+		MicData mic_data;
+		wait_for_mic_data(&mic_data);
+		send_mic_data(&mic_data);
+	}else{
+		printf("Received Accelerometer data!\n");
+		AccData acc_data;
+		wait_for_accelerometer_data(&acc_data);
+		send_acc_data(&acc_data);
 	}
 }
 	

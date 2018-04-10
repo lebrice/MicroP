@@ -144,6 +144,7 @@ void       HCI_Event_CB(void *pckt);
 /**
  * @}
  */
+	tBleStatus Add_Custom_Acc_Service(void);
 
 /**
  * @}
