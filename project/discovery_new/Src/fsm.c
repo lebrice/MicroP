@@ -222,7 +222,7 @@ void double_tap(){
 /* StartDefaultTask function */
 void StartDefaultTask(void const * argument)
 {
-	STATE state;
+	static STATE state;
 	
   while(1){
 		switch(state)

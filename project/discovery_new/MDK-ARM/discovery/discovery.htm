@@ -3,11 +3,11 @@
 <title>Static Call Graph - [discovery\discovery.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image discovery\discovery.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Mon Apr 09 21:20:11 2018
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Mon Apr 09 21:33:56 2018
 <BR><P>
 <H3>Maximum Stack Usage =      64372 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
-StartDefaultTask &rArr;  StartDefaultTask (Cycle)
+StartDefaultTask &rArr; single_tap &rArr; osSignalWait &rArr; xTaskNotifyWait &rArr; prvAddCurrentTaskToDelayedList &rArr; vListInsert
 <P>
 <H3>
 Mutually Recursive functions
@@ -15,7 +15,6 @@ Mutually Recursive functions
  <LI><a href="#[5]">BusFault_Handler</a>&nbsp;&nbsp;&nbsp;&rArr;&nbsp;&nbsp;&nbsp;<a href="#[5]">BusFault_Handler</a><BR>
  <LI><a href="#[3]">HardFault_Handler</a>&nbsp;&nbsp;&nbsp;&rArr;&nbsp;&nbsp;&nbsp;<a href="#[3]">HardFault_Handler</a><BR>
  <LI><a href="#[4]">MemManage_Handler</a>&nbsp;&nbsp;&nbsp;&rArr;&nbsp;&nbsp;&nbsp;<a href="#[4]">MemManage_Handler</a><BR>
- <LI><a href="#[66]">StartDefaultTask</a>&nbsp;&nbsp;&nbsp;&rArr;&nbsp;&nbsp;&nbsp;<a href="#[66]">StartDefaultTask</a><BR>
  <LI><a href="#[6]">UsageFault_Handler</a>&nbsp;&nbsp;&nbsp;&rArr;&nbsp;&nbsp;&nbsp;<a href="#[6]">UsageFault_Handler</a><BR>
  <LI><a href="#[84]">_Error_Handler</a>&nbsp;&nbsp;&nbsp;&rArr;&nbsp;&nbsp;&nbsp;<a href="#[84]">_Error_Handler</a><BR>
 </UL>
@@ -703,7 +702,7 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[c3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_GPIO_Init
 <LI><a href="#[ba]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LIS3DSH_Read
 <LI><a href="#[cb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;single_tap
-<LI><a href="#[ca]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;double_tap
+<LI><a href="#[c9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;double_tap
 </UL>
 
 <P><STRONG><a name="[89]"></a>HAL_GetTick</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, stm32f4xx_hal.o(i.HAL_GetTick))
@@ -976,7 +975,7 @@ Global Symbols
 <LI><a href="#[b9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UART_WaitOnFlagUntilTimeout
 </UL>
 <BR>[Called By]<UL><LI><a href="#[cb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;single_tap
-<LI><a href="#[ca]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;double_tap
+<LI><a href="#[c9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;double_tap
 </UL>
 
 <P><STRONG><a name="[b4]"></a>HAL_UART_TxCpltCallback</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, stm32f4xx_hal_uart.o(i.HAL_UART_TxCpltCallback))
@@ -1007,8 +1006,8 @@ Global Symbols
 <LI><a href="#[6d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_dmul
 <LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_d2f
 </UL>
-<BR>[Called By]<UL><LI><a href="#[ca]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;double_tap
-<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;detect_tap
+<BR>[Called By]<UL><LI><a href="#[c9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;double_tap
+<LI><a href="#[ca]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;detect_tap
 </UL>
 
 <P><STRONG><a name="[be]"></a>MX_ADC1_Init</STRONG> (Thumb, 84 bytes, Stack size 32 bytes, adc.o(i.MX_ADC1_Init))
@@ -1084,17 +1083,13 @@ Global Symbols
 <P><STRONG><a name="[2]"></a>NMI_Handler</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, stm32f4xx_it.o(i.NMI_Handler))
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f407xx.o(RESET)
 </UL>
-<P><STRONG><a name="[66]"></a>StartDefaultTask</STRONG> (Thumb, 58 bytes, Stack size 0 bytes, fsm.o(i.StartDefaultTask))
-<BR><BR>[Stack]<UL><LI>Max Depth = 64372 + In Cycle
-<LI>Call Chain = StartDefaultTask &rArr;  StartDefaultTask (Cycle)
+<P><STRONG><a name="[66]"></a>StartDefaultTask</STRONG> (Thumb, 76 bytes, Stack size 0 bytes, fsm.o(i.StartDefaultTask))
+<BR><BR>[Stack]<UL><LI>Max Depth = 64372<LI>Call Chain = StartDefaultTask &rArr; single_tap &rArr; osSignalWait &rArr; xTaskNotifyWait &rArr; prvAddCurrentTaskToDelayedList &rArr; vListInsert
 </UL>
 <BR>[Calls]<UL><LI><a href="#[cb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;single_tap
-<LI><a href="#[ca]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;double_tap
-<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;detect_tap
-<LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartDefaultTask
-<LI><a href="#[c9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2printf
-</UL>
-<BR>[Called By]<UL><LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartDefaultTask
+<LI><a href="#[c9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;double_tap
+<LI><a href="#[ca]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;detect_tap
+<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2printf
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> freertos.o(.constdata)
 </UL>
@@ -1165,8 +1160,8 @@ Global Symbols
 
 <P><STRONG><a name="[11f]"></a>__1printf$bare</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, printfb.o(i.__0printf$bare), UNUSED)
 
-<P><STRONG><a name="[c9]"></a>__2printf</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, printfb.o(i.__0printf$bare))
-<BR><BR>[Called By]<UL><LI><a href="#[ca]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;double_tap
+<P><STRONG><a name="[c8]"></a>__2printf</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, printfb.o(i.__0printf$bare))
+<BR><BR>[Called By]<UL><LI><a href="#[c9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;double_tap
 <LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartDefaultTask
 </UL>
 
@@ -1300,7 +1295,7 @@ Global Symbols
 <LI><a href="#[df]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_atan2
 <LI><a href="#[d4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_acosf
 </UL>
-<BR>[Called By]<UL><LI><a href="#[ca]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;double_tap
+<BR>[Called By]<UL><LI><a href="#[c9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;double_tap
 </UL>
 
 <P><STRONG><a name="[e5]"></a>calculate_roll</STRONG> (Thumb, 112 bytes, Stack size 32 bytes, fsm.o(i.calculate_roll))
@@ -1313,10 +1308,10 @@ Global Symbols
 <LI><a href="#[df]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_atan2
 <LI><a href="#[d4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__hardfp_acosf
 </UL>
-<BR>[Called By]<UL><LI><a href="#[ca]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;double_tap
+<BR>[Called By]<UL><LI><a href="#[c9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;double_tap
 </UL>
 
-<P><STRONG><a name="[c8]"></a>detect_tap</STRONG> (Thumb, 50 bytes, Stack size 224 bytes, fsm.o(i.detect_tap))
+<P><STRONG><a name="[ca]"></a>detect_tap</STRONG> (Thumb, 50 bytes, Stack size 224 bytes, fsm.o(i.detect_tap))
 <BR><BR>[Stack]<UL><LI>Max Depth = 360<LI>Call Chain = detect_tap &rArr; LIS3DSH_ReadACC &rArr; __aeabi_dmul &rArr; _double_epilogue &rArr; _double_round
 </UL>
 <BR>[Calls]<UL><LI><a href="#[e6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osDelay
@@ -1327,10 +1322,10 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[e7]"></a>detected_tap</STRONG> (Thumb, 82 bytes, Stack size 0 bytes, fsm.o(i.detected_tap))
-<BR><BR>[Called By]<UL><LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;detect_tap
+<BR><BR>[Called By]<UL><LI><a href="#[ca]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;detect_tap
 </UL>
 
-<P><STRONG><a name="[ca]"></a>double_tap</STRONG> (Thumb, 178 bytes, Stack size 8104 bytes, fsm.o(i.double_tap))
+<P><STRONG><a name="[c9]"></a>double_tap</STRONG> (Thumb, 178 bytes, Stack size 8104 bytes, fsm.o(i.double_tap))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8352<LI>Call Chain = double_tap &rArr; calculate_roll &rArr; __hardfp_atan2 &rArr; atan &rArr; __hardfp_atan &rArr; __kernel_poly &rArr; __aeabi_dmul &rArr; _double_epilogue &rArr; _double_round
 </UL>
 <BR>[Calls]<UL><LI><a href="#[bb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_WritePin
@@ -1339,7 +1334,7 @@ Global Symbols
 <LI><a href="#[b8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_Transmit
 <LI><a href="#[e5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;calculate_roll
 <LI><a href="#[e3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;calculate_pitch
-<LI><a href="#[c9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2printf
+<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2printf
 </UL>
 <BR>[Called By]<UL><LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartDefaultTask
 </UL>
@@ -1379,8 +1374,8 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[eb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vTaskDelay
 </UL>
 <BR>[Called By]<UL><LI><a href="#[cb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;single_tap
-<LI><a href="#[ca]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;double_tap
-<LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;detect_tap
+<LI><a href="#[c9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;double_tap
+<LI><a href="#[ca]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;detect_tap
 </UL>
 
 <P><STRONG><a name="[ea]"></a>osKernelStart</STRONG> (Thumb, 10 bytes, Stack size 8 bytes, cmsis_os.o(i.osKernelStart))
