@@ -4,18 +4,10 @@ from requests import put, get
 import json
 
 import scipy.io.wavfile as wav
-fake_data = {
-    "data": {
-        "x": [1,2,3,4,5,6,7],
-        "y": [1,2,3,4,5,6,7],
-        "z": [1,2,3,4,5,6,7],
-    }
-}
+from io import BytesIO, StringIO
 
-fake_data = {
-    "data": 3
-}
-
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimage
 
 import os
 current_dir = ""
@@ -25,23 +17,42 @@ except:
     current_dir = os.getcwd()
 import numpy as np
 
-DEFAULT_URL = "http://localhost:5000/speech/"
+SPEECH_URL = "http://localhost:5000/speech/"
+ACCELEROMETER_URL = "http://localhost:5000/accelerometer/"
 
 # np.random.seed(123123)
-def send_to_api(file_path, url=DEFAULT_URL):
-    files = {
-        "audio": open(file_path, "rb")
-    }
+def send_to_speech_api(file_path, url=SPEECH_URL):
+    with open(file_path, "rb") as f:
+        files = {
+            "audio": f
+        }
 
-    response = requests.post(url, files=files)
-    response_data = response.json()
+        response = requests.post(url, files=files)
+        response_data = response.json()
+        # pred_label = response_data["classes"]
+        # pred_probabilities = response_data["probabilities"]
+        # return pred_label, pred_probabilities
+        result = response_data["result"]
+        return result
 
-    # pred_label = response_data["classes"]
-    # pred_probabilities = response_data["probabilities"]
-    # return pred_label, pred_probabilities
-    result = response_data["result"]
-    return result
+def send_to_accelerometer_api(file_path, url=ACCELEROMETER_URL):
+    with open(file_path) as f:
+        files = {
+            "accelerometer": f
+        }
 
+        response = requests.post(url, files=files)
+        # response_data = response.json()
+        image = mpimage.imread(BytesIO(response.content), format="png")
+        plt.imshow(image)
+        plt.show()
+        # print(response_data)
+        # image = response.files
+        # print(image)
+        # pred_label = response_data["classes"]
+        # pred_probabilities = response_data["probabilities"]
+        # return pred_label, pred_probabilities
+        return image
 
 def test_with_validation_images(test_count=100):
     image_files = os.listdir(f"{current_dir}/spectrograms/valid")
@@ -59,7 +70,7 @@ def test_with_validation_images(test_count=100):
     start_time = time.time()
     for i, file_name in enumerate(test_files):
         true_label = get_label(file_name)
-        result = send_to_api(f"{current_dir}/spectrograms/valid/"+file_name)
+        result = send_to_speech_api(f"{current_dir}/spectrograms/valid/"+file_name)
 
         print("File",file_name,"true Label:", true_label, "Predicted label:", result)
         # pred_label, pred_probabilities = send_to_api(f"{current_dir}/spectrograms/valid/"+file_name)
@@ -95,7 +106,7 @@ def test_with_live_recording(duration=1, sampling_rate=16000):
     
     record_to_file(test_audio_file, recording_length_secs=duration,sampling_freq=16000)
     play_sound_file(test_audio_file)
-    result = send_to_api(test_audio_file)
+    result = send_to_speech_api(test_audio_file)
     print(result)
 
 def test_with_recording():
@@ -106,13 +117,33 @@ def test_with_recording():
     if not os.path.isfile(test_audio_file):
         record_to_file(test_audio_file, sampling_freq=16000)
     play_sound_file(test_audio_file)
-    result = send_to_api(test_audio_file)
+    result = send_to_speech_api(test_audio_file)
     print(result)
+
+
+def test_accelerometer():
+    t = np.linspace(0, 10, 10000)
+    pitch = np.sin(t)
+    roll = np.sin(2*t)
+    stacked = np.stack([pitch, roll]).T
+    print(stacked.shape)
+
+    # fig, ax = plt.subplots()
+    # ax.fill(t, pitch, 'b', t, roll, 'r', alpha=0.3)
+    # plt.show()
+
+    test_acc_file = f"{current_dir}/tmp/api_test.csv"
+    np.savetxt(test_acc_file, stacked, delimiter=",")
+    image = send_to_accelerometer_api(test_acc_file, url=ACCELEROMETER_URL)
+    mpimage.imsave(f"{current_dir}/tmp/api_test_acc.png", image)
+    return
+
 
 def main():
     # test_with_validation_images()
-    test_with_live_recording()
+    # test_with_live_recording()
     # test_with_recording()
+    test_accelerometer()
 
 
 if __name__ == '__main__':

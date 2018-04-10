@@ -1,4 +1,6 @@
-from flask import Flask, request
+
+import flask
+from flask import Flask, request, make_response
 from flask_restful import Resource, Api
 import matplotlib.pyplot as plt
 import json
@@ -42,8 +44,6 @@ class Speech(Resource):
         """
         Method that handles the incoming data.
         """
-        request_data = request.get_json()
-
         # Read the image file from the request
         audio_file = BytesIO()
         request.files["audio"].save(audio_file)
@@ -65,7 +65,6 @@ class Speech(Resource):
             result = int(string_result)
         finally:
             return result
-        return string_result
 
     def use_custom_model(self, audio_file):
         """ Uses the TensorFlow model to determine which digit is spoken in the audio clip. """
@@ -115,43 +114,51 @@ class Speech(Resource):
 
 
 class Accelerometer(Resource):
-    # def __init__(self):
 
-    def get(self):
-        return accelerometer_data
+    def post(self):
+          # Read the image file from the request
+        csv_file = BytesIO()
+        request.files["accelerometer"].save(csv_file)
+        csv_file.seek(0)
 
-    
+        data = np.genfromtxt(csv_file, delimiter=",", dtype=float)
+        print(data.shape)
+        data = np.reshape(data, (10000, 2))
+        
+        t = np.linspace(0, 10, 10000)
+        pitch = data[:, 0]
+        roll = data[:, 1]
+        print(t.shape, pitch.shape, roll.shape)
+        
+        # fig, ax = plt.subplots()
 
-        # with tf.Session(graph=graph) as session:
-        #     session.run(tf.global_variables_initializer())
+        
+        from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+        from matplotlib.figure import Figure
+        fig = Figure()
+        axis = fig.add_subplot(1, 1, 1)
+        axis.plot(t, pitch, 'b', label="pitch")
+        axis.plot(t, roll, 'r', label="roll")
+        fig.legend(loc="upper right")
+        canvas = FigureCanvas(fig)
+        output = BytesIO()
+        canvas.print_png(output)
+        response = make_response(output.getvalue())
+        response.mimetype = 'image/png'
+        return response
 
-        #     prediction = session.run(
-        #         output_tensor,
-        #         feed_dict={
-        #             input_tensor: data
-        #         }
-        #     )
-        #     print("Prediction:", prediction)
-        #     return {
-        #         "result": int(prediction)
-        #     }
-        # parser = reqparse.RequestParser()
-        # parser.add_argument('x', type=List[float], help='X-axis accelerometer values')
-        # parser.add_argument('y', type=List[float], help='Y-axis accelerometer values')
-        # parser.add_argument('z', type=List[float], help='Z-axis accelerometer values')
-        # args = parser.parse_args()
-        # try:
-        #     x = args["x"]
-        #     y = args["y"]
-        #     z = args["z"]
-        #     return {"OK: OK"}, 200
-        # except json.JSONDecodeError as e:
-        #     return {"ERROR": e.msg}, 400
-        # except RuntimeError as e:
-        #     return {"ERROR": e.msg}, 400
+
+        # # # image_path = f"{current_dir}/temp_image.png"
+        # # image_path = StringIO()
+        # # # plt.savefig(image_path)
+        # output.seek(0)
+        # flask.send_file(output, attachment_filename="image.png")
+        
+
+
 
 api.add_resource(Home, '/')
-api.add_resource(Accelerometer, '/accelerometer/<int:id>')
+api.add_resource(Accelerometer, '/accelerometer/')
 api.add_resource(Speech, '/speech/')
 
 if __name__ == '__main__':
