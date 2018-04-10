@@ -58,7 +58,7 @@ volatile uint16_t connection_handle = 0;
 volatile uint8_t notification_enabled = FALSE;
 volatile AxesRaw_t axes_data = {0, 0, 0};
 uint16_t sampleServHandle, TXCharHandle, RXCharHandle;
-uint16_t accServHandle, freeFallCharHandle, accCharHandle;
+uint16_t accServHandle, freeFallCharHandle, accCharHandle, customAccServHandle, customAccCharHandle;
 uint16_t envSensServHandle, tempCharHandle, pressCharHandle, humidityCharHandle;
 
 #if NEW_SERVICES
@@ -120,6 +120,9 @@ do {\
 /**
  * @}
  */
+
+
+
 
 /** @defgroup SENSOR_SERVICE_Exported_Functions 
  * @{
@@ -778,6 +781,56 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
  * @}
  */
  
+
+// OUR CUSTOM SERVICE for the accelerometer.
+// TODO: I DONT HAVE A CLUE WHAT I'M DOING.
+tBleStatus Add_Custom_Acc_Service(void)
+{
+  tBleStatus ret;
+
+  uint8_t uuid[16];
+  
+  COPY_ACC_SERVICE_UUID(uuid);
+	// TODO: figure out if we have the right UUID.
+  ret = aci_gatt_add_serv(
+		UUID_TYPE_128, 
+		uuid, 
+		PRIMARY_SERVICE, 
+		200,
+		&customAccServHandle
+	);
+  if (ret != BLE_STATUS_SUCCESS) goto fail;    
+//  
+//  COPY_FREE_FALL_UUID(uuid);
+//  ret =  aci_gatt_add_char(accServHandle, UUID_TYPE_128, uuid, 1,
+//                           CHAR_PROP_NOTIFY, ATTR_PERMISSION_NONE, 0,
+//                           16, 0, &freeFallCharHandle);
+//  if (ret != BLE_STATUS_SUCCESS) goto fail;
+  
+  COPY_ACC_UUID(uuid);  
+  ret =  aci_gatt_add_char(
+		customAccServHandle,
+		UUID_TYPE_128, 
+		uuid,
+		200,
+		CHAR_PROP_NOTIFY|CHAR_PROP_READ,
+		ATTR_PERMISSION_NONE,
+		GATT_NOTIFY_READ_REQ_AND_WAIT_FOR_APPL_RESP,
+		16, 
+		0,
+		&customAccCharHandle
+	);
+  if (ret != BLE_STATUS_SUCCESS) goto fail;
+  
+  PRINTF("Service CUSTOM_ACC added. Handle 0x%04X, Acc Charac handle: 0x%04X\n",customAccServHandle, accCharHandle);	
+  return BLE_STATUS_SUCCESS; 
+  
+fail:
+  PRINTF("Error while adding ACC service.\n");
+  return BLE_STATUS_ERROR ;
+    
+}
+
 /**
  * @}
  */
