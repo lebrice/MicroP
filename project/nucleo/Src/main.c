@@ -388,8 +388,7 @@ void wait_for_mic_data(MicData * mic_data){
 void send_acc_data(AccData * data){
 	// TODO: send the pitch and roll correctly via Bluetooth.
 	// TODO: I HAVE NO CLUE WHAT I'M DOING.
-  tBleStatus ret; 
-	float buffer[BLUETOOTH_BATCH_SIZE];
+  tBleStatus ret;
 	
 	if(set_connectable){
     setConnectable();
@@ -400,13 +399,29 @@ void send_acc_data(AccData * data){
 		const int bytes_to_send = ACC_SAMPLE_COUNT * sizeof(float) / sizeof(uint8_t);
 		const int number_of_batches = bytes_to_send / BLUETOOTH_BATCH_SIZE;
 		const int samples_per_batch = BLUETOOTH_BATCH_SIZE / sizeof(float);
-		int offset = 0;
-				
+		
+		
 		// TODO: Figure out how to send data in batches.
+		// TODO: THIS IS WRONG, need to have numbers in LITTLE-ENDIAN.
+		// TODO: SEND PITCH
+		int offset = 0;
 		for(int batch_i=0; batch_i<number_of_batches;){
-			
-			// TODO: Send one batch of data.
-			ret = aci_gatt_update_char_value(customAccServHandle, customAccCharHandle, 0, BLUETOOTH_BATCH_SIZE, (uint8_t*) &buffer[offset]);
+			// Send one batch of data.
+			ret = aci_gatt_update_char_value(customAccServHandle, customAccCharHandle, 0, BLUETOOTH_BATCH_SIZE, (uint8_t*) &data->pitch[offset]);
+			if (ret == BLE_STATUS_SUCCESS){
+				// We successfully (I think) sent data using bluetooth.
+				batch_i += 1;
+				offset += samples_per_batch;
+			}else {
+				PRINTF("Error while updating CUSTOM ACC characteristic.\n") ;
+			}	
+		}
+		
+		// TODO: SEND ROLL
+		offset = 0;
+		for(int batch_i=0; batch_i<number_of_batches;){
+			// Send one batch of data.
+			ret = aci_gatt_update_char_value(customAccServHandle, customAccCharHandle, 0, BLUETOOTH_BATCH_SIZE, (uint8_t*) &data->roll[offset]);
 			if (ret == BLE_STATUS_SUCCESS){
 				// We successfully (I think) sent data using bluetooth.
 				batch_i += 1;
