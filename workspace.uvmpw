@@ -21,6 +21,18 @@
 
   <project>
     <PathAndName>.\Lab4\MDK-ARM\Lab4.uvprojx</PathAndName>
+  </project>
+
+  <project>
+    <PathAndName>.\project\nucleo\BLE_SampleProject.uvprojx</PathAndName>
+  </project>
+
+  <project>
+    <PathAndName>.\project\discovery_new\MDK-ARM\discovery.uvprojx</PathAndName>
+  </project>
+
+  <project>
+    <PathAndName>.\project\discovery_old\MDK-ARM\discovery_old.uvprojx</PathAndName>
     <NodeIsActive>1</NodeIsActive>
     <NodeIsExpanded>1</NodeIsExpanded>
   </project>
