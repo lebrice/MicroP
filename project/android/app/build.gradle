@@ -39,5 +39,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     implementation 'com.android.volley:volley:1.0.0'
     implementation 'org.apache.httpcomponents:httpcore:4.4.1'
+    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
     implementation 'org.apache.httpcomponents:httpmime:4.4.1'
+    implementation 'org.apache.directory.studio:org.apache.commons.io:2.4'
 }

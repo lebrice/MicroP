@@ -42,8 +42,11 @@ import com.android.volley.toolbox.Volley;
 import com.ecse426.project.microp.R;
 import com.ecse426.project.utils.GattUtils;
 
+import org.apache.commons.io.IOUtils;
+
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -173,7 +176,15 @@ public class ClientActivity extends AppCompatActivity {
         String testData = "no_data";
         String key = "audio";
         String filePath = "/mnt/sdcard/Documents/test.txt";
-        uploadButton.setOnClickListener(view -> httpPostStringWeb(url, key, testData));
+        File testFile = new File(filePath);
+        uploadButton.setOnClickListener(view -> {
+            try {
+                uploadFile(url, key, testFile);
+                Log.d(TAG, "Sending to web server!");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     protected void onResume() {
@@ -311,7 +322,7 @@ public class ClientActivity extends AppCompatActivity {
     }
 
     // Sending raw string
-    private void httpPostStringWeb(String url, String key, String data){
+    private void httpPostStringWeb(String url, String key, String data) {
         ProgressDialog pDialog = new ProgressDialog(this);
         pDialog.setMessage("Sending...");
         pDialog.show();
@@ -328,6 +339,33 @@ public class ClientActivity extends AppCompatActivity {
             protected Map<String, String> getParams() {
                 Map<String, String> params = new HashMap<>();
                 params.put(key,data);
+                return params;
+            }
+        };
+        AppController.getInstance().addToRequestQueue(stringRequest, AppController.TAG);
+    }
+
+    // Sending raw string
+    private void uploadFile(String url, String key, File file) throws IOException {
+        ProgressDialog pDialog = new ProgressDialog(this);
+        pDialog.setMessage("Sending...");
+        pDialog.show();
+
+        byte[] data = IOUtils.toByteArray(file.getAbsolutePath());
+        String dataEncoding = Base64.encodeToString(data, Base64.DEFAULT);
+
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, response -> {
+            Log.i(TAG, response);
+            pDialog.hide();
+        }, error -> {
+            // Log error
+            Log.e(TAG, "Request failure!");
+            pDialog.hide();
+        }) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put(key, dataEncoding);
                 return params;
             }
         };
@@ -356,21 +394,6 @@ public class ClientActivity extends AppCompatActivity {
         };
         AppController.getInstance().addToRequestQueue(jsonObjReq, AppController.TAG);
     }
-
-//    private void httpPostFileWeb(String url, String key, String filePath) {
-//        File file = new File(filePath);
-//        ProgressDialog pDialog = new ProgressDialog(this);
-//        pDialog.setMessage("Sending...");
-//        pDialog.show();
-//        MultipartRequest request = new MultipartRequest(url, null, null, file, response -> {
-//            Log.i(TAG, response.toString());
-//            pDialog.hide();
-//        }, error -> {
-//            Log.e(TAG, error.getMessage());
-//            pDialog.hide();
-//        });
-//        AppController.getInstance().addToRequestQueue(request, AppController.TAG);
-//    }
 
     // Used for writing to file
     public void writeToFile(byte[] array, String pathName)
@@ -576,12 +599,6 @@ public class ClientActivity extends AppCompatActivity {
                 Log.e(TAG, "Unable to convert message bytes to string");
             }
             Log.d(TAG, "Received message: " + messageString);
-
-            Log.d(TAG, "Sending to web server!");
-            //httpPostFileWeb(url, key, filePath);
-            httpPostJsonWeb(url, key, encoding);
         }
-
-
     }
 }
