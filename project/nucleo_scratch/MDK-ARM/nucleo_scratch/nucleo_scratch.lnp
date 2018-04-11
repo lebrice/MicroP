@@ -1,10 +1,12 @@
---cpu=Cortex-M4.fp
+--cpu Cortex-M4.fp
 "nucleo_scratch\startup_stm32f401xe.o"
 "nucleo_scratch\system_stm32f4xx.o"
 "nucleo_scratch\stm32f4xx_it.o"
 "nucleo_scratch\stm32f4xx_hal_msp.o"
 "nucleo_scratch\main.o"
 "nucleo_scratch\fput_debug.o"
+"nucleo_scratch\usart.o"
+"nucleo_scratch\gpio.o"
 "nucleo_scratch\stm32f4xx_hal_tim.o"
 "nucleo_scratch\stm32f4xx_hal_rcc_ex.o"
 "nucleo_scratch\stm32f4xx_hal_dma_ex.o"
@@ -21,6 +23,6 @@
 "nucleo_scratch\stm32f4xx_hal_pwr.o"
 "nucleo_scratch\stm32f4xx_hal_tim_ex.o"
 --library_type=microlib --strict --scatter "nucleo_scratch\nucleo_scratch.sct"
---summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
 --list "nucleo_scratch.map" -o nucleo_scratch\nucleo_scratch.axf

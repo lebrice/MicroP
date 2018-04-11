@@ -759,11 +759,11 @@ ARM Macro Assembler    Page 12
               00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
 erwork --depend=nucleo_scratch\startup_stm32f401xe.d -onucleo_scratch\startup_s
-tm32f401xe.o -I.\RTE\_nucleo_scratch -IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSI
-S\Include -IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.11.0\Drivers\CMSIS\Device\
-ST\STM32F4xx\Include --predefine="__EVAL SETA 1" --predefine="__MICROLIB SETA 1
-" --predefine="__UVISION_VERSION SETA 524" --predefine="_RTE_ SETA 1" --predefi
-ne="STM32F401xE SETA 1" --list=startup_stm32f401xe.lst startup_stm32f401xe.s
+tm32f401xe.o -IC:\microp\project\nucleo_scratch\MDK-ARM\RTE -IC:\Keil_v5\ARM\PA
+CK\Keil\STM32F4xx_DFP\2.11.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include -IC:\Kei
+l_v5\ARM\CMSIS\Include --predefine="__MICROLIB SETA 1" --predefine="__UVISION_V
+ERSION SETA 515" --predefine="_RTE_ SETA 1" --predefine="STM32F401xE SETA 1" --
+list=startup_stm32f401xe.lst startup_stm32f401xe.s
 
 
 
@@ -1599,4 +1599,4 @@ Symbol: __main
       At line 192 in file startup_stm32f401xe.s
 Comment: __main used once
 2 symbols
-421 symbols in table
+420 symbols in table

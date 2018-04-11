@@ -43,6 +43,10 @@
 #include "hci.h"
 #include "stm32_bluenrg_ble.h"
 
+#ifndef __MAIN_NUCLEO_H__
+#include "main.h"
+#endif
+
 extern SPI_HandleTypeDef SpiHandle;
 
 /**
@@ -53,6 +57,9 @@ extern SPI_HandleTypeDef SpiHandle;
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   HCI_Isr();
+	if (GPIO_Pin == DATA_INTERRUPT_Pin){
+		printf("GPIO Interrupt handler! (pin %d)\n", GPIO_Pin);
+	}
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
