@@ -1,6 +1,7 @@
 package com.ecse426.project.app;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -22,20 +23,27 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.ParcelUuid;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.ecse426.project.microp.R;
 import com.ecse426.project.utils.GattUtils;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,11 +67,11 @@ public class ClientActivity extends AppCompatActivity {
     private boolean mScanning;
     private boolean mInitialized;
     private List<String> listAddress = new ArrayList<String>();
-    private String message = "message";
 
-    private final UUID CUSTOM_SERVICE_023_UUID = GattUtils.CUSTOM_SERVICE_023_UUID;
-    private final UUID CUSTOM_SERVICE_428_UUID = GattUtils.CUSTOM_SERVICE_428_UUID;
-    private final UUID CHARACTERISTIC1_023_UUID = GattUtils.CHARACTERISTIC1_023_UUID;
+    private final UUID SERVICE_023_UUID = GattUtils.SERVICE_023_UUID;
+    private final UUID SERVICE_428_UUID = GattUtils.SERVICE_428_UUID;
+    private final UUID CHAR_AUDIO_023_UUID = GattUtils.CHAR_AUDIO_023_UUID;
+    private final UUID CHAR_ACCEL_023_UUID = GattUtils.CHAR_ACCEL_023_UUID;
     private final UUID CONTROL_POINT_UUID = GattUtils.CONTROL_POINT_CHAR_UUID;
     private final UUID CLIENT_CHARACTERISTIC_CONFIG_UUID = GattUtils.CLIENT_CHARACTERISTIC_CONFIG_UUID;
     private final String NUCLEO_MAC_ADDRESS = GattUtils.NUCLEO_MAC_ADDRESS;
@@ -78,13 +86,20 @@ public class ClientActivity extends AppCompatActivity {
     private Button startScanButton;
     private Button stopScanButton;
     private TextView textNucleoAddress;
-    private EditText textMessage;
+//    private EditText textMessage;
     private Button sendButton;
+    private Button uploadButton;
+
+    // Volley connectivity
+    private RequestQueue queue;
+    private String url = "http://httpbin.org/post";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.client_activity);
+        Context mContext = getApplicationContext();
+        queue = Volley.newRequestQueue(mContext);
 
         // Setup BLE in Activity
         Log.d(TAG, "BLE Setting up");
@@ -100,8 +115,8 @@ public class ClientActivity extends AppCompatActivity {
         stopScanButton = findViewById(R.id.stop_scan_button);
         textAddress = findViewById(R.id.device_address);
         textNucleoAddress = findViewById(R.id.nucleo_address);
-        textMessage = findViewById(R.id.text_message);
         sendButton = findViewById(R.id.send_button);
+        uploadButton = findViewById(R.id.upload_button);
 
         String textSet = "Nucleo MAC Address: " + NUCLEO_MAC_ADDRESS;
         textNucleoAddress.setText(textSet);
@@ -109,6 +124,9 @@ public class ClientActivity extends AppCompatActivity {
 
         // Hid progress bar by default
         progressBar.setVisibility(View.INVISIBLE);
+
+        // Check for permissions
+        hasPermissions();
 
         // Click Listeners for start and stop scan buttons
         startScanButton.setOnClickListener(v -> {
@@ -118,10 +136,6 @@ public class ClientActivity extends AppCompatActivity {
         stopScanButton.setOnClickListener(v -> {
             stopScan();
             Log.d(TAG, "Stop Scan button clicked");
-        });
-        sendButton.setOnClickListener(view -> {
-            message = textMessage.getText().toString();
-            sendMessage(message);
         });
 
         // Populate ListView
@@ -155,6 +169,11 @@ public class ClientActivity extends AppCompatActivity {
                 Toast.makeText(this, "Need to select address", Toast.LENGTH_SHORT).show();
             }
         });
+
+        String testData = "no_data";
+        String key = "audio";
+        String filePath = "/mnt/sdcard/Documents/test.txt";
+        uploadButton.setOnClickListener(view -> httpPostStringWeb(url, key, testData));
     }
 
     protected void onResume() {
@@ -173,7 +192,7 @@ public class ClientActivity extends AppCompatActivity {
         listAddress.clear();
         List<ScanFilter> filters = new ArrayList<>();
         ScanFilter filter = new ScanFilter.Builder()
-                .setServiceUuid(new ParcelUuid(CUSTOM_SERVICE_023_UUID))
+                .setServiceUuid(new ParcelUuid(SERVICE_023_UUID))
                 .build();
         ScanSettings settings = new ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
@@ -246,6 +265,139 @@ public class ClientActivity extends AppCompatActivity {
         requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_FINE_LOCATION);
     }
 
+    /*
+   We pass in a Context, false for autoconnect and a BluetoothGattCallback. Be careful when using autoconnect, as it could run rampant.
+   An active BLE interface with uncontrolled connection attempts will drain the battery and choke up the CPU, so its best to handle reconnections manually.
+    */
+    private void connectDevice(BluetoothDevice device) {
+        GattClientCallback gattClientCallback = new GattClientCallback();
+        mGatt = device.connectGatt(this, false, gattClientCallback);
+        Log.d(TAG, "=====GATT SERVER CONNECTED=====");
+        Toast.makeText(this, "Connecting to " + selectedAddress, Toast.LENGTH_SHORT).show();
+    }
+
+    // To fully disconnect from server
+    public void disconnectGattServer() {
+        mConnected = false;
+        if (mGatt != null) {
+            mGatt.disconnect();
+            mGatt.close();
+            Log.d(TAG, "=====GATT SERVER DISCONNECTED=====");
+        }
+    }
+
+    private void sendMessage(String message) {
+        if (!mConnected && !mInitialized) {
+            return;
+        }
+        BluetoothGattService service = mGatt.getService(SERVICE_023_UUID);
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHAR_AUDIO_023_UUID);
+        byte[] messageBytes = new byte[0];
+        // convert message to byte array
+        try {
+            messageBytes = message.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            Log.e(TAG, "Failed to convert message string to byte array");
+        }
+        // Send message by writing to the characteristic
+        characteristic.setValue(messageBytes);
+        boolean messageSuccess = mGatt.writeCharacteristic(characteristic);
+        if (messageSuccess) {
+            Log.i(TAG, "=====Message sent successfully!=====");
+        }
+        else  {
+            Log.i(TAG, "=====Message failed!=====");
+        }
+    }
+
+    // Sending raw string
+    private void httpPostStringWeb(String url, String key, String data){
+        ProgressDialog pDialog = new ProgressDialog(this);
+        pDialog.setMessage("Sending...");
+        pDialog.show();
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, response -> {
+            // Log the first 500 characters of the response string
+            Log.i(TAG, response);
+            pDialog.hide();
+        }, error -> {
+            // Log error
+            Log.e(TAG, "Request failure!");
+            pDialog.hide();
+        }) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put(key,data);
+                return params;
+            }
+        };
+        AppController.getInstance().addToRequestQueue(stringRequest, AppController.TAG);
+    }
+
+    // Sending Json Object
+    private void httpPostJsonWeb(String url, String key, String data){
+        ProgressDialog pDialog = new ProgressDialog(this);
+        pDialog.setMessage("Sending...");
+        pDialog.show();
+        JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.POST, url, null,
+                response -> {
+                    Log.d(TAG, response.toString());
+                    pDialog.hide();
+            }, error -> {
+                Log.e(TAG, error.getMessage());
+                pDialog.hide();
+        }){
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put(key, data);
+                return params;
+            }
+        };
+        AppController.getInstance().addToRequestQueue(jsonObjReq, AppController.TAG);
+    }
+
+//    private void httpPostFileWeb(String url, String key, String filePath) {
+//        File file = new File(filePath);
+//        ProgressDialog pDialog = new ProgressDialog(this);
+//        pDialog.setMessage("Sending...");
+//        pDialog.show();
+//        MultipartRequest request = new MultipartRequest(url, null, null, file, response -> {
+//            Log.i(TAG, response.toString());
+//            pDialog.hide();
+//        }, error -> {
+//            Log.e(TAG, error.getMessage());
+//            pDialog.hide();
+//        });
+//        AppController.getInstance().addToRequestQueue(request, AppController.TAG);
+//    }
+
+    // Used for writing to file
+    public void writeToFile(byte[] array, String pathName)
+    {
+        File file = new File(pathName);
+        try
+        {
+            if (!file.exists()) {
+                Log.i(TAG, "File doesn't exist, creating new one!");
+                boolean success = file.createNewFile();
+                if (success) {
+                    Log.i(TAG, "File created!");
+                }
+                else {
+                    Log.e(TAG, "File creation failure!");
+                }
+            }
+            FileOutputStream stream = new FileOutputStream(pathName);
+            stream.write(array);
+            Log.i(TAG, "File written to!");
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+
     /**
      * Handles BLE scanning callbacks
      * When scanning for devices
@@ -298,49 +450,6 @@ public class ClientActivity extends AppCompatActivity {
         }
     }
 
-    /*
-   We pass in a Context, false for autoconnect and a BluetoothGattCallback. Be careful when using autoconnect, as it could run rampant.
-   An active BLE interface with uncontrolled connection attempts will drain the battery and choke up the CPU, so its best to handle reconnections manually.
-    */
-    private void connectDevice(BluetoothDevice device) {
-        GattClientCallback gattClientCallback = new GattClientCallback();
-        mGatt = device.connectGatt(this, false, gattClientCallback);
-        Log.d(TAG, "=====GATT SERVER CONNECTED=====");
-        Toast.makeText(this, "Connecting to " + selectedAddress, Toast.LENGTH_SHORT).show();
-    }
-
-    // To fully disconnect from server
-    public void disconnectGattServer() {
-        mConnected = false;
-        if (mGatt != null) {
-            mGatt.disconnect();
-            mGatt.close();
-            Log.d(TAG, "=====GATT SERVER DISCONNECTED=====");
-        }
-    }
-
-    private void sendMessage(String message) {
-        if (mConnected && mInitialized) {
-            return;
-        }
-        BluetoothGattService service = mGatt.getService(CUSTOM_SERVICE_023_UUID);
-        BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHARACTERISTIC1_023_UUID);
-        byte[] messageBytes = new byte[0];
-        // convert message to byte array
-        try {
-            messageBytes = message.getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            Log.e(TAG, "Failed to convert message string to byte array");
-        }
-        // Send message
-        characteristic.setValue(messageBytes);
-        boolean messageSuccess = mGatt.writeCharacteristic(characteristic);
-        if (messageSuccess) {
-            Log.i(TAG, "Message sent successfully!");
-        }
-    }
-
-
     /**
      * Handles callbacks from the GATT server
      * This is where to get characteristics (data) from services
@@ -348,6 +457,7 @@ public class ClientActivity extends AppCompatActivity {
      * it and the characteristics
      */
     private class GattClientCallback extends BluetoothGattCallback {
+        private String key = "audio"; //audio be default
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
@@ -376,20 +486,27 @@ public class ClientActivity extends AppCompatActivity {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             super.onServicesDiscovered(gatt, status);
             if (status != BluetoothGatt.GATT_SUCCESS) {
-                Log.d(TAG, "Bluetooth discover services failed");
+                Log.d(TAG, "=====Bluetooth discover services failed=====");
                 return;
             }
-            BluetoothGattService service = gatt.getService(CUSTOM_SERVICE_023_UUID);
-            BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHARACTERISTIC1_023_UUID);
-            characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
-            // signifies that our characteristic is fully ready to use
-            mInitialized = gatt.setCharacteristicNotification(characteristic, true);
-            Log.i(TAG, "Bluetooth services discovered! Successfully connected!");
 
-            // Enable notification value descriptor for the characteristic
-//            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
-//            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-//            gatt.writeDescriptor(descriptor);
+            Log.i(TAG, "=====Bluetooth GATT Success!=====");
+            BluetoothGattService service = gatt.getService(SERVICE_023_UUID);
+            for (BluetoothGattCharacteristic characteristic :service.getCharacteristics()) {
+                Log.i(TAG, "Found characteristic: " + characteristic);
+            }
+
+            BluetoothGattCharacteristic audioCharacteristic = service.getCharacteristic(CHAR_AUDIO_023_UUID);
+            audioCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+
+            // Signifies that our audioCharacteristic is fully ready to use
+            mInitialized = gatt.setCharacteristicNotification(audioCharacteristic, true);
+            Log.i(TAG, "=====Bluetooth services discovered! Successfully connected!=====");
+
+            // Enable notification value descriptor for the audioCharacteristic
+            BluetoothGattDescriptor descriptor = audioCharacteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            gatt.writeDescriptor(descriptor);
         }
 
 //        /**
@@ -415,8 +532,8 @@ public class ClientActivity extends AppCompatActivity {
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status){
 
             BluetoothGattCharacteristic characteristic =
-                    gatt.getService(CUSTOM_SERVICE_023_UUID)
-                            .getCharacteristic(CHARACTERISTIC1_023_UUID);
+                    gatt.getService(SERVICE_023_UUID)
+                            .getCharacteristic(CHAR_AUDIO_023_UUID);
 
             characteristic.setValue(new byte[]{1, 1});
             gatt.writeCharacteristic(characteristic);
@@ -429,16 +546,42 @@ public class ClientActivity extends AppCompatActivity {
          * @param gatt Gatt session
          * @param characteristic Characteristic of service
          */
+        @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
             byte[] messageBytes = characteristic.getValue();
             String messageString = null;
+            String key = null;
+            String filePath = null;
+            String encoding = null;
+
+            if (characteristic.getUuid().equals(CHAR_AUDIO_023_UUID)) {
+                filePath = "/mnt/sdcard/Documents/audio.wav";
+                key = "audio";
+                writeToFile(messageBytes, filePath);
+            }
+            else if (characteristic.getUuid().equals(CHAR_ACCEL_023_UUID)) {
+                filePath = "/mnt/sdcard/Documents/accel.csv";
+                key = "accel";
+                writeToFile(messageBytes, filePath);
+            }
+            else {
+                Log.e(TAG, "Unrecognized characteristic!");
+            }
+
             try {
                 messageString = new String(messageBytes, "UTF-8");
+                encoding = Base64.encodeToString(messageBytes, Base64.DEFAULT);
             } catch (UnsupportedEncodingException e) {
                 Log.e(TAG, "Unable to convert message bytes to string");
             }
             Log.d(TAG, "Received message: " + messageString);
+
+            Log.d(TAG, "Sending to web server!");
+            //httpPostFileWeb(url, key, filePath);
+            httpPostJsonWeb(url, key, encoding);
         }
+
+
     }
 }
