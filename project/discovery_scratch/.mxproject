@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=C:/Users/morin/OneDrive/Documents/MicroP_DMA_test/Inc
+HeaderPath=C:/Users/morin/OneDrive/Documents/Microprocessor Lab/G20_LAB1/MicroP/project/discovery_scratch/Inc
 HeaderFiles=gpio.h;adc.h;dma.h;FreeRTOSConfig.h;tim.h;usart.h;stm32f4xx_it.h;stm32f4xx_hal_conf.h;main.h;spi.h;
-SourcePath=C:/Users/morin/OneDrive/Documents/MicroP_DMA_test/Src
+SourcePath=C:/Users/morin/OneDrive/Documents/Microprocessor Lab/G20_LAB1/MicroP/project/discovery_scratch/Src
 SourceFiles=gpio.c;adc.c;dma.c;freertos.c;tim.c;usart.c;stm32f4xx_it.c;stm32f4xx_hal_msp.c;stm32f4xx_hal_timebase_TIM.c;main.c;spi.c;
 
 [PreviousLibFiles]
