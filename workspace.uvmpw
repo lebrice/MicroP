@@ -9,7 +9,6 @@
 
   <project>
     <PathAndName>.\Lab1\LAB1.uvprojx</PathAndName>
-    <NodeIsActive>1</NodeIsActive>
   </project>
 
   <project>
@@ -26,6 +25,8 @@
 
   <project>
     <PathAndName>.\project\nucleo\BLE_SampleProject.uvprojx</PathAndName>
+    <NodeIsActive>1</NodeIsActive>
+    <NodeIsExpanded>1</NodeIsExpanded>
   </project>
 
   <project>
@@ -33,7 +34,7 @@
   </project>
 
   <project>
-    <PathAndName>.\project\discovery_old\MDK-ARM\discovery_old.uvprojx</PathAndName>
+    <PathAndName>.\project\nucleo_scratch\MDK-ARM\nucleo_scratch.uvprojx</PathAndName>
     <NodeIsExpanded>1</NodeIsExpanded>
   </project>
 

@@ -176,7 +176,17 @@ int main(void)
   
   /* Initialize the BlueNRG HCI */
   HCI_Init();
+	
+	GPIO_Init();
+	
 	UART_Init();
+	
+//	// ---------------------- TEST UART ---------------------------------
+//	HAL_UART_Receive(&huart2, data, 3, HAL_MAX_DELAY);
+//	
+//	
+//	// ---------------------- TEST UART ---------------------------------
+
 
   /* Reset BlueNRG hardware */
   BlueNRG_RST();
@@ -234,7 +244,7 @@ int main(void)
   ret = aci_gatt_update_char_value(service_handle, dev_name_char_handle, 0,
                                    strlen(name), (uint8_t *)name);
 
-	HAL_UART_Receive(&huart2, data, 3, HAL_MAX_DELAY);
+	
 	
   if(ret){
     PRINTF("aci_gatt_update_char_value failed.\n");            
@@ -368,6 +378,7 @@ void UART_Init(void) {
   huart2.Init.Mode = UART_MODE_TX_RX;
   huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+	HAL_UART_Init(&huart2);
 }
 
 void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
@@ -403,127 +414,29 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
 }
 
 void GPIO_Init(void) {
-	GPIO_InitTypeDef hgpio;
-	hgpio.Pin = DATA_INTERRUPT_Pin|IS_MIC_DATA_Pin;
-	hgpio.Mode = GPIO_MODE_IT_RISING;
-	hgpio.Pull = GPIO_NOPULL;
-	HAL_GPIO_Init(GPIOC, &hgpio);
+	GPIO_InitTypeDef GPIO_InitStruct;
+	
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+	
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = IS_MIC_DATA_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(IS_MIC_DATA_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = DATA_INTERRUPT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(DATA_INTERRUPT_GPIO_Port, &GPIO_InitStruct);
 	
 	HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+
 }
-
-void wait_for_accelerometer_data(AccData * acc_data){
-	int bytes_to_receive = ACC_SAMPLE_COUNT * sizeof(float) / sizeof(uint8_t);
-	HAL_UART_Receive(&huart2, (uint8_t*) acc_data->pitch, bytes_to_receive, HAL_MAX_DELAY);
-	HAL_UART_Receive(&huart2, (uint8_t*) acc_data->roll, bytes_to_receive, HAL_MAX_DELAY);
-}
-
-void wait_for_mic_data(MicData * mic_data){
-	
-	uint32_t buffer[MIC_SAMPLE_COUNT];	
-	
-	// The bytes are sent with DMA from the discovery board, and it seems like it sends it as 32-bit words.
-	// Therefore, we need to shrink down the data, to uint16_t, to save some bandwidth.
-	
-	int bytes_to_receive = MIC_SAMPLE_COUNT * sizeof(uint32_t) / sizeof(uint8_t);
-	
-	HAL_UART_Receive(&huart2, (uint8_t*) buffer, bytes_to_receive, HAL_MAX_DELAY);
-
-	for(int i=0; i<MIC_SAMPLE_COUNT; i += 4){
-		// for every four bytes we received in buffer, keep only the lowest two.
-		mic_data->data[i] = 0x0000FFFF | buffer[i];
-	}
-}
-
-void send_acc_data(AccData * data){
-	// TODO: send the pitch and roll correctly via Bluetooth.
-	// TODO: I HAVE NO CLUE WHAT I'M DOING.
-  tBleStatus ret;
-	
-	if(set_connectable){
-    setConnectable();
-    set_connectable = FALSE;
-  }
-	if(connected)
-	{
-		const int bytes_to_send = ACC_SAMPLE_COUNT * sizeof(float) / sizeof(uint8_t);
-		const int number_of_batches = bytes_to_send / BLUETOOTH_BATCH_SIZE;
-		const int samples_per_batch = BLUETOOTH_BATCH_SIZE / sizeof(float);
-		
-		
-		// TODO: Figure out how to send data in batches.
-		// TODO: THIS IS WRONG, need to have numbers in LITTLE-ENDIAN.
-		// TODO: SEND PITCH
-		int offset = 0;
-		for(int batch_i=0; batch_i<number_of_batches;){
-			// Send one batch of data.
-			ret = aci_gatt_update_char_value(customAccServHandle, customAccCharHandle, 0, BLUETOOTH_BATCH_SIZE, (uint8_t*) &data->pitch[offset]);
-			if (ret == BLE_STATUS_SUCCESS){
-				// We successfully (I think) sent data using bluetooth.
-				batch_i += 1;
-				offset += samples_per_batch;
-			}else {
-				PRINTF("Error while updating CUSTOM ACC characteristic.\n") ;
-			}	
-		}
-		
-		// TODO: SEND ROLL
-		offset = 0;
-		for(int batch_i=0; batch_i<number_of_batches;){
-			// Send one batch of data.
-			ret = aci_gatt_update_char_value(customAccServHandle, customAccCharHandle, 0, BLUETOOTH_BATCH_SIZE, (uint8_t*) &data->roll[offset]);
-			if (ret == BLE_STATUS_SUCCESS){
-				// We successfully (I think) sent data using bluetooth.
-				batch_i += 1;
-				offset += samples_per_batch;
-			}else {
-				PRINTF("Error while updating CUSTOM ACC characteristic.\n") ;
-			}	
-		}
-		
-	}
-}
-
-void send_mic_data(MicData * data){
-	// TODO: send the mic data correctly via Bluetooth.
-	if(set_connectable){
-    setConnectable();
-    set_connectable = FALSE;
-  }
-	
-	// TODO:
-	
-	
-	
-}
-
-
-void UART_Receiver(){
-	
-	// TODO: Read a GPIO pin which determines if the data is accelerometer data or microphone data.
-	BOOL is_mic_data = FALSE;
-	//	is_mic_data = HAL_GPIO_ReadPin(GPIOx, IS_MIC_DATA_Pin);
-	
-	
-	if(is_mic_data){
-		PRINTF("Received Microphone data!\n");
-		MicData mic_data;
-		wait_for_mic_data(&mic_data);
-		send_mic_data(&mic_data);
-	}else{
-		printf("Received Accelerometer data!\n");
-		AccData acc_data;
-		wait_for_accelerometer_data(&acc_data);
-		send_acc_data(&acc_data);
-	}
-}
-	
-
-void EXTI1_IRQHandler(void) {
-	int x = 0;
-}
-
 
 /**
  * @}
