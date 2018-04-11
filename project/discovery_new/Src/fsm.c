@@ -225,16 +225,8 @@ void double_tap(){
 void StartDefaultTask(void const * argument)
 {
 	static STATE state;
-	
-	for(;;) {
-		acc_x = 0;
-		LIS3DSH_ReadACC(&temp_buffer[0]);
-		acc_x = (float)temp_buffer[0];
-		acc_y = (float)temp_buffer[1];
-		acc_z = (float)temp_buffer[2];
-		osDelay(10);
-	}
-
+	osDelay(10); //Allow accelerometer data to initialize to escape first accelerometer differential
+	detect_tap(); //Escape initial large change in acceleration to avoid detecting single tap immediately
   while(1){
 		switch(state)
 		{
@@ -253,6 +245,7 @@ void StartDefaultTask(void const * argument)
 				
 				case SINGLETAP:
 					printf("Single Tap!\n");
+					HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
 					single_tap();
 					// We're done. return to the IDLE state.
 					state = IDLE;				
@@ -260,6 +253,7 @@ void StartDefaultTask(void const * argument)
 
 				case DOUBLETAP:
 					printf("Double Tap!\n");
+					HAL_GPIO_TogglePin(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
 					double_tap();
 					// We're done. return to the IDLE state.
 					state = IDLE;
