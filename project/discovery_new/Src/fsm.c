@@ -246,6 +246,9 @@ void StartDefaultTask(void const * argument)
 				case SINGLETAP:
 					printf("Single Tap!\n");
 					HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
+					SET_PIN(DATA_INTERRUPT);
+					osDelay(1);
+					RESET_PIN(DATA_INTERRUPT);
 					single_tap();
 					// We're done. return to the IDLE state.
 					state = IDLE;				
