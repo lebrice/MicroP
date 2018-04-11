@@ -46,6 +46,9 @@
 #include "debug.h"
 #include "stm32_bluenrg_ble.h"
 #include "bluenrg_utils.h"
+#include "stm32f4xx_hal.h"
+
+#include "main.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -74,6 +77,7 @@ extern uint16_t accCharHandle, customAccServHandle, customAccCharHandle, customV
 uint8_t bnrg_expansion_board = IDB04A1; /* at startup, suppose the X-NUCLEO-IDB04A1 is used */
 
 void UART_Init(void);
+void GPIO_Init(void);
 UART_HandleTypeDef huart2;
 
 #define MIC_SAMPLE_COUNT 16000
@@ -303,7 +307,7 @@ int main(void)
   {
     HCI_Process();
     User_Process(&axes_data);
-		UART_Receiver();
+		//UART_Receiver();
 		
 #if NEW_SERVICES
     Update_Time_Characteristics();
@@ -360,6 +364,17 @@ void UART_Init(void) {
   huart2.Init.Mode = UART_MODE_TX_RX;
   huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+}
+
+void GPIO_Init(void) {
+	GPIO_InitTypeDef hgpio;
+	hgpio.Pin = DATA_INTERRUPT_Pin|IS_MIC_DATA_Pin;
+	hgpio.Mode = GPIO_MODE_IT_RISING;
+	hgpio.Pull = GPIO_NOPULL;
+	HAL_GPIO_Init(GPIOC, &hgpio);
+	
+	HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(EXTI1_IRQn);
 }
 
 void wait_for_accelerometer_data(AccData * acc_data){
@@ -468,6 +483,10 @@ void UART_Receiver(){
 	}
 }
 	
+
+void EXTI1_IRQHandler(void) {
+	int x = 0;
+}
 
 
 /**
