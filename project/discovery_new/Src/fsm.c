@@ -224,6 +224,7 @@ void double_tap(){
 /* StartDefaultTask function */
 void StartDefaultTask(void const * argument)
 {
+	uint8_t data[3] = {1,2,3};
 	static STATE state;
 	osDelay(10); //Allow accelerometer data to initialize to escape first accelerometer differential
 	detect_tap(); //Escape initial large change in acceleration to avoid detecting single tap immediately
@@ -249,6 +250,8 @@ void StartDefaultTask(void const * argument)
 					SET_PIN(DATA_INTERRUPT);
 					osDelay(1);
 					RESET_PIN(DATA_INTERRUPT);
+					osDelay(1);
+					HAL_UART_Transmit(&huart4, data, 3, 100);
 					single_tap();
 					// We're done. return to the IDLE state.
 					state = IDLE;				
