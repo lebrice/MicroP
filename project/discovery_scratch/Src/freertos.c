@@ -50,6 +50,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "cmsis_os.h"
+#include "lis3dsh.h"
 
 /* USER CODE BEGIN Includes */     
 
@@ -57,6 +58,10 @@
 
 /* Variables -----------------------------------------------------------------*/
 osThreadId defaultTaskHandle;
+float Buffer[3];
+float accX;
+float accY;
+float accZ;
 
 /* USER CODE BEGIN Variables */
 
@@ -114,7 +119,11 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+		LIS3DSH_ReadACC(&Buffer[0]);
+		accX = (float)Buffer[0];
+		accY = (float)Buffer[1];
+		accZ = (float)Buffer[2];
+    osDelay(10);
   }
   /* USER CODE END StartDefaultTask */
 }

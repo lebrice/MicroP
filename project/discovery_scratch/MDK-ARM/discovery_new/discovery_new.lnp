@@ -1,4 +1,4 @@
---cpu=Cortex-M4.fp
+--cpu Cortex-M4.fp
 "discovery_new\startup_stm32f407xx.o"
 "discovery_new\adc.o"
 "discovery_new\spi.o"
@@ -11,6 +11,7 @@
 "discovery_new\main.o"
 "discovery_new\stm32f4xx_hal_timebase_tim.o"
 "discovery_new\tim.o"
+"discovery_new\lis3dsh.o"
 "discovery_new\system_stm32f4xx.o"
 "discovery_new\stm32f4xx_hal_adc_ex.o"
 "discovery_new\stm32f4xx_hal_flash.o"
@@ -40,6 +41,6 @@
 "discovery_new\cmsis_os.o"
 "discovery_new\croutine.o"
 --library_type=microlib --strict --scatter "discovery_new\discovery_new.sct"
---summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
 --list "discovery_new.map" -o discovery_new\discovery_new.axf

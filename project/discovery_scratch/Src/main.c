@@ -56,6 +56,8 @@
 #include "usart.h"
 #include "gpio.h"
 
+#include "lis3dsh.h"
+
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
@@ -70,6 +72,8 @@ uint32_t ADCBufferDMA[16000];
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
+void initializeACC(void);
+LIS3DSH_InitTypeDef Acc_instance;
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -79,8 +83,8 @@ void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN 0 */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 {
-	printf("Callback");
-
+	//printf("Callback");
+	HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_15);
 }
 /* USER CODE END 0 */
 
@@ -118,6 +122,8 @@ int main(void)
   MX_ADC1_Init();
   MX_UART4_Init();
   MX_SPI1_Init();
+	
+	initializeACC();
   /* USER CODE BEGIN 2 */
 
 	// Start the timers.
@@ -246,6 +252,26 @@ void _Error_Handler(char *file, int line)
   {
   }
   /* USER CODE END Error_Handler_Debug */
+}
+
+void initializeACC(void){
+	
+	Acc_instance.Axes_Enable				= LIS3DSH_XYZ_ENABLE;
+	Acc_instance.AA_Filter_BW				= LIS3DSH_AA_BW_50;
+	Acc_instance.Full_Scale					= LIS3DSH_FULLSCALE_2;
+	Acc_instance.Power_Mode_Output_DataRate		= LIS3DSH_DATARATE_100;
+	Acc_instance.Self_Test					= LIS3DSH_SELFTEST_NORMAL;
+	Acc_instance.Continous_Update   = LIS3DSH_ContinousUpdate_Disabled;
+	
+	LIS3DSH_Init(&Acc_instance);	
+	
+	/* Enabling interrupt conflicts with push button
+  ACC_Interrupt_Config.Dataready_Interrupt	= LIS3DSH_DATA_READY_INTERRUPT_ENABLED;
+	ACC_Interrupt_Config.Interrupt_signal			= LIS3DSH_ACTIVE_HIGH_INTERRUPT_SIGNAL;
+	ACC_Interrupt_Config.Interrupt_type				= LIS3DSH_INTERRUPT_REQUEST_PULSED;
+	
+	LIS3DSH_DataReadyInterruptConfig(&ACC_Interrupt_Config);
+	*/
 }
 
 #ifdef  USE_FULL_ASSERT

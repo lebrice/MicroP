@@ -868,12 +868,12 @@ ARM Macro Assembler    Page 14
               00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
 erwork --depend=discovery_new\startup_stm32f407xx.d -odiscovery_new\startup_stm
-32f407xx.o -I..\Inc -I.\RTE\_discovery_new -IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.
-1\CMSIS\Include -IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.11.0\Drivers\CMSIS\D
-evice\ST\STM32F4xx\Include --predefine="__EVAL SETA 1" --predefine="__MICROLIB 
-SETA 1" --predefine="__UVISION_VERSION SETA 524" --predefine="_RTE_ SETA 1" --p
-redefine="STM32F407xx SETA 1" --list=startup_stm32f407xx.lst startup_stm32f407x
-x.s
+32f407xx.o -I..\Inc -IC:\microp\project\discovery_scratch\MDK-ARM\RTE -IC:\Keil
+_v5\ARM\PACK\ARM\CMSIS\5.2.0\CMSIS\Include -IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx
+_DFP\2.11.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include --predefine="__MICROLIB S
+ETA 1" --predefine="__UVISION_VERSION SETA 515" --predefine="_RTE_ SETA 1" --pr
+edefine="STM32F407xx SETA 1" --list=startup_stm32f407xx.lst startup_stm32f407xx
+.s
 
 
 
@@ -1958,4 +1958,4 @@ Symbol: __main
       At line 190 in file startup_stm32f407xx.s
 Comment: __main used once
 2 symbols
-446 symbols in table
+445 symbols in table
