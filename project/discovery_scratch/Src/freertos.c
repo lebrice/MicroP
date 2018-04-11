@@ -117,7 +117,7 @@ void StartDefaultTask(void const * argument)
 
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */
-  for(;;)
+  while(1)
   {
 		LIS3DSH_ReadACC(&Buffer[0]);
 		accX = (float)Buffer[0];

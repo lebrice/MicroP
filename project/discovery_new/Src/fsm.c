@@ -1,6 +1,6 @@
 
 #include "fsm.h"
-#include "LIS3DSH.h"
+#include "lis3dsh.h"
 #include "main.h"
 
 // Very useful macros for setting and resetting a given pin.
@@ -27,7 +27,8 @@ extern osThreadId defaultTaskHandle;
 // Handle for the UART.
 extern UART_HandleTypeDef huart4;
 
-
+float temp_buffer[3];
+float acc_x, acc_y, acc_z;
 
 extern uint32_t mic_buffer[MIC_BUFFER_SIZE];
 
@@ -55,19 +56,19 @@ bool detect_tap(){
 	
 	const int BUFFER_SIZE = TAP_CHECKING_INTERVAL_MS / ACC_SAMPLING_PERIOD;
 	
-//	float acc_x;
-//	float acc_y;
-	float acc_z;
+	//float acc_x;
+	//float acc_y;
+	//float acc_z;
 	
-	float temp_buffer[3];
+	//float temp_buffer[3];
 	
 	float buffer[BUFFER_SIZE];
 	
 	
 	for (int i=0; i<BUFFER_SIZE; i++){
 		LIS3DSH_ReadACC(&temp_buffer[0]);
-//		acc_x = (float)temp_buffer[0];
-//		acc_y = (float)temp_buffer[1];
+		acc_x = (float)temp_buffer[0];
+		acc_y = (float)temp_buffer[1];
 		acc_z = (float)temp_buffer[2];
 		
 		// what we keep: z
@@ -225,8 +226,15 @@ void StartDefaultTask(void const * argument)
 {
 	static STATE state;
 	
-	single_tap();
-	
+	for(;;) {
+		acc_x = 0;
+		LIS3DSH_ReadACC(&temp_buffer[0]);
+		acc_x = (float)temp_buffer[0];
+		acc_y = (float)temp_buffer[1];
+		acc_z = (float)temp_buffer[2];
+		osDelay(10);
+	}
+
   while(1){
 		switch(state)
 		{
