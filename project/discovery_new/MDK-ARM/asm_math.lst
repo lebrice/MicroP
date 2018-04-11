@@ -160,12 +160,12 @@ ARM Macro Assembler    Page 3
    82 00000072                 END
               00 00 00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
-erwork --depend=discovery\asm_math.d -odiscovery\asm_math.o -I..\Inc -IC:\micro
-p\project\discovery_new\MDK-ARM\RTE -IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.2.0\CMSIS
-\Include -IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.11.0\Drivers\CMSIS\Device\S
-T\STM32F4xx\Include --predefine="__MICROLIB SETA 1" --predefine="__UVISION_VERS
-ION SETA 515" --predefine="_RTE_ SETA 1" --predefine="STM32F407xx SETA 1" --lis
-t=asm_math.lst ..\Src\asm_math.s
+erwork --depend=discovery\asm_math.d -odiscovery\asm_math.o -I..\Inc -I.\RTE\_d
+iscovery -IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include -IC:\Keil_v5\ARM\P
+ACK\Keil\STM32F4xx_DFP\2.11.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include --prede
+fine="__EVAL SETA 1" --predefine="__MICROLIB SETA 1" --predefine="__UVISION_VER
+SION SETA 524" --predefine="_RTE_ SETA 1" --predefine="STM32F407xx SETA 1" --li
+st=asm_math.lst ..\Src\asm_math.s
 
 
 
@@ -197,4 +197,4 @@ Symbol: text
       None
 Comment: text unused
 3 symbols
-340 symbols in table
+341 symbols in table

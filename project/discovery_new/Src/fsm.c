@@ -29,7 +29,7 @@ extern UART_HandleTypeDef huart4;
 
 float temp_buffer[3];
 float acc_x, acc_y, acc_z;
-
+//float pitch_roll_buffer[2][1000];
 extern uint32_t mic_buffer[MIC_BUFFER_SIZE];
 
 
@@ -96,7 +96,7 @@ void HAL_UART_RxCompltCallback(UART_HandleTypeDef *huart){
 
 void single_tap(){
 	// MICROPHONE-related variables.
-	const int MIC_RECORDING_FREQ_HZ = 16000;
+	const int MIC_RECORDING_FREQ_HZ = 10000;
 	const int MIC_RECORDING_LENGTH_SECS = 1;
 	const int MIC_RECORDING_SAMPLE_COUNT = MIC_RECORDING_LENGTH_SECS * MIC_RECORDING_FREQ_HZ;
 	
@@ -116,7 +116,7 @@ void single_tap(){
 	
 	
 	// Set the GPIO pin to let the nucleo board known that we want to transmit some Microphone data.
-	SET_PIN(IS_MIC_DATA);
+	//SET_PIN(IS_MIC_DATA);
 	
 	// Send the mic data over UART to the Nucleo board.
 	int bytes_to_send = MIC_RECORDING_SAMPLE_COUNT * sizeof(mic_buffer[0]) / sizeof(uint8_t);
@@ -174,17 +174,18 @@ void double_tap(){
 	
 	// TODO: decide if we send pitch and roll, or the raw data.
 //	float acc_buffer[3][ACC_RECORDING_SAMPLE_COUNT];
-	float pitch_roll_buffer[2][ACC_RECORDING_SAMPLE_COUNT];
 	
+	static float pitch_roll_buffer[2][ACC_RECORDING_SAMPLE_COUNT];
 	float temp_buffer[3];
 	float acc_x, acc_y, acc_z;
 	float pitch, roll;
 	
 	
-	
+	printf("ACC COUNT: %d\n",ACC_RECORDING_SAMPLE_COUNT);
 	// Record the accelerometer data for 10 seconds.
 	for(int i=0; i< ACC_RECORDING_SAMPLE_COUNT; i++){
 		// Read a sample from the Accelerometer via SPI.
+		printf("i = %d\n",i);
 		LIS3DSH_ReadACC(temp_buffer);
 		acc_x = (float)temp_buffer[0];
 		acc_y = (float)temp_buffer[1];
@@ -199,12 +200,6 @@ void double_tap(){
 	}
 
 	// Send the data via UART to the nucleo board.
-
-	// Set the IS_MIC_DATA GPIO pin to '0', to tell the Nucleo Board that we are sending accelerometer data.					
-	RESET_PIN(IS_MIC_DATA);
-
-
-
 	// Send the Pitch array over to the Nucleo board via UART.
 	int bytes_to_send = ACC_RECORDING_SAMPLE_COUNT * sizeof(float) / sizeof(uint8_t);
 	HAL_UART_Transmit(&huart4, (uint8_t*) pitch_roll_buffer[0], bytes_to_send, HAL_MAX_DELAY);
@@ -224,7 +219,7 @@ void double_tap(){
 /* StartDefaultTask function */
 void StartDefaultTask(void const * argument)
 {
-	uint8_t data[3] = {1,2,3};
+	//uint8_t data[3] = {1,2,3};
 	static STATE state;
 	osDelay(10); //Allow accelerometer data to initialize to escape first accelerometer differential
 	detect_tap(); //Escape initial large change in acceleration to avoid detecting single tap immediately
@@ -241,27 +236,42 @@ void StartDefaultTask(void const * argument)
 					// if we detect another tap, go to doubletap, else, to singletap.
 					// TODO: Possibly configure the detect_tap to take in a customizable interval between two consecutive taps
 					// What about something like count_taps(interval), which returns the number of local maxima in the interval? 
+					HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
 					state = (detect_tap()) ? DOUBLETAP : SINGLETAP;
 					break;
 				
 				case SINGLETAP:
 					printf("Single Tap!\n");
+					HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
 					HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
+				
+					SET_PIN(IS_MIC_DATA);
+					osDelay(1);
 					SET_PIN(DATA_INTERRUPT);
 					osDelay(1);
-					RESET_PIN(DATA_INTERRUPT);
-					osDelay(1);
-					HAL_UART_Transmit(&huart4, data, 3, 100);
+					RESET_PIN(DATA_INTERRUPT);				
+				
+					//HAL_UART_Transmit(&huart4, data, 3, 100);
 					single_tap();
 					// We're done. return to the IDLE state.
+					HAL_GPIO_TogglePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin);
 					state = IDLE;				
 					break;
 
 				case DOUBLETAP:
 					printf("Double Tap!\n");
+					HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
 					HAL_GPIO_TogglePin(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
+				
+					RESET_PIN(IS_MIC_DATA);
+					osDelay(1);
+					SET_PIN(DATA_INTERRUPT);
+					osDelay(1);
+					RESET_PIN(DATA_INTERRUPT);	
+				
 					double_tap();
 					// We're done. return to the IDLE state.
+					HAL_GPIO_TogglePin(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin);
 					state = IDLE;
 					break;
 

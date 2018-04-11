@@ -25,12 +25,13 @@
 
   <project>
     <PathAndName>.\project\nucleo\BLE_SampleProject.uvprojx</PathAndName>
-    <NodeIsActive>1</NodeIsActive>
     <NodeIsExpanded>1</NodeIsExpanded>
   </project>
 
   <project>
     <PathAndName>.\project\discovery_new\MDK-ARM\discovery.uvprojx</PathAndName>
+    <NodeIsActive>1</NodeIsActive>
+    <NodeIsExpanded>1</NodeIsExpanded>
   </project>
 
   <project>

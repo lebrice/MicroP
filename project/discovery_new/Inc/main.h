@@ -72,7 +72,7 @@
 #define LED_ORANGE_GPIO_Port GPIOD
 #define LED_ORANGE_Pin GPIO_PIN_13
 
-#define MIC_BUFFER_SIZE 16000
+#define MIC_BUFFER_SIZE 10000
 
 /* ########################## Assert Selection ############################## */
 /**
