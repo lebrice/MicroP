@@ -80,7 +80,7 @@ def test_with_validation_images(test_count=100):
     print(f"seconds per image: {total_time / test_count:2.3}")
 
 
-def test_with_live_recording(duration=1, sampling_rate=16000):
+def test_with_live_recording(duration=1, sampling_rate=10000):
     """
     Test the API by recording a digit using the microphone and then preprocessing it, sending the spectrogram and awaiting the result.
     """
@@ -96,7 +96,7 @@ def test_with_live_recording(duration=1, sampling_rate=16000):
         print(f"\rRecording in {i}", end="\r")
         sleep(1)
     
-    record_to_file(test_audio_file, recording_length_secs=duration,sampling_freq=16000)
+    record_to_file(test_audio_file, recording_length_secs=duration,sampling_freq=sampling_rate)
     play_sound_file(test_audio_file)
     result = send_to_speech_api(test_audio_file)
     print(result)
@@ -107,7 +107,7 @@ def test_with_recording():
         
     test_audio_file = f"{current_dir}/tmp/api_test.wav"
     if not os.path.isfile(test_audio_file):
-        record_to_file(test_audio_file, sampling_freq=16000)
+        record_to_file(test_audio_file, sampling_freq=10000)
     play_sound_file(test_audio_file)
     result = send_to_speech_api(test_audio_file)
     print(result)
@@ -136,8 +136,9 @@ def test_accelerometer():
 def main():
     # test_with_validation_images()
     # test_with_live_recording()
+    test_with_live_recording(duration=1, sampling_rate=10000)
     # test_with_recording()
-    test_accelerometer()
+    # test_accelerometer()
 
 
 if __name__ == '__main__':
