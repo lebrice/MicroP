@@ -1,0 +1,200 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000                 AREA             text, CODE, READONLY
+    2 00000000                 EXPORT           asm_math
+    3 00000000         
+    4 00000000         ; function asm_math
+    5 00000000         ; inputs:
+    6 00000000         ; -------
+    7 00000000         ; R0: testValues pointer
+    8 00000000         ; R1: size
+    9 00000000         ; R2: asm_output pointer
+   10 00000000         
+   11 00000000         asm_math
+   12 00000000         
+   13 00000000         ; REGISTERS USED:
+   14 00000000         ; S0 : RMS value
+   15 00000000         ; S1 : MAX value
+   16 00000000         ; S2 : MIN value
+   17 00000000         
+   18 00000000         ; R3 : MAX index
+   19 00000000         ; R4 : MIN index
+   20 00000000         
+   21 00000000         ; S3 : Current value from the array (i.e. "S3 = array[i]
+                       ")
+   22 00000000         ; R5 : Loop counter (goes from size to 0, decremented at
+                        each loop iteration)
+   23 00000000         ; S4 : float value of the 'size' (R1), used for the divi
+                       sion at the end of the RMS calculation.
+   24 00000000         
+   25 00000000         ; Since we use registers greater than R3, we need to sav
+                       e them onto the stack, and reset them after, in order no
+                       t to lose data. 
+   26 00000000 B430            STMDB            SP!, { R4, R5}
+   27 00000002 ED2D 2A01       VPUSH            S4
+   28 00000006         
+   29 00000006         
+   30 00000006         ; set initial values
+   31 00000006 ED9F 0A1B       VLDR.f32         S0, =0      ; initial RMS value
+                                                             is 0.
+   32 0000000A EDD0 0A00       VLDR.f32         S1, [R0]    ; Load in the first
+                                                             value, and set it 
+                                                            as the initial max.
+                                                            
+   33 0000000E EEB0 1A60       VMOV.f32         S2, S1      ; Set initial min t
+                                                            o be the first valu
+                                                            e in the array. (ta
+                                                            ke it from S1 since
+                                                             we just loaded.)
+   34 00000012 F04F 0300       MOV              R3, #0      ; initial max index
+                                                             is 0.
+   35 00000016 F04F 0400       MOV              R4, #0      ; initial min index
+                                                             is 0.
+   36 0000001A F04F 0500       MOV              R5, #0      ; Loop Counter vari
+                                                            able, initiated wit
+                                                            h the 'size' value.
+                                                             We will decrement 
+                                                            it at each iteratio
+                                                            n.
+   37 0000001E         
+   38 0000001E         loop
+   39 0000001E         ; S3 is the current latest value of the array.
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+   40 0000001E EDD0 1A00       VLDR.f32         S3, [R0]    ; Load the value po
+                                                            inted to by R0 into
+                                                             S3.
+   41 00000022         
+   42 00000022         ; RMS calculation
+   43 00000022 EE01 0AA1       VMLA.f32         S0, S3, S3  ; S0 = S0 + S3 * S3
+                                                            
+   44 00000026         
+   45 00000026         ; MAX calculation.
+   46 00000026 EEF4 1A60       VCMP.f32         S3, S1      ; Compare S3 (the l
+                                                            atest value) and S1
+                                                             (the current max) 
+                                                            (" if(S3 > S1){ (..
+                                                            .) }")
+   47 0000002A EEF1 FA10       VMRS             APSR_nzcv, FPSCR ; move the con
+                                                            ditions from the fl
+                                                            oating-point unit t
+                                                            o the core so we ca
+                                                            n use conditional o
+                                                            perations on non-ve
+                                                            ctor instructions.
+   48 0000002E BFC4 EEF0 
+              0A61             VMOVGT.f32       S1, S3      ;Move S3 into S1 if
+                                                             the 'GT' (Greater-
+                                                            Than) condition is 
+                                                            met, as set in the 
+                                                            previous VCMP opera
+                                                            tion
+   49 00000034 462B            MOVGT            R3, R5
+   50 00000036         
+   51 00000036         ; MIN Calculation
+   52 00000036 EEF4 1A41       VCMP.f32         S3, S2      ;Compare S3 (the la
+                                                            test value) and S1 
+                                                            (the current max) (
+                                                            " if(S3 > S1){ (...
+                                                            ) }")
+   53 0000003A EEF1 FA10       VMRS             APSR_nzcv, FPSCR ; move the con
+                                                            ditions from the fl
+                                                            oating-point unit t
+                                                            o the core so we ca
+                                                            n use conditional o
+                                                            perations on non-ve
+                                                            ctor instructions.
+   54 0000003E BFBC EEB0 
+              1A61             VMOVLT.f32       S2, S3      ;Move S3 into S2 if
+                                                             the 'LT' (Less-Tha
+                                                            n) condition is met
+                                                            , as set in the pre
+                                                            vious VCMP operatio
+                                                            n
+   55 00000044 462C            MOVLT            R4, R5
+   56 00000046         
+   57 00000046         ; Increment the array pointer.
+   58 00000046 F100 0004       ADD              R0, R0, #4
+   59 0000004A         ; Increment the loop counter 
+   60 0000004A F105 0501       ADD              R5, R5, #1
+   61 0000004E         
+   62 0000004E         ; Check exit condition.
+   63 0000004E 428D            CMP              R5, R1
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+   64 00000050 D1E5            BNE              loop
+   65 00000052         
+   66 00000052         ; Divide RMS by the size (as a float), then take its squ
+                       are root.
+   67 00000052 EE02 1A10       VMOV.f32         S4, R1      ; Put the 'int' bit
+                                                            s of size into S4.
+   68 00000056 EEB8 2AC2       VCVT.f32.s32     S4, S4      ; convert S4 to a f
+                                                            loat version of S4 
+                                                            (the size)
+   69 0000005A EE80 0A02       VDIV.f32         S0, S0, S4  ; (RMS = RMS / floa
+                                                            t(SIZE)
+   70 0000005E EEB1 0AC0       VSQRT.f32        S0, S0
+   71 00000062         
+   72 00000062         ; Save all the required values.
+   73 00000062 ECA2 0A03       VSTM             R2!, {S0, S1, S2}
+   74 00000066 E882 0018       STM              R2, {R3, R4}
+   75 0000006A         
+   76 0000006A         ; Restore the original values of registers we used.
+   77 0000006A BC30            LDMIA            SP!, {R4, R5}
+   78 0000006C ECBD 2A01       VPOP             S4
+   79 00000070         
+   80 00000070         
+   81 00000070 4770            BX               LR
+   82 00000072                 END
+              00 00 00000000 
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
+erwork --depend=discovery\asm_math.d -odiscovery\asm_math.o -I..\Inc -IC:\micro
+p\project\discovery_new\MDK-ARM\RTE -IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.2.0\CMSIS
+\Include -IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.11.0\Drivers\CMSIS\Device\S
+T\STM32F4xx\Include --predefine="__MICROLIB SETA 1" --predefine="__UVISION_VERS
+ION SETA 515" --predefine="_RTE_ SETA 1" --predefine="STM32F407xx SETA 1" --lis
+t=asm_math.lst ..\Src\asm_math.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+asm_math 00000000
+
+Symbol: asm_math
+   Definitions
+      At line 11 in file ..\Src\asm_math.s
+   Uses
+      At line 2 in file ..\Src\asm_math.s
+Comment: asm_math used once
+loop 0000001E
+
+Symbol: loop
+   Definitions
+      At line 38 in file ..\Src\asm_math.s
+   Uses
+      At line 64 in file ..\Src\asm_math.s
+Comment: loop used once
+text 00000000
+
+Symbol: text
+   Definitions
+      At line 1 in file ..\Src\asm_math.s
+   Uses
+      None
+Comment: text unused
+3 symbols
+340 symbols in table

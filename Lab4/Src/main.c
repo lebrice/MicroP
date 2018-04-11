@@ -220,7 +220,9 @@ int main(void)
 	
   HAL_TIM_Base_Start_DMA(&htim2, ADCBufferDMA, ADC_BUFFER_SIZE);
 	
-	sleep();
+	HAL_ADC_Start_DMA(&hadc1, ADCBufferDMA, ADC_BUFFER_SIZE);
+	
+	//sleep();
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
