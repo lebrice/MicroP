@@ -76,6 +76,8 @@ extern uint16_t accCharHandle, customAccServHandle, customAccCharHandle, customV
 
 uint8_t bnrg_expansion_board = IDB04A1; /* at startup, suppose the X-NUCLEO-IDB04A1 is used */
 
+uint8_t data[3];
+
 void UART_Init(void);
 void GPIO_Init(void);
 UART_HandleTypeDef huart2;
@@ -232,6 +234,8 @@ int main(void)
   ret = aci_gatt_update_char_value(service_handle, dev_name_char_handle, 0,
                                    strlen(name), (uint8_t *)name);
 
+	HAL_UART_Receive(&huart2, data, 3, HAL_MAX_DELAY);
+	
   if(ret){
     PRINTF("aci_gatt_update_char_value failed.\n");            
     while(1);
@@ -356,7 +360,7 @@ void User_Process(AxesRaw_t* p_axes)
 
 
 void UART_Init(void) {
-	huart2.Instance = USART2;
+	huart2.Instance = USART1;
   huart2.Init.BaudRate = 115200;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
@@ -364,6 +368,38 @@ void UART_Init(void) {
   huart2.Init.Mode = UART_MODE_TX_RX;
   huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+}
+
+void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
+{
+
+  GPIO_InitTypeDef GPIO_InitStruct;
+  if(uartHandle->Instance==USART1)
+  {
+  /* USER CODE BEGIN USART1_MspInit 0 */
+
+  /* USER CODE END USART1_MspInit 0 */
+    /* USART1 clock enable */
+    __HAL_RCC_USART1_CLK_ENABLE();
+  
+    /**USART1 GPIO Configuration    
+    PA9     ------> USART1_TX
+    PA10     ------> USART1_RX 
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    /* USART1 interrupt Init */
+    HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART1_IRQn);
+  /* USER CODE BEGIN USART1_MspInit 1 */
+
+  /* USER CODE END USART1_MspInit 1 */
+  }
 }
 
 void GPIO_Init(void) {

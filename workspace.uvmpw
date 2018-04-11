@@ -9,6 +9,7 @@
 
   <project>
     <PathAndName>.\Lab1\LAB1.uvprojx</PathAndName>
+    <NodeIsActive>1</NodeIsActive>
   </project>
 
   <project>
@@ -33,7 +34,6 @@
 
   <project>
     <PathAndName>.\project\discovery_old\MDK-ARM\discovery_old.uvprojx</PathAndName>
-    <NodeIsActive>1</NodeIsActive>
     <NodeIsExpanded>1</NodeIsExpanded>
   </project>
 

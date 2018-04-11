@@ -41,15 +41,28 @@
 #include "usart.h"
 #include "gpio.h"
 
-/* USER CODE BEGIN Includes */
+#include "cube_hal.h"
 
+#include "osal.h"
+#include "sensor_service.h"
+#include "debug.h"
+#include "stm32_bluenrg_ble.h"
+#include "bluenrg_utils.h"
+#include "stm32f4xx_hal.h"
+
+#include <stdio.h>
+
+/* USER CODE BEGIN Includes */
+#define BDADDR_SIZE 6
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+extern uint16_t accCharHandle, customAccServHandle, customAccCharHandle, customVoiceServHandle;
 
+uint8_t bnrg_expansion_board = IDB04A1; /* at startup, suppose the X-NUCLEO-IDB04A1 is used */
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -72,7 +85,15 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	const char *name = "B123NRG";
+  uint8_t SERVER_BDADDR[] = {0x12, 0x34, 0x00, 0xE1, 0x80, 0x03};
+  uint8_t bdaddr[BDADDR_SIZE];
+  uint16_t service_handle, dev_name_char_handle, appearance_char_handle;
+  
+  uint8_t  hwVersion;
+  uint16_t fwVersion;
+  
+  int ret;  
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -81,7 +102,13 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+#if NEW_SERVICES
+  /* Configure LED2 */
+  BSP_LED_Init(LED2); 
+#endif
+  
+  /* Configure the User Button in GPIO Mode */
+  BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_GPIO);
   /* USER CODE END Init */
 
   /* Configure the system clock */
