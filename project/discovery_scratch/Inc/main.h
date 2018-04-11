@@ -59,6 +59,10 @@
 
 /* Private define ------------------------------------------------------------*/
 
+#define DATA_INTERRUPT_Pin GPIO_PIN_8
+#define DATA_INTERRUPT_GPIO_Port GPIOD
+#define IS_MIC_DATA_Pin GPIO_PIN_9
+#define IS_MIC_DATA_GPIO_Port GPIOD
 #define LED3_Pin GPIO_PIN_12
 #define LED3_GPIO_Port GPIOD
 #define LED4_Pin GPIO_PIN_13
