@@ -59,18 +59,20 @@
 
 /* Private define ------------------------------------------------------------*/
 
-#define MIC_IN_Pin GPIO_PIN_0
-#define MIC_IN_GPIO_Port GPIOA
+#define DATA_INTERRUPT_Pin GPIO_PIN_8
+#define DATA_INTERRUPT_GPIO_Port GPIOD
 #define IS_MIC_DATA_Pin GPIO_PIN_9
 #define IS_MIC_DATA_GPIO_Port GPIOD
-#define LED_GREEN_Pin GPIO_PIN_12
-#define LED_GREEN_GPIO_Port GPIOD
-#define LED_ORANGE_Pin GPIO_PIN_13
-#define LED_ORANGE_GPIO_Port GPIOD
-#define LED_RED_Pin GPIO_PIN_14
-#define LED_RED_GPIO_Port GPIOD
-#define LED_BLUE_Pin GPIO_PIN_15
 #define LED_BLUE_GPIO_Port GPIOD
+#define LED_BLUE_Pin GPIO_PIN_15
+#define LED_RED_GPIO_Port GPIOD
+#define LED_RED_Pin GPIO_PIN_14
+#define LED_GREEN_GPIO_Port GPIOD
+#define LED_GREEN_Pin GPIO_PIN_12
+#define LED_ORANGE_GPIO_Port GPIOD
+#define LED_ORANGE_Pin GPIO_PIN_13
+
+#define MIC_BUFFER_SIZE 16000
 
 /* ########################## Assert Selection ############################## */
 /**

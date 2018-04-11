@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=C:/Users/Fabrice/repos/MicroP/project/discovery_new/Inc
+HeaderPath=C:/Users/morin/OneDrive/Documents/Microprocessor Lab/G20_LAB1/MicroP/project/discovery_new/Inc
 HeaderFiles=stm32f4xx_it.h;stm32f4xx_hal_conf.h;main.h;gpio.h;usart.h;adc.h;dma.h;FreeRTOSConfig.h;spi.h;tim.h;
-SourcePath=C:/Users/Fabrice/repos/MicroP/project/discovery_new/Src
+SourcePath=C:/Users/morin/OneDrive/Documents/Microprocessor Lab/G20_LAB1/MicroP/project/discovery_new/Src
 SourceFiles=stm32f4xx_it.c;stm32f4xx_hal_msp.c;main.c;gpio.c;usart.c;adc.c;dma.c;freertos.c;spi.c;tim.c;stm32f4xx_hal_timebase_TIM.c;
 
 [PreviousLibFiles]

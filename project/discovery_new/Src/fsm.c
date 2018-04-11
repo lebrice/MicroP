@@ -1,6 +1,7 @@
 
 #include "fsm.h"
 #include "LIS3DSH.h"
+#include "main.h"
 
 // Very useful macros for setting and resetting a given pin.
 #define PIN(i) i##_Pin
@@ -28,7 +29,7 @@ extern UART_HandleTypeDef huart4;
 
 
 
-
+extern uint32_t mic_buffer[MIC_BUFFER_SIZE];
 
 
 bool detected_tap(float *samples, int num_samples) {
@@ -102,7 +103,7 @@ void single_tap(){
 	
 	// Buffer holding the microphone samples.
 	// TODO: DMA seems to only be able to use 32-bit wide data.
-	uint32_t mic_buffer[MIC_RECORDING_SAMPLE_COUNT];
+	//uint32_t mic_buffer[MIC_RECORDING_SAMPLE_COUNT];
 	
 	// Start recording audio using the ADC with DMA.
 	HAL_ADC_Start_DMA(&hadc1, mic_buffer, MIC_RECORDING_SAMPLE_COUNT);
@@ -223,6 +224,8 @@ void double_tap(){
 void StartDefaultTask(void const * argument)
 {
 	static STATE state;
+	
+	single_tap();
 	
   while(1){
 		switch(state)
