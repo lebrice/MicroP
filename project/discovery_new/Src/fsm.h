@@ -23,8 +23,9 @@
 #include "math.h"
 #endif
 
-
-
+#define TAP_FILTER_ALPHA 0.9
+#define ACC_FILTER_ALPHA 0.5
+#define TAP_THRESHOLD 100.0
 
 typedef enum {
 	IDLE,
@@ -33,4 +34,14 @@ typedef enum {
 	DOUBLETAP,
 	WAITING_REPLY,
 } STATE;
+
+typedef struct {
+	float rms;
+	float max_value;
+	float min_value;
+	int max_index;
+	int min_index;	
+} asm_output;
+
+void asm_math(float *inputValues, int size, asm_output *results);
 
