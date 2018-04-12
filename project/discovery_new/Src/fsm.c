@@ -32,6 +32,19 @@ float acc_x, acc_y, acc_z;
 //float pitch_roll_buffer[2][1000];
 extern uint32_t mic_buffer[MIC_BUFFER_SIZE];
 
+/** Squashes an uint32_t array down to uint16_t in-place.
+*
+*/
+void squash(uint32_t array[], int length){
+	// Create two pointers, pointing at the start of the array.
+	uint32_t * source = &array[0];
+	uint16_t * destination = (uint16_t*) &array[0];
+	for (int i=0; i<length; i++, source++, destination++){
+		// We copy from source -> destination, within array.
+		*destination = (uint16_t) *source;
+	}
+}
+
 
 bool detected_tap(float *samples, int num_samples) {
 	const int Z_THRESH = 30;
