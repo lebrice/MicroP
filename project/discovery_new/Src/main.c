@@ -56,9 +56,12 @@
 #include "usart.h"
 #include "gpio.h"
 
-#include "lis3dsh.h"
-
 /* USER CODE BEGIN Includes */
+
+#define MIC_BUFFER_SIZE 10000
+
+
+
 
 /* USER CODE END Includes */
 
@@ -74,7 +77,6 @@ uint32_t mic_buffer[MIC_BUFFER_SIZE];
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
-void initializeACC (void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -119,12 +121,6 @@ int main(void)
   MX_ADC1_Init();
   MX_UART4_Init();
   MX_SPI1_Init();
-	
-	initializeACC();
-	
-	HAL_TIM_Base_Start(&htim2);
-	HAL_TIM_Base_Start_DMA(&htim2, mic_buffer, MIC_BUFFER_SIZE);
-	
   /* USER CODE BEGIN 2 */
 	
 //	HAL_UART_Transmit(&huart4, buffer, sizeof(buffer), HAL_MAX_DELAY);
@@ -257,26 +253,6 @@ void _Error_Handler(char *file, int line)
   {
   }
   /* USER CODE END Error_Handler_Debug */
-}
-
-void initializeACC(void){
-	LIS3DSH_InitTypeDef Acc_instance;
-	Acc_instance.Axes_Enable				= LIS3DSH_XYZ_ENABLE;
-	Acc_instance.AA_Filter_BW				= LIS3DSH_AA_BW_50;
-	Acc_instance.Full_Scale					= LIS3DSH_FULLSCALE_2;
-	Acc_instance.Power_Mode_Output_DataRate		= LIS3DSH_DATARATE_100;
-	Acc_instance.Self_Test					= LIS3DSH_SELFTEST_NORMAL;
-	Acc_instance.Continous_Update   = LIS3DSH_ContinousUpdate_Disabled;
-	
-	LIS3DSH_Init(&Acc_instance);	
-	
-	/* Enabling interrupt conflicts with push button
-  ACC_Interrupt_Config.Dataready_Interrupt	= LIS3DSH_DATA_READY_INTERRUPT_ENABLED;
-	ACC_Interrupt_Config.Interrupt_signal			= LIS3DSH_ACTIVE_HIGH_INTERRUPT_SIGNAL;
-	ACC_Interrupt_Config.Interrupt_type				= LIS3DSH_INTERRUPT_REQUEST_PULSED;
-	
-	LIS3DSH_DataReadyInterruptConfig(&ACC_Interrupt_Config);
-	*/
 }
 
 #ifdef  USE_FULL_ASSERT

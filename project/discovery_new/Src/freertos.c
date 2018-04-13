@@ -57,6 +57,7 @@
 
 /* Variables -----------------------------------------------------------------*/
 osThreadId defaultTaskHandle;
+osThreadId blinkerTaskHandle;
 
 /* USER CODE BEGIN Variables */
 
@@ -64,6 +65,7 @@ osThreadId defaultTaskHandle;
 
 /* Function prototypes -------------------------------------------------------*/
 void StartDefaultTask(void const * argument);
+void StartBlinkerTask(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -97,6 +99,10 @@ void MX_FREERTOS_Init(void) {
   osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
+  /* definition and creation of blinkerTask */
+  osThreadDef(blinkerTask, StartBlinkerTask, osPriorityIdle, 0, 128);
+  blinkerTaskHandle = osThreadCreate(osThread(blinkerTask), NULL);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -112,6 +118,18 @@ __weak void StartDefaultTask(void const * argument)
 
   /* USER CODE BEGIN StartDefaultTask */
   /* USER CODE END StartDefaultTask */
+}
+
+/* StartBlinkerTask function */
+__weak void StartBlinkerTask(void const * argument)
+{
+  /* USER CODE BEGIN StartBlinkerTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartBlinkerTask */
 }
 
 /* USER CODE BEGIN Application */

@@ -3,11 +3,16 @@
 #include "lis3dsh.h"
 #include "main.h"
 
+
 // Very useful macros for setting and resetting a given pin.
 #define PIN(i) i##_Pin
-#define SET_PIN(i) HAL_GPIO_WritePin(i##_GPIO_Port, PIN(i), GPIO_PIN_SET)
-#define RESET_PIN(i) HAL_GPIO_WritePin(i##_GPIO_Port, PIN(i), GPIO_PIN_RESET)
-#define TOGGLE_PIN(i) HAL_GPIO_TogglePin(i##_GPIO_Port, PIN(i))
+#define PORT(i) i##_GPIO_Port
+#define SET_PIN(i) HAL_GPIO_WritePin(PORT(i), PIN(i), GPIO_PIN_SET)
+#define RESET_PIN(i) HAL_GPIO_WritePin(PORT(i), PIN(i), GPIO_PIN_RESET)
+#define TOGGLE_PIN(i) HAL_GPIO_TogglePin(PORT(i), PIN(i))
+#define READ_PIN(i) HAL_GPIO_ReadPin(PORT(i), PIN(i))
+
+#define MIC_BUFFER_SIZE 10000
 
 // signal representing if the microphone data buffer is full.
 static bool mic_buffer_full_signal = 0x0001;
