@@ -28,7 +28,7 @@
 #define MIN(a, b) ((a < b) ? a : b)
 #define BOUND(x, lower, upper) (MAX(MIN(x, upper), lower))
 
-#define ADC_BUFFER_SIZE 50
+#define ADC_BUFFER_SIZE 8400
 
 
 void StartAdcTask(void const * arguments);
