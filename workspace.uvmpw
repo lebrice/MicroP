@@ -25,17 +25,11 @@
 
   <project>
     <PathAndName>.\project\nucleo\BLE_SampleProject.uvprojx</PathAndName>
-    <NodeIsExpanded>1</NodeIsExpanded>
   </project>
 
   <project>
     <PathAndName>.\project\discovery_new\MDK-ARM\discovery.uvprojx</PathAndName>
     <NodeIsActive>1</NodeIsActive>
-    <NodeIsExpanded>1</NodeIsExpanded>
-  </project>
-
-  <project>
-    <PathAndName>.\project\nucleo_scratch\MDK-ARM\nucleo_scratch.uvprojx</PathAndName>
     <NodeIsExpanded>1</NodeIsExpanded>
   </project>
 
