@@ -50,21 +50,31 @@ void squash(uint32_t array[], int length){
 	}
 }
 
+float exp_moving_avg_filter(float values[], int length, float alpha){
+	register float previous = values[0];
+	for(int c = 0; c < length; c++) {
+		previous = alpha * values[c] + (1.0f-alpha) * previous;
+		values[c] = previous;
+	}
+}
 
-bool detected_tap(float *samples, int num_samples) {
-	const int Z_THRESH = 30;
-		
-	float max = samples[0];
-	int c;
-	for(c = 1; c < num_samples; c++) {
-		if(samples[c] > max) {
-			max = samples[c];
-		}
-	}
-	if(max - samples[0] > Z_THRESH && max - samples[num_samples - 1] > Z_THRESH) {
-		return 1;
-	}
-	return 0;
+bool detected_tap(float *samples, int num_samples, float threshold) {
+//	const int Z_THRESH = 30;
+//		
+//	float max = samples[0];
+//	int c;
+//	for(c = 1; c < num_samples; c++) {
+//		if(samples[c] > max) {
+//			max = samples[c];
+//		}
+//	}
+//	if(max - samples[0] > Z_THRESH && max - samples[num_samples - 1] > Z_THRESH) {
+//		return 1;
+//	}
+//	return 0;
+	asm_output output;
+	asm_math(samples, num_samples, &output);
+	return (output.max_value - output.rms > threshold);
 }
 
 bool detect_tap(){
@@ -94,8 +104,8 @@ bool detect_tap(){
 		
 		osDelay(ACC_SAMPLING_PERIOD);
 	}
-	
-	return detected_tap(buffer, BUFFER_SIZE);
+	exp_moving_avg_filter(buffer, BUFFER_SIZE, TAP_FILTER_ALPHA);
+	return detected_tap(buffer, BUFFER_SIZE, TAP_THRESHOLD);
 }
 
 
@@ -225,6 +235,8 @@ void double_tap(){
 
 	// Send the data via UART to the nucleo board.
 	// Send the Pitch array over to the Nucleo board via UART.
+	exp_moving_avg_filter(pitch_roll_buffer[0], ACC_RECORDING_SAMPLE_COUNT, ACC_FILTER_ALPHA);
+	exp_moving_avg_filter(pitch_roll_buffer[1], ACC_RECORDING_SAMPLE_COUNT, ACC_FILTER_ALPHA);
 	int bytes_to_send = ACC_RECORDING_SAMPLE_COUNT * sizeof(float) / sizeof(uint8_t);
 	HAL_UART_Transmit(&huart4, (uint8_t*) pitch_roll_buffer[0], bytes_to_send, HAL_MAX_DELAY);
 
