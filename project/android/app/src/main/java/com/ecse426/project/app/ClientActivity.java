@@ -35,10 +35,8 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 import com.ecse426.project.microp.R;
 import com.ecse426.project.utils.GattUtils;
 
@@ -47,6 +45,7 @@ import org.apache.commons.io.IOUtils;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -69,13 +68,13 @@ public class ClientActivity extends AppCompatActivity {
     private boolean mConnected;
     private boolean mScanning;
     private boolean mInitialized;
+    private boolean mDescriptorWritten;
+    private boolean mCharacteristicWritten;
     private List<String> listAddress = new ArrayList<String>();
 
-    private final UUID SERVICE_023_UUID = GattUtils.SERVICE_023_UUID;
-    private final UUID SERVICE_428_UUID = GattUtils.SERVICE_428_UUID;
-    private final UUID CHAR_AUDIO_023_UUID = GattUtils.CHAR_AUDIO_023_UUID;
-    private final UUID CHAR_ACCEL_023_UUID = GattUtils.CHAR_ACCEL_023_UUID;
-    private final UUID CONTROL_POINT_UUID = GattUtils.CONTROL_POINT_CHAR_UUID;
+    private final UUID CUSTOM_SERVICE_UUID = GattUtils.CUSTOM_SERVICE_UUID;
+    private final UUID CHAR_AUDIO_UUID = GattUtils.CHAR_AUDIO_UUID;
+    private final UUID CHAR_ACCEL_UUID = GattUtils.CHAR_ACCEL_UUID;
     private final UUID CLIENT_CHARACTERISTIC_CONFIG_UUID = GattUtils.CLIENT_CHARACTERISTIC_CONFIG_UUID;
     private final String NUCLEO_MAC_ADDRESS = GattUtils.NUCLEO_MAC_ADDRESS;
 
@@ -89,20 +88,16 @@ public class ClientActivity extends AppCompatActivity {
     private Button startScanButton;
     private Button stopScanButton;
     private TextView textNucleoAddress;
-//    private EditText textMessage;
     private Button sendButton;
     private Button uploadButton;
 
     // Volley connectivity
-    private RequestQueue queue;
     private String url = "http://httpbin.org/post";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.client_activity);
-        Context mContext = getApplicationContext();
-        queue = Volley.newRequestQueue(mContext);
 
         // Setup BLE in Activity
         Log.d(TAG, "BLE Setting up");
@@ -203,7 +198,7 @@ public class ClientActivity extends AppCompatActivity {
         listAddress.clear();
         List<ScanFilter> filters = new ArrayList<>();
         ScanFilter filter = new ScanFilter.Builder()
-                .setServiceUuid(new ParcelUuid(SERVICE_023_UUID))
+                .setServiceUuid(new ParcelUuid(CUSTOM_SERVICE_UUID))
                 .build();
         ScanSettings settings = new ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
@@ -301,8 +296,8 @@ public class ClientActivity extends AppCompatActivity {
         if (!mConnected && !mInitialized) {
             return;
         }
-        BluetoothGattService service = mGatt.getService(SERVICE_023_UUID);
-        BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHAR_AUDIO_023_UUID);
+        BluetoothGattService service = mGatt.getService(CUSTOM_SERVICE_UUID);
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHAR_AUDIO_UUID);
         byte[] messageBytes = new byte[0];
         // convert message to byte array
         try {
@@ -345,7 +340,7 @@ public class ClientActivity extends AppCompatActivity {
         AppController.getInstance().addToRequestQueue(stringRequest, AppController.TAG);
     }
 
-    // Sending raw string
+    // Encodes data in file to Base64 string, creates an http post request to url, and performs the request
     private void uploadFile(String url, String key, File file) throws IOException {
         ProgressDialog pDialog = new ProgressDialog(this);
         pDialog.setMessage("Sending...");
@@ -369,6 +364,8 @@ public class ClientActivity extends AppCompatActivity {
                 return params;
             }
         };
+
+        // Add request to queue to perform it
         AppController.getInstance().addToRequestQueue(stringRequest, AppController.TAG);
     }
 
@@ -395,12 +392,61 @@ public class ClientActivity extends AppCompatActivity {
         AppController.getInstance().addToRequestQueue(jsonObjReq, AppController.TAG);
     }
 
-    // Used for writing to file
-    public void writeToFile(byte[] array, String pathName)
+    /*
+        A note on serialization and deserialization
+        This method expects that the serialization of the byte array is of the following format:
+        [pitch_msr0, roll_msr0, pitch_msr1, roll_msr1, ...]
+        Deserialization is done by assuming that the array is of even length and that a pitch
+        measurement is followed by a roll measurement, followed by a pitch measurement, etc.
+     */
+    public void writeToAccFile(byte[] array, String pathName)
     {
         File file = new File(pathName);
         try
         {
+            // If file doesn't exist, create new file and add columns pitch and roll
+            if (!file.exists()) {
+                Log.i(TAG, "File doesn't exist, creating new one!");
+                boolean success = file.createNewFile();
+                if (success) {
+                    FileOutputStream fileOutputStream = new FileOutputStream(file);
+                    OutputStreamWriter streamWriter = new OutputStreamWriter(fileOutputStream);
+                    Log.i(TAG, "File created!");
+                    streamWriter.append("pitch,roll\n");
+                }
+                else {
+                    Log.e(TAG, "File creation failure!");
+                }
+            }
+            // Output stream for file and stream writer to write to file
+            FileOutputStream fileOutputStream = new FileOutputStream(file);
+            OutputStreamWriter streamWriter = new OutputStreamWriter(fileOutputStream);
+
+            // Iterate through the array by 2 (pitch and roll), comma seperate the bytes and insert
+            // the row to the file
+            for (int i = 0; i < array.length - 1; i += 2) {
+                int pitchIndex = i;
+                int rollIndex = i + 1;
+
+                String pitchMeasurement = Byte.toString(array[pitchIndex]);
+                String rollMeasurement = Byte.toString(array[rollIndex]);
+
+                // Comma separate the values and add new line at the end
+                String row = pitchMeasurement + "," + rollMeasurement + "\n";
+                streamWriter.append(row);
+                Log.i(TAG,"Row " + row + " added.");
+            }
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    // TODO figure out a way to write to wav file
+    public void writeToWaveFile(byte[] array, String pathname) {
+
+        File file = new File(pathname);
+        try {
             if (!file.exists()) {
                 Log.i(TAG, "File doesn't exist, creating new one!");
                 boolean success = file.createNewFile();
@@ -411,12 +457,14 @@ public class ClientActivity extends AppCompatActivity {
                     Log.e(TAG, "File creation failure!");
                 }
             }
-            FileOutputStream stream = new FileOutputStream(pathName);
-            stream.write(array);
+//            AudioStream
+//
+//
+//            streamWriter.append(Arrays.toString(array));
+//            streamWriter.append("\n");
             Log.i(TAG, "File written to!");
-        } catch (Exception e)
-        {
-            e.printStackTrace();
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
         }
     }
 
@@ -513,40 +561,80 @@ public class ClientActivity extends AppCompatActivity {
                 return;
             }
 
-            Log.i(TAG, "=====Bluetooth GATT Success!=====");
-            BluetoothGattService service = gatt.getService(SERVICE_023_UUID);
-            for (BluetoothGattCharacteristic characteristic :service.getCharacteristics()) {
-                Log.i(TAG, "Found characteristic: " + characteristic);
+            /*
+                Get voice and acc characterstics and enable notification. This will allow android
+                to keep getting data whenever voice and acc data gets updated
+             */
+            BluetoothGattService service = gatt.getService(CUSTOM_SERVICE_UUID);
+            List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
+            Log.i(TAG, "=====Bluetooth service discovered! Successfully connected!=====");
+
+            // Enable notification property for audio and accel characteristics. Will seem as a constant stream of data.
+            for (BluetoothGattCharacteristic mCharacteristic : characteristics) {
+                if (mCharacteristic.getUuid().equals(CHAR_AUDIO_UUID)) {
+
+                    int property = mCharacteristic.getProperties();
+                    if ((property | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                        setCharacteristicNotification(mCharacteristic, true);
+                    }
+                    else {
+                        Log.e(TAG, "Characteristic does not support notify!");
+                    }
+                }
+                else if (mCharacteristic.getUuid().equals(CHAR_ACCEL_UUID)) {
+                    int property = mCharacteristic.getProperties();
+                    if ((property | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                        setCharacteristicNotification(mCharacteristic, true);
+                    }
+                    else {
+                        Log.e(TAG, "Characteristic does not support notify!");
+                    }
+                }
             }
 
-            BluetoothGattCharacteristic audioCharacteristic = service.getCharacteristic(CHAR_AUDIO_023_UUID);
-            audioCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
 
-            // Signifies that our audioCharacteristic is fully ready to use
-            mInitialized = gatt.setCharacteristicNotification(audioCharacteristic, true);
-            Log.i(TAG, "=====Bluetooth services discovered! Successfully connected!=====");
+//            BluetoothGattCharacteristic audioCharacteristic = service.getCharacteristic(CHAR_AUDIO_UUID);
+//            audioCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+//
+//            // Signifies that our audioCharacteristic is fully ready to use
+//            mInitialized = gatt.setCharacteristicNotification(audioCharacteristic, true);
+//
+//            // Enable notification value descriptor for the audioCharacteristic
+//            BluetoothGattDescriptor descriptor = audioCharacteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+//            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+//            mDescriptorWritten = gatt.writeDescriptor(descriptor);
+//            if (mDescriptorWritten) Log.i(TAG, "Descriptor written to successfully!");
+//            else Log.e(TAG, "Descriptor write failure!");
 
-            // Enable notification value descriptor for the audioCharacteristic
-            BluetoothGattDescriptor descriptor = audioCharacteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
-            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-            gatt.writeDescriptor(descriptor);
         }
 
-//        /**
-//         *
-//         * @param gatt
-//         * @param characteristic
-//         */
-//        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-//            super.onCharacteristicChanged(gatt, characteristic);
-//            byte[] messageBytes = characteristic.getValue();
-//            String messageString = null;
-//            messageString = new String(bytes);
-//        }
+        // Enable notify characteristic and write to descriptor
+        private void setCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enabled) {
+            if (mBluetoothAdapter == null || mGatt == null) {
+                Log.w(TAG, "BluetoothAdapter not initialized");
+                return;
+            }
+
+            // Signifies that our characteristic is fully ready to use
+            mInitialized = mGatt.setCharacteristicNotification(characteristic, enabled);
+            if (mInitialized) Log.i(TAG, "Characteristic notify success!");
+            else Log.e(TAG, "Characteristic notify failure!");
+
+            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+            descriptor.setValue(enabled?BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                    :BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+            mDescriptorWritten = mGatt.writeDescriptor(descriptor);
+
+            if (mDescriptorWritten) Log.i(TAG, "Descriptor write success!");
+            else Log.e(TAG, "Descriptor write failure!");
+        }
 
         /**
-         * Writing to descriptor of characteristic. Need to write to Characteristic to tell the sensor to start
+         * Writing to descriptor of characteristic.
+         *  Not sure about this: Need to write to Characteristic to tell the sensor to start
          * streaming data. Write a simple byte array that contains {1,1} that serves as a data streaming command.
+         * Can also write to the device within this method. So if we want to write to the LED
+         * service, can do so here.
          * @param gatt Gatt session
          * @param descriptor Descriptor written to
          * @param status Status
@@ -554,12 +642,24 @@ public class ClientActivity extends AppCompatActivity {
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status){
 
-            BluetoothGattCharacteristic characteristic =
-                    gatt.getService(SERVICE_023_UUID)
-                            .getCharacteristic(CHAR_AUDIO_023_UUID);
+            BluetoothGattService service = gatt.getService(CUSTOM_SERVICE_UUID);
+            BluetoothGattCharacteristic audioCharacteristic = service.getCharacteristic(CHAR_AUDIO_UUID);
+            BluetoothGattCharacteristic accelCharacteristic = service.getCharacteristic(CHAR_ACCEL_UUID);
 
-            characteristic.setValue(new byte[]{1, 1});
-            gatt.writeCharacteristic(characteristic);
+            // Are these values even necessary?? Not sure
+//            audioCharacteristic.setValue(new byte[]{1,1});
+//            accelCharacteristic.setValue(new byte[]{1,1});
+
+            List<BluetoothGattCharacteristic> characteristics = new ArrayList<>();
+            characteristics.add(accelCharacteristic);
+            characteristics.add(audioCharacteristic);
+
+            for (BluetoothGattCharacteristic characteristic : characteristics) {
+                mCharacteristicWritten = gatt.writeCharacteristic(characteristic);
+                if (mCharacteristicWritten) Log.i(TAG, "Write to characteristic success!");
+                else Log.e(TAG, "Characteristic write failure!");
+            }
+
 
         }
 
@@ -578,15 +678,16 @@ public class ClientActivity extends AppCompatActivity {
             String filePath = null;
             String encoding = null;
 
-            if (characteristic.getUuid().equals(CHAR_AUDIO_023_UUID)) {
+            if (characteristic.getUuid().equals(CHAR_AUDIO_UUID)) {
                 filePath = "/mnt/sdcard/Documents/audio.wav";
                 key = "audio";
-                writeToFile(messageBytes, filePath);
+                // TODO write to wav file
+                //write(messageBytes, filePath);
             }
-            else if (characteristic.getUuid().equals(CHAR_ACCEL_023_UUID)) {
-                filePath = "/mnt/sdcard/Documents/accel.csv";
-                key = "accel";
-                writeToFile(messageBytes, filePath);
+            else if (characteristic.getUuid().equals(CHAR_ACCEL_UUID)) {
+                filePath = "/mnt/sdcard/Documents/acc.csv";
+                key = "acc";
+                writeToAccFile(messageBytes, filePath);
             }
             else {
                 Log.e(TAG, "Unrecognized characteristic!");
