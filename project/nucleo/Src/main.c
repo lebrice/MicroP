@@ -47,7 +47,6 @@
 #include "stm32_bluenrg_ble.h"
 #include "bluenrg_utils.h"
 #include "stm32f4xx_hal.h"
-
 #include "main.h"
 
 #include <string.h>
@@ -71,10 +70,10 @@ extern volatile int connected;
 extern AxesRaw_t axes_data;
 
 
-extern uint16_t accCharHandle, customAccServHandle, customAccCharHandle, customVoiceServHandle;
+extern uint16_t accCharHandle, customServHandle, customAccCharHandle, customVoiceServHandle;
 
 
-uint8_t bnrg_expansion_board = IDB04A1; /* at startup, suppose the X-NUCLEO-IDB04A1 is used */
+uint8_t bnrg_expansion_board = IDB04A1; /* at startup, suppose the X-NUCLEO-IDB04A1 is used */  
 
 uint8_t data[3];
 
@@ -265,53 +264,54 @@ int main(void)
   
   PRINTF("SERVER: BLE Stack Initialized\n");
   
-  ret = Add_Acc_Service();
+ ret = Add_Acc_Service();
+ 
+ if(ret == BLE_STATUS_SUCCESS)
+   PRINTF("Acc service added successfully.\n");
+ else
+   PRINTF("Error while adding Acc service.\n");
+  
+	// Don't care about this service
+//  ret = Add_Environmental_Sensor_Service();
+ 
+//  if(ret == BLE_STATUS_SUCCESS)
+//    PRINTF("Environmental Sensor service added successfully.\n");
+//  else
+//    PRINTF("Error while adding Environmental Sensor service.\n");
+
+  // ------------ OUR CUSTOM SERVICE ----------------
+	ret = Add_Custom_Service();
   
   if(ret == BLE_STATUS_SUCCESS)
-    PRINTF("Acc service added successfully.\n");
+    PRINTF("CUSTOM service added successfully.\n");
   else
-    PRINTF("Error while adding Acc service.\n");
-  
+    PRINTF("Error while adding CUSTOM service.\n");
 	
-	// ------------ OUR CUSTOM SERVICE ----------------
-	ret = Add_Custom_Acc_Service();
-  
-  if(ret == BLE_STATUS_SUCCESS)
-    PRINTF("CUSTOM Acc service added successfully.\n");
-  else
-    PRINTF("Error while adding CUSTOM Acc service.\n");
-	
-	// ------------------------------------------------
-  
-	
-  ret = Add_Environmental_Sensor_Service();
-  
-  if(ret == BLE_STATUS_SUCCESS)
-    PRINTF("Environmental Sensor service added successfully.\n");
-  else
-    PRINTF("Error while adding Environmental Sensor service.\n");
+	// ------------------------------------------------  
 
 #if NEW_SERVICES
   /* Instantiate Timer Service with two characteristics:
    * - seconds characteristic (Readable only)
    * - minutes characteristics (Readable and Notifiable )
    */
-  ret = Add_Time_Service(); 
+  // Don't care about this service
+  // ret = Add_Time_Service(); 
   
-  if(ret == BLE_STATUS_SUCCESS)
-    PRINTF("Time service added successfully.\n");
-  else
-    PRINTF("Error while adding Time service.\n");  
+  // if(ret == BLE_STATUS_SUCCESS)
+  //   PRINTF("Time service added successfully.\n");
+  // else
+  //   PRINTF("Error while adding Time service.\n");  
   
   /* Instantiate LED Button Service with one characteristic:
    * - LED characteristic (Readable and Writable)
+   * Can write to this from the android app and tell the board led to activate
    */  
   ret = Add_LED_Service();
 
   if(ret == BLE_STATUS_SUCCESS)
     PRINTF("LED service added successfully.\n");
   else
-    PRINTF("Error while adding LED service.\n");  
+    PRINTF("Error while adding LED service.\n");
 #endif
 
   /* Set output power level */
@@ -321,6 +321,9 @@ int main(void)
   {
     HCI_Process();
     User_Process(&axes_data);
+    // THIS IS FOR UPDATING ACC AND VOICE DATA
+    //Custom_Acc_Update(&acc_data);
+    //Custom_Voice_Update(&voice_data);
 		//UART_Receiver();
 		
 #if NEW_SERVICES

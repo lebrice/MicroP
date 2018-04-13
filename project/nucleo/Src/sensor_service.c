@@ -58,8 +58,8 @@ volatile uint16_t connection_handle = 0;
 volatile uint8_t notification_enabled = FALSE;
 volatile AxesRaw_t axes_data = {0, 0, 0};
 uint16_t sampleServHandle, TXCharHandle, RXCharHandle;
-uint16_t accServHandle, freeFallCharHandle, accCharHandle, customAccServHandle, customAccCharHandle;
-uint16_t envSensServHandle, tempCharHandle, pressCharHandle, humidityCharHandle;
+uint16_t accServHandle, freeFallCharHandle, accCharHandle, customServHandle;
+uint16_t envSensServHandle, tempCharHandle, pressCharHandle, humidityCharHandle, customVoiceCharHandle, customAccCharHandle;
 
 #if NEW_SERVICES
   uint16_t timeServHandle, secondsCharHandle, minuteCharHandle;
@@ -93,6 +93,10 @@ do {\
   #define COPY_TEMP_CHAR_UUID(uuid_struct)         COPY_UUID_128(uuid_struct,0x05,0x36,0x6e,0x80, 0xcf,0x3a, 0x11,0xe1, 0x9a,0xb4, 0x00,0x02,0xa5,0xd5,0xc5,0x1b)
   #define COPY_PRESS_CHAR_UUID(uuid_struct)        COPY_UUID_128(uuid_struct,0x06,0x36,0x6e,0x80, 0xcf,0x3a, 0x11,0xe1, 0x9a,0xb4, 0x00,0x02,0xa5,0xd5,0xc5,0x1b)
   #define COPY_HUMIDITY_CHAR_UUID(uuid_struct)     COPY_UUID_128(uuid_struct,0x07,0x36,0x6e,0x80, 0xcf,0x3a, 0x11,0xe1, 0x9a,0xb4, 0x00,0x02,0xa5,0xd5,0xc5,0x1b)
+
+  #define COPY_CUSTOM_SERVICE_UUID(uuid_struct)			COPY_UUID_128(uuid_struct,0x11,0x11,0x22,0x22, 0xbb,0xaa, 0xcc,0xdd, 0x9a,0xb4, 0x00,0x02,0xa5,0xd5,0xc5,0x1b)
+  #define COPY_CUSTOM_ACC_CHAR_UUID(uuid_struct)				COPY_UUID_128(uuid_struct,0xcc,0x11,0xcc,0xdd, 0xcf,0x4a, 0x11,0xe1, 0x8f,0xfc, 0x00,0x02,0xa5,0xd5,0xc5,0x1b)
+  #define COPY_CUSTOM_VOICE_CHAR_UUID(uuid_struct)				COPY_UUID_128(uuid_struct,0xcc,0x22,0x89,0xb1, 0xd0,0x5b, 0x22,0xf2, 0x90,0x0d, 0x11,0x13,0xb6,0xe6,0xd6,0x2c)
               
   // Time service: uuid = 0x08, 0x36, 0x6e, 0x80, 0xcf, 0x3a, 0x11, 0xe1, 0x9a, 0xb4, 0x00, 0x02, 0xa5, 0xd5, 0xc5, 0x1b
   //      straight uuid = 0x08366e80cf3a11e19ab40002a5d5c51b
@@ -112,6 +116,10 @@ do {\
   #define COPY_TEMP_CHAR_UUID(uuid_struct)         COPY_UUID_128(uuid_struct,0xa3,0x2e,0x55,0x20, 0xe4,0x77, 0x11,0xe2, 0xa9,0xe3, 0x00,0x02,0xa5,0xd5,0xc5,0x1b)
   #define COPY_PRESS_CHAR_UUID(uuid_struct)        COPY_UUID_128(uuid_struct,0xcd,0x20,0xc4,0x80, 0xe4,0x8b, 0x11,0xe2, 0x84,0x0b, 0x00,0x02,0xa5,0xd5,0xc5,0x1b)
   #define COPY_HUMIDITY_CHAR_UUID(uuid_struct)     COPY_UUID_128(uuid_struct,0x01,0xc5,0x0b,0x60, 0xe4,0x8c, 0x11,0xe2, 0xa0,0x73, 0x00,0x02,0xa5,0xd5,0xc5,0x1b)
+
+  #define COPY_CUSTOM_SERVICE_UUID(uuid_struct)			COPY_UUID_128(uuid_struct,0x11,0x11,0x22,0x22, 0xbb,0xaa, 0xcc,0xdd, 0x9a,0xb4, 0x00,0x02,0xa5,0xd5,0xc5,0x1b)
+  #define COPY_CUSTOM_ACC_CHAR_UUID(uuid_struct)				COPY_UUID_128(uuid_struct,0xcc,0x11,0xcc,0xdd, 0xcf,0x4a, 0x11,0xe1, 0x8f,0xfc, 0x00,0x02,0xa5,0xd5,0xc5,0x1b)
+  #define COPY_CUSTOM_VOICE_CHAR_UUID(uuid_struct)				COPY_UUID_128(uuid_struct,0xcc,0x22,0x89,0xb1, 0xd0,0x5b, 0x22,0xf2, 0x90,0x0d, 0x11,0x13,0xb6,0xe6,0xd6,0x2c)
 #endif
 
 /* Store Value into a buffer in Little Endian Format */
@@ -782,37 +790,32 @@ void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_da
  */
  
 
-// OUR CUSTOM SERVICE for the accelerometer.
-// TODO: I DONT HAVE A CLUE WHAT I'M DOING.
-tBleStatus Add_Custom_Acc_Service(void)
+// OUR CUSTOM SERVICE for the accelerometer and voice data
+// 2 Characteristics: 1 for Pitch/Roll data, 1 for Mic data 
+tBleStatus Add_Custom_Service(void)
 {
   tBleStatus ret;
 
   uint8_t uuid[16];
   
-  COPY_ACC_SERVICE_UUID(uuid);
+  COPY_CUSTOM_SERVICE_UUID(uuid);
 	// TODO: figure out if we have the right UUID.
   ret = aci_gatt_add_serv(
 		UUID_TYPE_128, 
 		uuid, 
 		PRIMARY_SERVICE, 
-		200,
-		&customAccServHandle
+		7,
+		&customServHandle
 	);
   if (ret != BLE_STATUS_SUCCESS) goto fail;    
-//  
-//  COPY_FREE_FALL_UUID(uuid);
-//  ret =  aci_gatt_add_char(accServHandle, UUID_TYPE_128, uuid, 1,
-//                           CHAR_PROP_NOTIFY, ATTR_PERMISSION_NONE, 0,
-//                           16, 0, &freeFallCharHandle);
-//  if (ret != BLE_STATUS_SUCCESS) goto fail;
   
-  COPY_ACC_UUID(uuid);  
+  // Copy UUID for acc characteristic
+  COPY_CUSTOM_ACC_CHAR_UUID(uuid);  
   ret =  aci_gatt_add_char(
-		customAccServHandle,
+		customServHandle,
 		UUID_TYPE_128, 
 		uuid,
-		200,
+		7,
 		CHAR_PROP_NOTIFY|CHAR_PROP_READ,
 		ATTR_PERMISSION_NONE,
 		GATT_NOTIFY_READ_REQ_AND_WAIT_FOR_APPL_RESP,
@@ -821,14 +824,70 @@ tBleStatus Add_Custom_Acc_Service(void)
 		&customAccCharHandle
 	);
   if (ret != BLE_STATUS_SUCCESS) goto fail;
+
+  // Copy UUID for mic characteristic
+  COPY_CUSTOM_VOICE_CHAR_UUID(uuid);  
+  ret =  aci_gatt_add_char(
+		customServHandle,
+		UUID_TYPE_128, 
+		uuid,
+		7,
+		CHAR_PROP_NOTIFY|CHAR_PROP_READ,
+		ATTR_PERMISSION_NONE,
+		GATT_NOTIFY_READ_REQ_AND_WAIT_FOR_APPL_RESP,
+		16, 
+		0,
+		&customVoiceCharHandle
+	);
+  if (ret != BLE_STATUS_SUCCESS) goto fail;
   
-  PRINTF("Service CUSTOM_ACC added. Handle 0x%04X, Acc Charac handle: 0x%04X\n",customAccServHandle, accCharHandle);	
+  PRINTF("Service CUSTOM_SERVICE added. Handle 0x%04X, Acc Charac handle: 0x%04X\n, Mic Charac Handle: 0x%04X\n",customServHandle, customAccCharHandle, customVoiceCharHandle);	
   return BLE_STATUS_SUCCESS; 
   
 fail:
   PRINTF("Error while adding ACC service.\n");
   return BLE_STATUS_ERROR ;
     
+}
+
+/**
+ * @brief  Update pitch and roll data
+ * @param  Pitch and roll data 
+ * @retval Status
+ */
+tBleStatus Custom_Acc_Update(int32_t data)
+{  
+  tBleStatus ret;
+  
+  ret = aci_gatt_update_char_value(customServHandle, customAccCharHandle, 0, 2,
+                                   (uint8_t*)&data);
+  
+  if (ret != BLE_STATUS_SUCCESS){
+    PRINTF("Error while updating ACC characteristic.\n") ;
+    return BLE_STATUS_ERROR ;
+  }
+  return BLE_STATUS_SUCCESS;
+	
+}
+
+/**
+ * @brief  Update voice data
+ * @param  Voice data 
+ * @retval Status
+ */
+tBleStatus Custom_Voice_Update(int32_t data)
+{  
+  tBleStatus ret;
+  
+  ret = aci_gatt_update_char_value(customServHandle, customVoiceCharHandle, 0, 2,
+                                   (uint8_t*)&data);
+  
+  if (ret != BLE_STATUS_SUCCESS){
+    PRINTF("Error while updating ACC characteristic.\n") ;
+    return BLE_STATUS_ERROR ;
+  }
+  return BLE_STATUS_SUCCESS;
+	
 }
 
 /**

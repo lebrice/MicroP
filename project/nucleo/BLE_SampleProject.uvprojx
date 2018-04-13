@@ -10,7 +10,7 @@
       <TargetName>Application</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>5060528::V5.06 update 5 (build 528)::ARMCC</pCCUsed>
+      <pCCUsed>5060750::V5.06 update 6 (build 750)::ARMCC</pCCUsed>
       <uAC6>0</uAC6>
       <TargetOption>
         <TargetCommonOption>
@@ -336,7 +336,7 @@
               <MiscControls>--C99 --gnu</MiscControls>
               <Define>USE_HAL_DRIVER,STM32F401xE,USE_STM32F4XX_NUCLEO,DEBUG</Define>
               <Undefine></Undefine>
-              <IncludePath>.\Inc;.\Drivers\CMSIS\Device\ST\STM32F4xx\Include;.\Drivers\STM32F4xx_HAL_Driver\Inc;.\Drivers\BSP\STM32F4xx-Nucleo;.\Drivers\BSP\X-NUCLEO-IDB04A1;.\BLE\STM32_BlueNRG\SimpleBlueNRG_HCI\includes;.\Drivers\CMSIS\Include;.\RTE</IncludePath>
+              <IncludePath>.\Inc;.\Drivers\CMSIS\Device\ST\STM32F4xx\Include;.\Drivers\STM32F4xx_HAL_Driver\Inc;.\Drivers\BSP\STM32F4xx-Nucleo;.\Drivers\BSP\X-NUCLEO-IDB04A1;.\BLE\STM32_BlueNRG\SimpleBlueNRG_HCI\includes;.\Drivers\CMSIS\Include;.\RTE;.\RTE\_Application</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -632,8 +632,8 @@
   <RTE>
     <apis/>
     <components>
-      <component Cclass="Compiler" Cgroup="I/O" Csub="STDOUT" Cvariant="ITM" Cvendor="Keil" Cversion="1.1.0" condition="ARMCC Cortex-M with ITM">
-        <package name="ARM_Compiler" schemaVersion="1.3" url="http://www.keil.com/pack/" vendor="Keil" version="1.1.1"/>
+      <component Cbundle="ARM Compiler" Cclass="Compiler" Cgroup="I/O" Csub="STDOUT" Cvariant="ITM" Cvendor="Keil" Cversion="1.2.1" condition="ARMCC Cortex-M with ITM">
+        <package name="ARM_Compiler" schemaVersion="1.4.9" url="http://www.keil.com/pack/" vendor="Keil" version="1.3.3"/>
         <targetInfos>
           <targetInfo name="Application"/>
         </targetInfos>
