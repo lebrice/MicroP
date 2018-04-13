@@ -37,6 +37,8 @@ import android.widget.ToggleButton;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
+import com.ecse426.project.app.batches.AccBatch;
+import com.ecse426.project.app.batches.MicBatch;
 import com.ecse426.project.microp.R;
 import com.ecse426.project.utils.GattUtils;
 
@@ -48,6 +50,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -220,7 +223,7 @@ public class ClientActivity extends AppCompatActivity {
     }
 
     private void stopScan() {
-        if (mScanning && mBluetoothAdapter != null && mBluetoothAdapter.isEnabled() && mBluetoothLeScanner != null) {
+        if (mScanning && (mBluetoothAdapter != null) && mBluetoothAdapter.isEnabled() && (mBluetoothLeScanner != null)) {
             mBluetoothLeScanner.stopScan(mScanCallback);
             scanComplete();
         }
@@ -321,15 +324,19 @@ public class ClientActivity extends AppCompatActivity {
         ProgressDialog pDialog = new ProgressDialog(this);
         pDialog.setMessage("Sending...");
         pDialog.show();
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, response -> {
-            // Log the first 500 characters of the response string
-            Log.i(TAG, response);
-            pDialog.hide();
-        }, error -> {
+        StringRequest stringRequest = new StringRequest(
+            Request.Method.POST,
+            url,
+            response -> {
+                // Log the first 500 characters of the response string
+                Log.i(TAG, response);
+                pDialog.hide();
+            },
+            error -> {
             // Log error
             Log.e(TAG, "Request failure!");
             pDialog.hide();
-        }) {
+            }){
             @Override
             protected Map<String, String> getParams() {
                 Map<String, String> params = new HashMap<>();
@@ -392,81 +399,6 @@ public class ClientActivity extends AppCompatActivity {
         AppController.getInstance().addToRequestQueue(jsonObjReq, AppController.TAG);
     }
 
-    /*
-        A note on serialization and deserialization
-        This method expects that the serialization of the byte array is of the following format:
-        [pitch_msr0, roll_msr0, pitch_msr1, roll_msr1, ...]
-        Deserialization is done by assuming that the array is of even length and that a pitch
-        measurement is followed by a roll measurement, followed by a pitch measurement, etc.
-     */
-    public void writeToAccFile(byte[] array, String pathName)
-    {
-        File file = new File(pathName);
-        try
-        {
-            // If file doesn't exist, create new file and add columns pitch and roll
-            if (!file.exists()) {
-                Log.i(TAG, "File doesn't exist, creating new one!");
-                boolean success = file.createNewFile();
-                if (success) {
-                    FileOutputStream fileOutputStream = new FileOutputStream(file);
-                    OutputStreamWriter streamWriter = new OutputStreamWriter(fileOutputStream);
-                    Log.i(TAG, "File created!");
-                    streamWriter.append("pitch,roll\n");
-                }
-                else {
-                    Log.e(TAG, "File creation failure!");
-                }
-            }
-            // Output stream for file and stream writer to write to file
-            FileOutputStream fileOutputStream = new FileOutputStream(file);
-            OutputStreamWriter streamWriter = new OutputStreamWriter(fileOutputStream);
-
-            // Iterate through the array by 2 (pitch and roll), comma seperate the bytes and insert
-            // the row to the file
-            for (int i = 0; i < array.length - 1; i += 2) {
-                int pitchIndex = i;
-                int rollIndex = i + 1;
-
-                String pitchMeasurement = Byte.toString(array[pitchIndex]);
-                String rollMeasurement = Byte.toString(array[rollIndex]);
-
-                // Comma separate the values and add new line at the end
-                String row = pitchMeasurement + "," + rollMeasurement + "\n";
-                streamWriter.append(row);
-                Log.i(TAG,"Row " + row + " added.");
-            }
-        } catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    // TODO figure out a way to write to wav file
-    public void writeToWaveFile(byte[] array, String pathname) {
-
-        File file = new File(pathname);
-        try {
-            if (!file.exists()) {
-                Log.i(TAG, "File doesn't exist, creating new one!");
-                boolean success = file.createNewFile();
-                if (success) {
-                    Log.i(TAG, "File created!");
-                }
-                else {
-                    Log.e(TAG, "File creation failure!");
-                }
-            }
-//            AudioStream
-//
-//
-//            streamWriter.append(Arrays.toString(array));
-//            streamWriter.append("\n");
-            Log.i(TAG, "File written to!");
-        } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
-        }
-    }
 
 
     /**
@@ -672,34 +604,25 @@ public class ClientActivity extends AppCompatActivity {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
-            byte[] messageBytes = characteristic.getValue();
-            String messageString = null;
-            String key = null;
-            String filePath = null;
-            String encoding = null;
+
+            // The bytes coming from the nucleo.
+            byte[] bytes = characteristic.getValue();
 
             if (characteristic.getUuid().equals(CHAR_AUDIO_UUID)) {
-                filePath = "/mnt/sdcard/Documents/audio.wav";
-                key = "audio";
-                // TODO write to wav file
-                //write(messageBytes, filePath);
+                Log.i(TAG, "Received Mic Batch");
+                MicBatch batch = MicBatch.fromBytes(bytes);
+                AppController.getInstance().addMicBatch(batch);
             }
             else if (characteristic.getUuid().equals(CHAR_ACCEL_UUID)) {
-                filePath = "/mnt/sdcard/Documents/acc.csv";
-                key = "acc";
-                writeToAccFile(messageBytes, filePath);
+                Log.i(TAG, "Received Acc Batch");
+                AccBatch batch = AccBatch.fromBytes(bytes);
+                AppController.getInstance().addAccBatch(batch);
             }
             else {
                 Log.e(TAG, "Unrecognized characteristic!");
+                Log.d(TAG, "Received bytes: " + Arrays.toString(bytes));
             }
 
-            try {
-                messageString = new String(messageBytes, "UTF-8");
-                encoding = Base64.encodeToString(messageBytes, Base64.DEFAULT);
-            } catch (UnsupportedEncodingException e) {
-                Log.e(TAG, "Unable to convert message bytes to string");
-            }
-            Log.d(TAG, "Received message: " + messageString);
         }
     }
 }
