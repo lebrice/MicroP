@@ -124,11 +124,6 @@ __weak void StartDefaultTask(void const * argument)
 __weak void StartBlinkerTask(void const * argument)
 {
   /* USER CODE BEGIN StartBlinkerTask */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
   /* USER CODE END StartBlinkerTask */
 }
 

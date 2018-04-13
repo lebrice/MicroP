@@ -2,7 +2,7 @@
 #include "fsm.h"
 #include "lis3dsh.h"
 #include "main.h"
-
+#include "blinker.h"
 
 // Very useful macros for setting and resetting a given pin.
 #define PIN(i) i##_Pin
@@ -125,12 +125,15 @@ void single_tap(){
 	//uint32_t mic_buffer[MIC_RECORDING_SAMPLE_COUNT];
 	
 	// Start recording audio using the ADC with DMA.
+	start_blinking();
 	HAL_ADC_Start_DMA(&hadc1, mic_buffer, MIC_RECORDING_SAMPLE_COUNT);
 	
 	
 	// Wait on the mic_buffer_full signal, which will be set by the ADC callback once the buffer has been filled.
 	osSignalWait(mic_buffer_full_signal, osWaitForever);
 	HAL_ADC_Stop_DMA(&hadc1);
+	stop_blinking();
+	
 	
 	
 	// Set the GPIO pin to let the nucleo board known that we want to transmit some Microphone data.
@@ -198,6 +201,7 @@ void double_tap(){
 	float acc_x, acc_y, acc_z;
 	float pitch, roll;
 	
+	start_blinking();
 	
 	printf("ACC COUNT: %d\n",ACC_RECORDING_SAMPLE_COUNT);
 	// Record the accelerometer data for 10 seconds.
@@ -216,6 +220,8 @@ void double_tap(){
 		
 		osDelay(ACC_SAMPLING_PERIOD_MS);
 	}
+	
+	stop_blinking();
 
 	// Send the data via UART to the nucleo board.
 	// Send the Pitch array over to the Nucleo board via UART.

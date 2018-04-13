@@ -124,12 +124,12 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	
 //	HAL_UART_Transmit(&huart4, buffer, sizeof(buffer), HAL_MAX_DELAY);
-	
-	static uint8_t receive_buffer[3] = {0, 0, 0};
+//	
+//	static uint8_t receive_buffer[3] = {0, 0, 0};
 //	HAL_UART_Receive(&huart4, receive_buffer, sizeof(receive_buffer), HAL_MAX_DELAY);
 //	HAL_GPIO_WritePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin, GPIO_PIN_SET);
-	
-	HAL_UART_Receive_IT(&huart4, receive_buffer, sizeof(receive_buffer));
+//	
+//	HAL_UART_Receive_IT(&huart4, receive_buffer, sizeof(receive_buffer));
 	
 	
 
