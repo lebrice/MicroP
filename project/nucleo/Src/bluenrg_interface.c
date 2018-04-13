@@ -56,9 +56,11 @@ extern SPI_HandleTypeDef SpiHandle;
  */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+	extern void pipeline(void);
   HCI_Isr();
 	if (GPIO_Pin == DATA_INTERRUPT_Pin){
 		printf("GPIO Interrupt handler! (pin %d)\n", GPIO_Pin);
+		pipeline();
 	}
 }
 

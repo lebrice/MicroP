@@ -406,14 +406,29 @@
               <FilePath>.\Src\main.c</FilePath>
             </File>
             <File>
-              <FileName>sensor_service.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\Src\sensor_service.c</FilePath>
-            </File>
-            <File>
               <FileName>fput_debug.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Src\fput_debug.c</FilePath>
+            </File>
+            <File>
+              <FileName>custom_service.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\custom_service.c</FilePath>
+            </File>
+            <File>
+              <FileName>custom_service.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Src\custom_service.h</FilePath>
+            </File>
+            <File>
+              <FileName>pipeline.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Src\pipeline.c</FilePath>
+            </File>
+            <File>
+              <FileName>pipeline.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Src\pipeline.h</FilePath>
             </File>
           </Files>
         </Group>

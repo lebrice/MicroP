@@ -42,7 +42,7 @@
 #include "cube_hal.h"
 
 #include "osal.h"
-#include "sensor_service.h"
+//#include "sensor_service.h"
 #include "debug.h"
 #include "stm32_bluenrg_ble.h"
 #include "bluenrg_utils.h"
@@ -50,9 +50,10 @@
 
 #include "main.h"
 
+#include "custom_service.h"
+
 #include <string.h>
 #include <stdio.h>
-
 
 /* Private defines -----------------------------------------------------------*/
 #define BDADDR_SIZE 6
@@ -68,8 +69,6 @@
 /* Private variables ---------------------------------------------------------*/
 extern volatile uint8_t set_connectable;
 extern volatile int connected;
-extern AxesRaw_t axes_data;
-
 
 extern uint16_t accCharHandle, customAccServHandle, customAccCharHandle, customVoiceServHandle;
 
@@ -82,24 +81,6 @@ void UART_Init(void);
 void GPIO_Init(void);
 UART_HandleTypeDef huart2;
 
-#define MIC_SAMPLE_COUNT 16000
-#define ACC_SAMPLE_COUNT 10000
-#define VOICE_DATA_SAMPLE_LENGTH 16000
-#define BLUETOOTH_BATCH_SIZE 200
-
-typedef struct {
-	float pitch[ACC_SAMPLE_COUNT];
-	float roll[ACC_SAMPLE_COUNT];
-} AccData;
-
-typedef struct{
-	uint16_t data[VOICE_DATA_SAMPLE_LENGTH];
-} MicData;
-
-
-
-void UART_Receiver(void);
-
 /**
  * @}
  */
@@ -108,7 +89,7 @@ void UART_Receiver(void);
  * @{
  */
 /* Private function prototypes -----------------------------------------------*/
-void User_Process(AxesRaw_t* p_axes);
+//void User_Process(AxesRaw_t* p_axes);
 /**
  * @}
  */
@@ -137,7 +118,7 @@ void User_Process(AxesRaw_t* p_axes);
  * @retval None
  */
 int main(void)
-{
+{	
   const char *name = "B123NRG";
   uint8_t SERVER_BDADDR[] = {0x12, 0x34, 0x00, 0xE1, 0x80, 0x03};
   uint8_t bdaddr[BDADDR_SIZE];
@@ -264,14 +245,14 @@ int main(void)
   }
   
   PRINTF("SERVER: BLE Stack Initialized\n");
-  
-  ret = Add_Acc_Service();
-  
-  if(ret == BLE_STATUS_SUCCESS)
-    PRINTF("Acc service added successfully.\n");
-  else
-    PRINTF("Error while adding Acc service.\n");
-  
+//  
+//  ret = Add_Acc_Service();
+//  
+//  if(ret == BLE_STATUS_SUCCESS)
+//    PRINTF("Acc service added successfully.\n");
+//  else
+//    PRINTF("Error while adding Acc service.\n");
+//  
 	
 	// ------------ OUR CUSTOM SERVICE ----------------
 	ret = Add_Custom_Acc_Service();
@@ -283,45 +264,13 @@ int main(void)
 	
 	// ------------------------------------------------
   
-	
-  ret = Add_Environmental_Sensor_Service();
-  
-  if(ret == BLE_STATUS_SUCCESS)
-    PRINTF("Environmental Sensor service added successfully.\n");
-  else
-    PRINTF("Error while adding Environmental Sensor service.\n");
-
-#if NEW_SERVICES
-  /* Instantiate Timer Service with two characteristics:
-   * - seconds characteristic (Readable only)
-   * - minutes characteristics (Readable and Notifiable )
-   */
-  ret = Add_Time_Service(); 
-  
-  if(ret == BLE_STATUS_SUCCESS)
-    PRINTF("Time service added successfully.\n");
-  else
-    PRINTF("Error while adding Time service.\n");  
-  
-  /* Instantiate LED Button Service with one characteristic:
-   * - LED characteristic (Readable and Writable)
-   */  
-  ret = Add_LED_Service();
-
-  if(ret == BLE_STATUS_SUCCESS)
-    PRINTF("LED service added successfully.\n");
-  else
-    PRINTF("Error while adding LED service.\n");  
-#endif
-
   /* Set output power level */
   ret = aci_hal_set_tx_power_level(1,4);
 
   while(1)
   {
     HCI_Process();
-    User_Process(&axes_data);
-		//UART_Receiver();
+//    User_Process(&axes_data);
 		
 #if NEW_SERVICES
     Update_Time_Characteristics();
@@ -329,43 +278,43 @@ int main(void)
   }
 }
 
-/**
- * @brief  Process user input (i.e. pressing the USER button on Nucleo board)
- *         and send the updated acceleration data to the remote client.
- *
- * @param  AxesRaw_t* p_axes
- * @retval None
- */
-void User_Process(AxesRaw_t* p_axes)
-{
-	uint8_t data[3];
-	data[0] = 0;
-	data[1] = 1;
-	data[2] = 0;
-  if(set_connectable){
-    setConnectable();
-    set_connectable = FALSE;
-  }
+///**
+// * @brief  Process user input (i.e. pressing the USER button on Nucleo board)
+// *         and send the updated acceleration data to the remote client.
+// *
+// * @param  AxesRaw_t* p_axes
+// * @retval None
+// */
+//void User_Process(AxesRaw_t* p_axes)
+//{
+//	uint8_t data[3];
+//	data[0] = 0;
+//	data[1] = 1;
+//	data[2] = 0;
+//  if(set_connectable){
+//    setConnectable();
+//    set_connectable = FALSE;
+//  }
 
-  /* Check if the user has pushed the button */
-  if(BSP_PB_GetState(BUTTON_KEY) == RESET)
-  {
-    while (BSP_PB_GetState(BUTTON_KEY) == RESET);
-    
-    //BSP_LED_Toggle(LED2); //used for debugging (BSP_LED_Init() above must be also enabled)
-    
-    if(connected)
-    {
-			HAL_UART_Transmit(&huart2, data, 3, 1000);
-      /* Update acceleration data */
-      p_axes->AXIS_X += 1;
-      p_axes->AXIS_Y -= 1;
-      p_axes->AXIS_Z += 2;
-      //PRINTF("ACC: X=%6d Y=%6d Z=%6d\r\n", p_axes->AXIS_X, p_axes->AXIS_Y, p_axes->AXIS_Z);
-      Acc_Update(p_axes);
-    }
-  }
-}
+//  /* Check if the user has pushed the button */
+//  if(BSP_PB_GetState(BUTTON_KEY) == RESET)
+//  {
+//    while (BSP_PB_GetState(BUTTON_KEY) == RESET);
+//    
+//    //BSP_LED_Toggle(LED2); //used for debugging (BSP_LED_Init() above must be also enabled)
+//    
+//    if(connected)
+//    {
+//			HAL_UART_Transmit(&huart2, data, 3, 1000);
+//      /* Update acceleration data */
+//      p_axes->AXIS_X += 1;
+//      p_axes->AXIS_Y -= 1;
+//      p_axes->AXIS_Z += 2;
+//      //PRINTF("ACC: X=%6d Y=%6d Z=%6d\r\n", p_axes->AXIS_X, p_axes->AXIS_Y, p_axes->AXIS_Z);
+//      Acc_Update(p_axes);
+//    }
+//  }
+//}
 
 
 
