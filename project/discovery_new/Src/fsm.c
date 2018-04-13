@@ -3,6 +3,7 @@
 #include "lis3dsh.h"
 #include "main.h"
 #include "blinker.h"
+#include <stdio.h>
 
 // Very useful macros for setting and resetting a given pin.
 #define PIN(i) i##_Pin
@@ -32,8 +33,6 @@ extern osThreadId defaultTaskHandle;
 // Handle for the UART.
 extern UART_HandleTypeDef huart4;
 
-float temp_buffer[3];
-float acc_x, acc_y, acc_z;
 //float pitch_roll_buffer[2][1000];
 extern uint32_t mic_buffer[MIC_BUFFER_SIZE];
 
@@ -50,7 +49,7 @@ void squash(uint32_t array[], int length){
 	}
 }
 
-float exp_moving_avg_filter(float values[], int length, float alpha){
+void exp_moving_avg_filter(float values[], int length, float alpha){
 	register float previous = values[0];
 	for(int c = 0; c < length; c++) {
 		previous = alpha * values[c] + (1.0f-alpha) * previous;
@@ -92,15 +91,18 @@ bool detect_tap(){
 	
 	float buffer[BUFFER_SIZE];
 	
+	float temp_buffer[3];
+	float acc_x, acc_y, acc_z;
 	
 	for (int i=0; i<BUFFER_SIZE; i++){
-		LIS3DSH_ReadACC(&temp_buffer[0]);
+		LIS3DSH_ReadACC(temp_buffer);
 		acc_x = (float)temp_buffer[0];
 		acc_y = (float)temp_buffer[1];
 		acc_z = (float)temp_buffer[2];
 		
 		// what we keep: z
 		buffer[i] = acc_z;
+		printf("X: %2.3f, Y: %2.3f, Z: %2.3f\n", acc_x, acc_y, acc_z);
 		
 		osDelay(ACC_SAMPLING_PERIOD);
 	}
