@@ -27,6 +27,8 @@
 #define ACC_FILTER_ALPHA 0.5
 #define TAP_THRESHOLD 100.0
 
+#define PRE_RECORDING_DELAY_MS 1000
+
 typedef enum {
 	IDLE,
 	TAP_RECENT,

@@ -25,6 +25,7 @@ void stop_blinking(){
 */
 void StartBlinkerTask(void const * argument){
 	while(1){
+		RESET_PIN(LED_RED);
 		osSignalWait(blinker_on_signal, osWaitForever);
 		do{
 			// Blink until turned off.

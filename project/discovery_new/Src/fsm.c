@@ -137,6 +137,11 @@ void single_tap(){
 	//uint32_t mic_buffer[MIC_RECORDING_SAMPLE_COUNT];
 	
 	// Start recording audio using the ADC with DMA.
+	
+	//Wait before recording
+	SET_PIN(LED_GREEN);
+	osDelay(PRE_RECORDING_DELAY_MS);
+	RESET_PIN(LED_GREEN);
 	start_blinking();
 	HAL_ADC_Start_DMA(&hadc1, mic_buffer, MIC_RECORDING_SAMPLE_COUNT);
 	
@@ -145,8 +150,6 @@ void single_tap(){
 	osSignalWait(mic_buffer_full_signal, osWaitForever);
 	HAL_ADC_Stop_DMA(&hadc1);
 	stop_blinking();
-	
-	
 	
 	// Set the GPIO pin to let the nucleo board known that we want to transmit some Microphone data.
 	//SET_PIN(IS_MIC_DATA);
@@ -205,13 +208,17 @@ void double_tap(){
 	
 	const int ACC_RECORDING_SAMPLE_COUNT = ACC_RECORDING_LENGTH_MS / ACC_SAMPLING_PERIOD_MS;
 	
-	// TODO: decide if we send pitch and roll, or the raw data.
 //	float acc_buffer[3][ACC_RECORDING_SAMPLE_COUNT];
 	
 	static float pitch_roll_buffer[2][ACC_RECORDING_SAMPLE_COUNT];
 	float temp_buffer[3];
 	float acc_x, acc_y, acc_z;
 	float pitch, roll;
+	
+	//Wait before recording
+	SET_PIN(LED_GREEN);
+	osDelay(PRE_RECORDING_DELAY_MS);
+	RESET_PIN(LED_GREEN);
 	
 	start_blinking();
 	
