@@ -11,12 +11,9 @@ import java.util.UUID;
  */
 
 public class GattUtils {
-    public final static UUID SERVICE_023_UUID = UUID.fromString("02366E80-CF3A-11E1-9AB4-0002A5D5C51B");
-    public final static UUID SERVICE_428_UUID = UUID.fromString("42821A40-E477-11E2-82D0-0002A4D5C51B");
-    public final static UUID CHAR_AUDIO_023_UUID = UUID.fromString("E23E78A0-CF4A-11E1-8FFC-0002A5D5C51B");
-    public final static UUID CHAR_ACCEL_023_UUID = UUID.fromString("E23E78A0-CF4A-11E1-8FFC-0002A5D5C51B"); // TODO Set this characteristic for accelerometer data
-    public final static UUID CHARACTERISTIC2_023_UUID = UUID.fromString("340A1B80-CF4B-11E1-AC36-0002A5D5C51B"); // Read, Notify Permissions
-    public final static UUID CONTROL_POINT_CHAR_UUID = UUID.randomUUID();
+    public final static UUID CUSTOM_SERVICE_UUID = UUID.fromString("01366E80-CF3A-11E1-9AB4-0002A5D5C51B");
+    public final static UUID CHAR_AUDIO_UUID = UUID.fromString("E23E78A0-CF4A-11E1-8FFC-0002A5D5C51B");
+    public final static UUID CHAR_ACCEL_UUID = UUID.fromString("03366E80-CF3A-11E1-9AB4-0002A5D5C51B");
     public final static UUID CLIENT_CHARACTERISTIC_CONFIG_UUID = convertFromInteger(0x2902);
     public final static String NUCLEO_MAC_ADDRESS = "03:80:E1:00:34:12";
 
