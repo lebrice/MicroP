@@ -1,4 +1,4 @@
-package com.ecse426.project.app;
+package com.ecse426.project.utils;
 
 import android.content.Context;
 import android.media.AudioFormat;
@@ -29,12 +29,12 @@ public class WaveFileTools
 
         // Configure me!
         private static final int AUDIO_SOURCE = MediaRecorder.AudioSource.MIC;
-        private static final int SAMPLE_RATE = 16000; // Hz
+        private static final int SAMPLE_RATE = 10000; // Hz
         private static final int ENCODING = AudioFormat.ENCODING_PCM_16BIT;
         private static final int CHANNEL_MASK = AudioFormat.CHANNEL_IN_MONO;
         //
 
-        private static final int BUFFER_SIZE = 2 * AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_MASK, ENCODING);
+//        private static final int BUFFER_SIZE = 2 * AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_MASK, ENCODING);
 
         //
 //        /**

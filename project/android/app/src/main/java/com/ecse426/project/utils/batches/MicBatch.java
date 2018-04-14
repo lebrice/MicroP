@@ -1,11 +1,13 @@
-package com.ecse426.project.app.batches;
+package com.ecse426.project.utils.batches;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import static com.ecse426.project.app.AppController.MIC_BYTES_PER_BATCH;
-import static com.ecse426.project.app.AppController.MIC_SAMPLE_BYTES;
 
+/**
+ * Simple class for the MicBatch.
+ */
 public class MicBatch extends Object {
     public static boolean BIG_ENDIAN = true;
 
@@ -14,7 +16,6 @@ public class MicBatch extends Object {
     public MicBatch(){
         this.buffer.order(BIG_ENDIAN ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
     }
-
 
     /**
      * Factory method.
@@ -28,8 +29,13 @@ public class MicBatch extends Object {
     }
 
     public byte[] toBytes(){
-        return this.buffer.array();
+        return toBytes(ByteOrder.LITTLE_ENDIAN);
     }
+
+    public byte[] toBytes(ByteOrder byteOrder){
+        return this.buffer.order(byteOrder).array();
+    }
+
 
     public short[] toShorts(){
         return this.buffer.asShortBuffer().array();

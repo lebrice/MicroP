@@ -37,17 +37,15 @@ import android.widget.ToggleButton;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
-import com.ecse426.project.app.batches.AccBatch;
-import com.ecse426.project.app.batches.MicBatch;
+import com.ecse426.project.utils.batches.AccBatch;
+import com.ecse426.project.utils.batches.MicBatch;
 import com.ecse426.project.microp.R;
 import com.ecse426.project.utils.GattUtils;
 
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;

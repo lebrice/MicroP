@@ -6,59 +6,33 @@ package com.ecse426.project.app;
 
 import android.app.Application;
 import android.media.AudioFormat;
-import android.os.Build;
 import android.os.Environment;
-import android.support.annotation.RequiresApi;
 import android.system.ErrnoException;
 import android.system.Os;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 
-import com.android.internal.http.multipart.FilePart;
-import com.android.internal.http.multipart.MultipartEntity;
-import com.android.internal.http.multipart.Part;
-import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.ecse426.project.utils.LruBitmapCache;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOError;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.CharBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 
-import com.ecse426.project.app.batches.AccBatch;
-import com.ecse426.project.app.batches.MicBatch;
+import com.ecse426.project.utils.WaveFileTools;
+import com.ecse426.project.utils.batches.AccBatch;
+import com.ecse426.project.utils.batches.MicBatch;
 
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.mime.HttpMultipartMode;
-import org.apache.http.entity.mime.content.FileBody;
-import org.apache.http.entity.mime.content.StringBody;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.protocol.HTTP;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -183,7 +157,9 @@ public class AppController extends Application {
             this.createAccFile();
         }
         try {
+            // Write out the batch to the current acc file.
             this.accStreamWriter.write(batch.toString());
+
             this.accSampleCount += ACC_SAMPLES_PER_BATCH;
 
             // If we have all the samples we need
@@ -206,12 +182,19 @@ public class AppController extends Application {
     }
 
 
+    /** Returns the speech detection result back to the Nucleo Board using BLE.
+     * TODO: Figure out a way to send this back through BLE. ATM the BLE classes are in ClientActivity.
+     *
+     * @param digit
+     */
     private void returnSpokenDigit(int digit) {
-        // TODO: Figure out a way to send this back through BLE. ATM the BLE classes are in ClientActivity.
+
     }
 
 
     public void addMicBatch(MicBatch batch) {
+        Log.i(TAG, "Received ACC Batch!  (Sample count: " + this.accSampleCount + "/" + ACC_SAMPLE_COUNT + ").");
+
         if (micSampleCount == 0) {
             if (micFileCreated) throw new AssertionError();
             this.createMicFile();
@@ -319,7 +302,6 @@ public class AppController extends Application {
 
     private void closeMicFile() {
         try {
-            micStreamWriter.flush();
             micStreamWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -329,17 +311,10 @@ public class AppController extends Application {
 
     private void closeAccFile() {
         try {
-            accStreamWriter.flush();
             accStreamWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-    }
-
-
-    // TODO figure out a way to write to wav file
-    public void writeToWaveFile(byte[] array, String pathname) {
 
     }
 }
