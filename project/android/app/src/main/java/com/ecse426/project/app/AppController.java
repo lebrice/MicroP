@@ -196,22 +196,29 @@ public class AppController extends Application {
         Log.i(TAG, "Received ACC Batch!  (Sample count: " + this.accSampleCount + "/" + ACC_SAMPLE_COUNT + ").");
 
         if (micSampleCount == 0) {
+            // if this is the first sample, create a new file for holding microphone data.
             if (micFileCreated) throw new AssertionError();
             this.createMicFile();
         }
         try {
             micFileOutputStream.write(batch.toBytes());
-            this.micSampleCount += MIC_SAMPLES_PER_BATCH;
+            micSampleCount += MIC_SAMPLES_PER_BATCH;
 
-            if(this.micSampleCount >= MIC_SAMPLE_COUNT){
-                WaveFileTools.updateWavHeader(this.micFile);
+            if(micSampleCount >= MIC_SAMPLE_COUNT){
+                // Flush the buffers
                 this.closeMicFile();
 
+                // Update the .wav file header, to indicate the right length.
+                WaveFileTools.updateWavHeader(micFile);
+
+                this.sendFileToWebsite(true);
             }
-
-
         } catch (IOException e) {
             e.printStackTrace();
+            Log.e(TAG, "File creation failure!" + e.getMessage());
+        } catch (JSONException e) {
+            e.printStackTrace();
+            Log.e(TAG, "Error while Attempting to send file:" + e.getMessage());
         }
 
     }
@@ -258,10 +265,9 @@ public class AppController extends Application {
 
     private void sendFileToWebsite(boolean isMicRequest) throws JSONException, IOException {
         String filepath = isMicRequest ? MIC_FILE_PATH : ACC_FILE_PATH;
-
-
-        // TODO: Its actually simpler, given that Volley wasn't made for 'big' files, to just send the file as Base64 encoded.
-
+        /** TODO: Volley wasn't made for 'big' files, so we just send the file as Base64 encoded.
+         *
+         */
         String encodedFile = encodedFile = Base64.encodeToString(Files.readAllBytes(Paths.get(filepath)), Base64.DEFAULT);
 
         JSONObject requestJson = new JSONObject();
@@ -297,7 +303,7 @@ public class AppController extends Application {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
-        AppController.getInstance().addToRequestQueue(jsonObjReq, AppController.TAG);
+        addToRequestQueue(jsonObjReq, AppController.TAG);
     }
 
     private void closeMicFile() {
