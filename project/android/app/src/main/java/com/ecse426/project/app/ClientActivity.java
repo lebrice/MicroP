@@ -34,6 +34,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
@@ -43,6 +44,8 @@ import com.ecse426.project.microp.R;
 import com.ecse426.project.utils.GattUtils;
 
 import org.apache.commons.io.IOUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,6 +56,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import static com.ecse426.project.app.AppController.ACC_ENDPOINT_URL;
+import static com.ecse426.project.app.AppController.MIC_ENDPOINT_URL;
 
 public class ClientActivity extends AppCompatActivity {
 
@@ -293,16 +299,24 @@ public class ClientActivity extends AppCompatActivity {
         }
     }
 
-    private void sendMessage(String message) {
+    /** Returns the speech detection result back to the Nucleo Board using BLE.
+     * TODO: Figure out a way to send this back through BLE. ATM the BLE classes are in ClientActivity.
+     *
+     * @param digit
+     */
+    private void sendMessage(int digit) {
         if (!mConnected && !mInitialized) {
+            Log.e(TAG, "Trying to send a message, but there is not BLE connection!.");
             return;
         }
         BluetoothGattService service = mGatt.getService(CUSTOM_SERVICE_UUID);
+
+        // TODO: Change this to the "Spoken Digit" characteristic UUID.
         BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHAR_AUDIO_UUID);
         byte[] messageBytes = new byte[0];
         // convert message to byte array
         try {
-            messageBytes = message.getBytes("UTF-8");
+            messageBytes = Integer.toString(digit).getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
             Log.e(TAG, "Failed to convert message string to byte array");
         }
@@ -396,6 +410,49 @@ public class ClientActivity extends AppCompatActivity {
             }
         };
         AppController.getInstance().addToRequestQueue(jsonObjReq, AppController.TAG);
+    }
+
+
+    private void sendFileToWebsite(boolean isMicRequest) throws JSONException, IOException {
+        AppController controller = AppController.getInstance();
+
+
+        JSONObject requestJson = new JSONObject();
+        String encodedFile = controller.getEncodedFile(isMicRequest);
+        requestJson.put("accelerometer", encodedFile);
+        // Create the request.
+        JsonObjectRequest jsonObjReq = new JsonObjectRequest(
+                Request.Method.POST,
+                isMicRequest ? MIC_ENDPOINT_URL : ACC_ENDPOINT_URL,
+                requestJson,
+                response -> {
+                    Log.d(TAG, "SUCCESS: " + response.toString());
+                    if (isMicRequest) {
+                        int digit = response.optInt("result", 0);
+                        Log.i(TAG, "The API Returned the value '" + digit + "'");
+
+                        controller.closeMicFile();
+                        this.sendMessage(digit);
+
+                    } else {
+                        controller.closeAccFile();
+                    }
+
+                },
+                error -> {
+                    Log.e(TAG, "ERROR: " + error.getMessage());
+                    if (isMicRequest) {
+                        this.sendMessage(0);
+                    }
+                });
+
+        // Change the default timeout.
+        jsonObjReq.setRetryPolicy(new DefaultRetryPolicy(
+                30 * 1000, // 30 secs.
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
+        controller.addToRequestQueue(jsonObjReq, AppController.TAG);
     }
 
 
@@ -607,22 +664,44 @@ public class ClientActivity extends AppCompatActivity {
 
             // The bytes coming from the nucleo.
             byte[] bytes = characteristic.getValue();
+            // The controller instance, which will wend the data over.
+            AppController controllerInstance = AppController.getInstance();
 
-            if (characteristic.getUuid().equals(CHAR_AUDIO_UUID)) {
-                Log.i(TAG, "Received Mic Batch");
-                MicBatch batch = MicBatch.fromBytes(bytes);
-                AppController.getInstance().addMicBatch(batch);
-            }
-            else if (characteristic.getUuid().equals(CHAR_ACCEL_UUID)) {
-                Log.i(TAG, "Received Acc Batch");
-                AccBatch batch = AccBatch.fromBytes(bytes);
-                AppController.getInstance().addAccBatch(batch);
-            }
-            else {
-                Log.e(TAG, "Unrecognized characteristic!");
-                Log.d(TAG, "Received bytes: " + Arrays.toString(bytes));
-            }
 
+            try {
+                if (characteristic.getUuid().equals(CHAR_AUDIO_UUID)) {
+                    Log.i(TAG, "Received Mic Batch!");
+                    Log.d(TAG, "Received bytes: " + Arrays.toString(bytes));
+
+
+                    MicBatch batch = MicBatch.fromBytes(bytes);
+
+                    boolean done = controllerInstance.addMicBatch(batch);
+
+                    if(done){
+                        sendFileToWebsite(true);
+                    }
+
+                } else if (characteristic.getUuid().equals(CHAR_ACCEL_UUID)) {
+                    Log.i(TAG, "Received Acc Batch");
+                    Log.d(TAG, "Received bytes: " + Arrays.toString(bytes));
+
+                    AccBatch batch = AccBatch.fromBytes(bytes);
+
+                    boolean done = controllerInstance.addAccBatch(batch);
+
+                    if(done){
+                        // If we have one full file.
+                        sendFileToWebsite(false);
+                    }
+                } else {
+                    Log.e(TAG, "Unrecognized characteristic!");
+                    Log.d(TAG, "Received bytes: " + Arrays.toString(bytes));
+                }
+            } catch (IOException | JSONException e) {
+                e.printStackTrace();
+                Log.e(TAG, "Exception occured while trying to add a batch\n");
+            }
         }
     }
 }

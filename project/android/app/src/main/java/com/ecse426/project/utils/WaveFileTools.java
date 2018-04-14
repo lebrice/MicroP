@@ -1,24 +1,14 @@
 package com.ecse426.project.utils;
 
-import android.content.Context;
 import android.media.AudioFormat;
-import android.media.AudioRecord;
 import android.media.MediaRecorder;
-import android.os.AsyncTask;
-import android.os.SystemClock;
-import android.util.Log;
-import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.Locale;
-
-import static android.media.MediaRecorder.*;
 
 
 /** TAKEN ENTIRELY FROM https://gist.github.com/kmark/d8b1b01fb0d2febf5770*
