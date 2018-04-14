@@ -376,18 +376,19 @@ public class ClientActivity extends AppCompatActivity {
         AppController.getInstance().addToRequestQueue(stringRequest, AppController.TAG);
     }
 
+
     // Sending Json Object
     private void httpPostJsonWeb(String url, String key, String data){
         ProgressDialog pDialog = new ProgressDialog(this);
         pDialog.setMessage("Sending...");
-        pDialog.show();
+                pDialog.show();
         JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.POST, url, null,
                 response -> {
                     Log.d(TAG, response.toString());
                     pDialog.hide();
-            }, error -> {
-                Log.e(TAG, error.getMessage());
-                pDialog.hide();
+                }, error -> {
+            Log.e(TAG, error.getMessage());
+            pDialog.hide();
         }){
             @Override
             protected Map<String, String> getParams() {
@@ -553,7 +554,8 @@ public class ClientActivity extends AppCompatActivity {
             else Log.e(TAG, "Characteristic notify failure!");
 
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
-            descriptor.setValue(enabled?BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+            descriptor.setValue(enabled ?
+                    BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
                     :BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
             mDescriptorWritten = mGatt.writeDescriptor(descriptor);
 

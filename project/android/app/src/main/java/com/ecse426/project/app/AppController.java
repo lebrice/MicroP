@@ -5,26 +5,75 @@ package com.ecse426.project.app;
  */
 
 import android.app.Application;
+import android.media.AudioFormat;
+import android.os.Build;
 import android.os.Environment;
+import android.support.annotation.RequiresApi;
+import android.system.ErrnoException;
+import android.system.Os;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 
+import com.android.internal.http.multipart.FilePart;
+import com.android.internal.http.multipart.MultipartEntity;
+import com.android.internal.http.multipart.Part;
+import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.Response;
 import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.ecse426.project.utils.LruBitmapCache;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOError;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.CharBuffer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.ecse426.project.app.batches.AccBatch;
 import com.ecse426.project.app.batches.MicBatch;
 
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.protocol.HTTP;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class AppController extends Application {
+    // TODO: CHANGE ME.
+    public static final String WEBSITE_ADDRESS = "128.0.0.1:5000";
+
+    public static final String ACC_ENDPOINT_URL = WEBSITE_ADDRESS + "/accelerometer/";
+    public static final String MIC_ENDPOINT_URL = WEBSITE_ADDRESS + "/speech/";
+
+
     public static final int ACC_SAMPLE_COUNT = 1000;
     public static final int MIC_SAMPLE_COUNT = 10000;
+    public static final int MIC_SAMPLE_RATE = 10000;
+
     public static final int BLE_MAX_DATA_BYTES = 20;
 
     public static final int ACC_CHANNELS = 2;
@@ -34,12 +83,14 @@ public class AppController extends Application {
     public static final int ACC_BYTES_PER_BATCH = ACC_SAMPLES_PER_BATCH * ACC_SAMPLE_BYTES * ACC_CHANNELS;
     public static final int ACC_TOTAL_BYTES = ACC_BYTES_PER_BATCH * ACC_BATCH_COUNT;
 
-    public static final String ACC_FILE_PATH = Environment.getExternalStorageDirectory().getPath() +"/Documents/acc.csv";
+    public static final String ACC_FILE_PATH = Environment.getExternalStorageDirectory().getPath() + "/Documents/acc.csv";
 
-    private static int accSampleCount;
-    private static File accFile = null;
-    private static FileOutputStream accFileOutputStream;
-    private static OutputStreamWriter accStreamWriter;
+    private int accSampleCount = 0;
+
+    private boolean accFileCreated = false;
+    private File accFile = null;
+    private FileOutputStream accFileOutputStream;
+    private OutputStreamWriter accStreamWriter;
 
 
     public static final int MIC_CHANNELS = 1;
@@ -49,9 +100,11 @@ public class AppController extends Application {
     public static final int MIC_BYTES_PER_BATCH = MIC_SAMPLES_PER_BATCH * MIC_SAMPLE_BYTES * MIC_CHANNELS;
     public static final int MIC_TOTAL_BYTES = MIC_BYTES_PER_BATCH * MIC_BATCH_COUNT;
 
-    public static final String MIC_FILE_PATH = Environment.getExternalStorageDirectory().getPath() +"Documents/audio.wav";
+    public static final String MIC_FILE_PATH = Environment.getExternalStorageDirectory().getPath() + "Documents/audio.wav";
 
-    private static int micSampleCount;
+    private static int micSampleCount = 0;
+
+    private static boolean micFileCreated = false;
     private static File micFile = null;
     private static FileOutputStream micFileOutputStream;
     private static OutputStreamWriter micStreamWriter;
@@ -69,26 +122,117 @@ public class AppController extends Application {
     public void onCreate() {
         super.onCreate();
         mInstance = this;
-
     }
 
-    private void createFiles(){
-        this.micFile = new File(MIC_FILE_PATH);
-        // If file doesn't exist, create new file and add columns pitch and roll
-        if (!this.accFile.exists()) {
-            Log.i(TAG, "File doesn't exist, creating new one!");
-            boolean success = this.accFile.createNewFile();
-            if (success) {
-                fileOutputStream = new FileOutputStream(this.accFile);
-                streamWriter = new OutputStreamWriter(fileOutputStream);
-                Log.i(TAG, "File created!");
-                streamWriter.append("pitch,roll\n");
+
+    private File newBlankFile(String path) throws IOException, ErrnoException {
+        File file = new File(path);
+        boolean created = file.createNewFile();
+        if (!created) {
+            Os.remove(path);
+        }
+        return file;
+    }
+
+    private void createAccFile() {
+        try {
+            this.accFile = this.newBlankFile(ACC_FILE_PATH);
+            this.accFileOutputStream = new FileOutputStream(this.accFile);
+            this.accStreamWriter = new OutputStreamWriter(accFileOutputStream);
+        } catch (FileNotFoundException | ErrnoException e) {
+            e.printStackTrace();
+            Log.e(TAG, "File creation failure!" + e.getMessage());
+            e.printStackTrace();
+            Log.e(TAG, "File creation failure!" + e.getMessage());
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e(TAG, "File creation failure!" + e.getMessage());
+        }
+        Log.i(TAG, "Successfully created Acc file.");
+        this.accFileCreated = true;
+    }
+
+    private void createMicFile() {
+        try {
+            micFile = this.newBlankFile(ACC_FILE_PATH);
+            micFileOutputStream = new FileOutputStream(micFile);
+            micStreamWriter = new OutputStreamWriter(accFileOutputStream);
+            WaveFileTools.writeWavHeader(
+                    micFileOutputStream,
+                    AudioFormat.CHANNEL_IN_MONO,
+                    MIC_SAMPLE_RATE,
+                    AudioFormat.ENCODING_PCM_16BIT
+            );
+        } catch (FileNotFoundException | ErrnoException e) {
+            e.printStackTrace();
+            Log.e(TAG, "File creation failure!" + e.getMessage());
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e(TAG, "File creation failure!" + e.getMessage());
+        }
+        Log.i(TAG, "Successfully created Mic file.");
+
+        micFileCreated = true;
+    }
+
+    public void addAccBatch(AccBatch batch) {
+        Log.i(TAG, "Received ACC Batch!  (Sample count: " + this.accSampleCount + "/" + ACC_SAMPLE_COUNT + ").");
+
+        if (this.accSampleCount == 0) {
+            if (this.accFileCreated) throw new AssertionError();
+            this.createAccFile();
+        }
+        try {
+            this.accStreamWriter.write(batch.toString());
+            this.accSampleCount += ACC_SAMPLES_PER_BATCH;
+
+            // If we have all the samples we need
+            if (this.accSampleCount >= ACC_SAMPLE_COUNT) {
+
+                // Flush the output streams
+                this.closeAccFile();
+
+                // Send the data over to the API.
+                this.sendFileToWebsite(false);
             }
-            else {
-                Log.e(TAG, "File creation failure!");
-            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e(TAG, "File creation failure!" + e.getMessage());
+        } catch (JSONException e) {
+            e.printStackTrace();
+            Log.e(TAG, "Error while Attempting to send file:" + e.getMessage());
         }
     }
+
+
+    private void returnSpokenDigit(int digit) {
+        // TODO: Figure out a way to send this back through BLE. ATM the BLE classes are in ClientActivity.
+    }
+
+
+    public void addMicBatch(MicBatch batch) {
+        if (micSampleCount == 0) {
+            if (micFileCreated) throw new AssertionError();
+            this.createMicFile();
+        }
+        try {
+            micFileOutputStream.write(batch.toBytes());
+            this.micSampleCount += MIC_SAMPLES_PER_BATCH;
+
+            if(this.micSampleCount >= MIC_SAMPLE_COUNT){
+                WaveFileTools.updateWavHeader(this.micFile);
+                this.closeMicFile();
+
+            }
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
 
     public static synchronized AppController getInstance() {
         return mInstance;
@@ -119,7 +263,7 @@ public class AppController extends Application {
 
     public <T> void addToRequestQueue(Request<T> req) {
         req.setTag(TAG);
-        getRequestQueue().add(req);
+        this.getRequestQueue().add(req);
     }
 
     public void cancelPendingRequests(Object tag) {
@@ -129,97 +273,73 @@ public class AppController extends Application {
     }
 
 
-    public void addAccBatch(AccBatch batch) {
-        Log.i(TAG, "Received ACC Batch!  (Sample count: " + this.accSampleCount+ "/" + ACC_SAMPLE_COUNT + ").");
+    private void sendFileToWebsite(boolean isMicRequest) throws JSONException, IOException {
+        String filepath = isMicRequest ? MIC_FILE_PATH : ACC_FILE_PATH;
 
 
+        // TODO: Its actually simpler, given that Volley wasn't made for 'big' files, to just send the file as Base64 encoded.
+
+        String encodedFile = encodedFile = Base64.encodeToString(Files.readAllBytes(Paths.get(filepath)), Base64.DEFAULT);
+
+        JSONObject requestJson = new JSONObject();
+        requestJson.put("accelerometer", encodedFile);
+
+        // Create the request.
+        JsonObjectRequest jsonObjReq = new JsonObjectRequest(
+                Request.Method.POST,
+                isMicRequest ? MIC_ENDPOINT_URL : ACC_ENDPOINT_URL,
+                requestJson,
+                response -> {
+                    Log.d(TAG, "SUCCESS: " + response.toString());
+                    if (isMicRequest) {
+                        int digit = response.optInt("result", 0);
+                        this.closeMicFile();
+                        this.returnSpokenDigit(digit);
+
+                    } else {
+                        this.closeAccFile();
+                    }
+
+                },
+                error -> {
+                    Log.e(TAG, "ERROR: " + error.getMessage());
+                    if (isMicRequest) {
+                        this.returnSpokenDigit(0);
+                    }
+                });
+
+        // Change the default timeout.
+        jsonObjReq.setRetryPolicy(new DefaultRetryPolicy(
+                30 * 1000, // 30 secs.
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
+        AppController.getInstance().addToRequestQueue(jsonObjReq, AppController.TAG);
     }
 
-    public void addMicBatch(MicBatch batch) {
-        return;
-    }
-
-    /*
-        A note on serialization and deserialization
-        This method expects that the serialization of the byte array is of the following format:
-        [pitch_msr0, roll_msr0, pitch_msr1, roll_msr1, ...]
-        Deserialization is done by assuming that the array is of even length and that a pitch
-        measurement is followed by a roll measurement, followed by a pitch measurement, etc.
-     */
-    public void writeToAccFile(byte[] array, String pathName)
-    {
-        filePath = "/mnt/sdcard/Documents/acc.csv";
-        key = "acc";
-        AccBatch batch = AccBatch.fromBytes(array);
-        AppController.getInstance().addAccBatch(batch);
-
-        try
-        {
-            OutputStreamWriter streamWriter;
-            // If file doesn't exist, create new file and add columns pitch and roll
-            if (!this.accFile.exists()) {
-                Log.i(TAG, "File doesn't exist, creating new one!");
-                boolean success = this.accFile.createNewFile();
-                if (success) {
-                    fileOutputStream = new FileOutputStream(this.accFile);
-                    streamWriter = new OutputStreamWriter(fileOutputStream);
-                    Log.i(TAG, "File created!");
-                    streamWriter.append("pitch,roll\n");
-                }
-                else {
-                    Log.e(TAG, "File creation failure!");
-                }
-            }
-            // Output stream for file and stream writer to write to file
-            fileOutputStream = new FileOutputStream(this.accFile);
-            streamWriter = new OutputStreamWriter(fileOutputStream);
-
-            // Iterate through the array by 2 (pitch and roll), comma seperate the bytes and insert
-            // the row to the file
-            for (int i = 0; i < array.length - 1; i += 2) {
-                int pitchIndex = i;
-                int rollIndex = i + 1;
-
-                String pitchMeasurement = Byte.toString(array[pitchIndex]);
-                String rollMeasurement = Byte.toString(array[rollIndex]);
-
-                // Comma separate the values and add new line at the end
-                String row = pitchMeasurement + "," + rollMeasurement + "\n";
-                streamWriter.append(row);
-                Log.i(TAG,"Row " + row + " added.");
-            }
-        } catch (Exception e)
-        {
+    private void closeMicFile() {
+        try {
+            micStreamWriter.flush();
+            micStreamWriter.close();
+        } catch (IOException e) {
             e.printStackTrace();
         }
+
+    }
+
+    private void closeAccFile() {
+        try {
+            accStreamWriter.flush();
+            accStreamWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
 
     // TODO figure out a way to write to wav file
     public void writeToWaveFile(byte[] array, String pathname) {
-        filePath = "/mnt/sdcard/Documents/audio.wav";
-        File file = new File(pathname);
-        try {
-            if (!file.exists()) {
-                Log.i(TAG, "File doesn't exist, creating new one!");
-                boolean success = file.createNewFile();
-                if (success) {
-                    Log.i(TAG, "File created!");
-                }
-                else {
-                    Log.e(TAG, "File creation failure!");
-                }
-            }
-//            AudioStream
-//
-//
-//            streamWriter.append(Arrays.toString(array));
-//            streamWriter.append("\n");
-            Log.i(TAG, "File written to!");
-        } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
-        }
+
     }
-
-
 }
