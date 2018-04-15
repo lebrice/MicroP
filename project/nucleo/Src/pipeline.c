@@ -38,7 +38,7 @@ void pipeline(void){
 				mic_batch.data[j] = mic_buffer.data[j + offset];
 			}
 			// Send the batch via BLE
-			printf("Sending Batch #%u / %u\n", i, MIC_BATCH_COUNT);
+			printf("Sending MIC Batch #%u / %u\n", i, MIC_BATCH_COUNT);
 			mic_update(&mic_batch);
 			
 			
@@ -61,7 +61,7 @@ void pipeline(void){
 				acc_batch.pitch[j] = acc_buffer.pitch[offset + j];
 				acc_batch.roll[j] = acc_buffer.roll[offset + j];
 			}
-			printf("Sending Batch #%u / %u\n", i, ACC_BATCH_COUNT);
+			printf("Sending ACC Batch #%u / %u\n", i, ACC_BATCH_COUNT);
 			// Send over a batch of data.
 			acc_update(&acc_batch);
 			

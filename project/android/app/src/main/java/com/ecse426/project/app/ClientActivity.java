@@ -32,6 +32,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
+import android.widget.ViewAnimator;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
@@ -71,7 +72,7 @@ public class ClientActivity extends AppCompatActivity {
     private BluetoothGatt mGatt;
 
     private Handler mHandler;
-    private long SCAN_PERIOD = 30000;
+    private long SCAN_PERIOD = 10000;
     private boolean mConnected;
     private boolean mScanning;
     private boolean mInitialized;
@@ -95,7 +96,7 @@ public class ClientActivity extends AppCompatActivity {
     //    private ListView listView;
 
     //    private ArrayAdapter<String> arrayAdapter;
-//    private TextView textAddress;
+    private TextView textAddress;
     //    private ToggleButton toggleConnection;
     private Button startScanButton;
     //    private Button stopScanButton;
@@ -127,7 +128,7 @@ public class ClientActivity extends AppCompatActivity {
 //        toggleConnection = findViewById(R.id.toggle_connection);
         startScanButton = findViewById(R.id.start_scan_button);
 //        stopScanButton = findViewById(R.id.stop_scan_button);
-//        textAddress = findViewById(R.id.device_address);
+        textAddress = findViewById(R.id.device_address);
         textNucleoAddress = findViewById(R.id.nucleo_address);
         textBox = findViewById(R.id.text_box);
 //        sendButton = findViewById(R.id.send_button);
@@ -162,6 +163,8 @@ public class ClientActivity extends AppCompatActivity {
             startScan();
             Log.d(TAG, "Start Scan button clicked");
             scanProgressBar.setVisibility(View.VISIBLE);
+            startScanButton.setText(R.string.find_nucleo);
+            textAddress.setText("");
         });
 //        stopScanButton.setOnClickListener(v -> {
 //            stopScan();
@@ -273,7 +276,7 @@ public class ClientActivity extends AppCompatActivity {
             return;
         }
         for (String deviceAddress : mScanResults.keySet()) {
-            Log.d(TAG, "Found device: " + deviceAddress);
+            Log.v(TAG, "Found device: " + deviceAddress);
         }
         Log.d(TAG, "=====SCAN COMPLETE=====");
     }
@@ -508,6 +511,10 @@ public class ClientActivity extends AppCompatActivity {
                 selectedAddress = deviceAddress;
                 selectedDevice = device;
 
+                String deviceText = "Device MAC Address: " + selectedAddress;
+                textAddress.setText(deviceText);
+                textAddress.invalidate();
+
                 startScanButton.setText(R.string.nucleo_found);
 //                startScanButton.setPressed(true);
 //                startScanButton.setEnabled(false);
@@ -546,7 +553,7 @@ public class ClientActivity extends AppCompatActivity {
 //                arrayAdapter.notifyDataSetChanged();
 //            }
 //            Log.v(TAG, "=====RESULT ADDED=====");
-            Log.d(TAG, "Found Device at Address: " + deviceAddress);
+            Log.v(TAG, "Found Device at Address: " + deviceAddress);
         }
     }
 
@@ -741,14 +748,14 @@ public class ClientActivity extends AppCompatActivity {
                     int count = controllerInstance.getAccSampleCount();
                     boolean done = (count == ACC_SAMPLE_COUNT);
 
-                    accProgressBar.setProgress(count);
+//                    accProgressBar.setProgress(count);
 
                     if (done) {
                         // If we have one full file.
                         sendFileToWebsite(false);
                     } else {
-                        textBox.setText("Pitch: " + Arrays.toString(batch.pitch) +
-                                "\n" + "Roll: " + Arrays.toString(batch.roll));
+//                        textBox.setText("Pitch: " + Arrays.toString(batch.pitch) +
+//                                "\n" + "Roll: " + Arrays.toString(batch.roll));
                     }
 
                 } else {
