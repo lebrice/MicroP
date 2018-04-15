@@ -217,10 +217,10 @@ tBleStatus acc_update(AccBatch* acc_batch){
 	
 	serialize_acc_batch(acc_batch, serialized);	
 	
-	ret = aci_gatt_update_char_value(custom_service_handle, acc_char_handle, 0, 20, serialized);
+	ret = aci_gatt_update_char_value(custom_service_handle, acc_char_handle, 0, 16, serialized);
 	
   if (ret != BLE_STATUS_SUCCESS){
-    PRINTF("Error while updating ACC characteristic.\n") ;
+    PRINTF("Error while updating ACC characteristic (Errorcode %X)\n", ret);
     return BLE_STATUS_ERROR ;
   }
   return BLE_STATUS_SUCCESS;	
@@ -244,7 +244,7 @@ tBleStatus mic_update(MicBatch* mic_batch){
 	ret = aci_gatt_update_char_value(custom_service_handle, acc_char_handle, 0, 20, serialized);
 	
   if (ret != BLE_STATUS_SUCCESS){
-    PRINTF("Error while updating ACC characteristic.\n") ;
+    PRINTF("Error while updating Mic characteristic.(Errorcode %X)\n", ret);
     return BLE_STATUS_ERROR ;
   }
   return BLE_STATUS_SUCCESS;	

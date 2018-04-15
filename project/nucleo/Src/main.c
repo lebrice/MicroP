@@ -70,12 +70,17 @@
 extern volatile uint8_t set_connectable;
 extern volatile int connected;
 
+volatile uint8_t invoque_pipeline = 0;
+extern void pipeline(void);
+
 extern uint16_t accCharHandle, customAccServHandle, customAccCharHandle, customVoiceServHandle;
 
 
 uint8_t bnrg_expansion_board = IDB04A1; /* at startup, suppose the X-NUCLEO-IDB04A1 is used */
 
 uint8_t data[3];
+
+
 
 void UART_Init(void);
 void GPIO_Init(void);
@@ -271,7 +276,11 @@ int main(void)
 		if(set_connectable){
 			setConnectable();
 			set_connectable = FALSE;
-		}  
+		}
+			if(invoque_pipeline){
+				pipeline();
+				invoque_pipeline = 0;
+			}
 		
 		
 #if NEW_SERVICES

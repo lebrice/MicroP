@@ -48,7 +48,7 @@
 #endif
 
 extern SPI_HandleTypeDef SpiHandle;
-
+extern volatile uint8_t invoque_pipeline;
 /**
  * @brief  EXTI line detection callback.
  * @param  Specifies the pins connected EXTI line
@@ -60,7 +60,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   HCI_Isr();
 	if (GPIO_Pin == DATA_INTERRUPT_Pin){
 		printf("GPIO Interrupt handler! (pin %d)\n", GPIO_Pin);
-		pipeline();
+		invoque_pipeline = 1;
 	}
 }
 
