@@ -1,5 +1,3 @@
-
-
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -50,7 +48,7 @@ audio_dir_1 = """C:\\Users\\Fabrice\\repos\\free-spoken-digit-dataset\\recording
 audio_dir_2 = f"{current_dir}/sounds"
 
 audio_dirs = [
-    audio_dir_1,
+#    audio_dir_1,
     audio_dir_2
 ]
 
