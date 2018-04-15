@@ -11,7 +11,7 @@ extern volatile int connected;
 // Bluetooth Service Handle
 extern uint16_t custom_service_handle;
 // Bluetooth Service Characteristic Handles
-extern uint16_t pitch_roll_char_handle, voice_char_handle;
+extern uint16_t acc_char_handle, mic_char_handle, digit_char_handle;
 
 /** THE ENTIRE PIPELINE.
 *
@@ -64,8 +64,31 @@ void pipeline(void){
 			// Wait for a certain time, 
 			HAL_Delay(BLE_DELAY_BETWEEN_PACKETS_MS);
 		}
-		
 	}
-		
+}
+
+
+
+
+/** 
+ * @brief  This function is called when the digit comes back (when the phone changes the 'digit' char.)
+ * @param  Handle of the attribute
+ * @param  Size of the modified attribute data
+ * @param  Pointer to the modified attribute data
+ * @retval None
+ */
+void Attribute_Modified_CB(uint16_t handle, uint8_t data_length, uint8_t *att_data)
+{
+	printf("GATT attribute %x was modified!\n", handle);
+	/* If GATT client has modified 'LED button characteristic' value, toggle LED2 */
+	if(handle == digit_char_handle + 1){
+		printf("Received data:\t'");
+		for(int i=0; i<data_length; i++){
+			printf("%c", att_data[i]);
+		}
+		printf("'\n");
+		HAL_UART_Transmit(&huart2, att_data, data_length, HAL_MAX_DELAY);
+		printf("Done sending result over UART\n");
+	}
 }
 	

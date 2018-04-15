@@ -119,7 +119,7 @@ UART_HandleTypeDef huart2;
  */
 int main(void)
 {	
-  const char *name = "B123NRG";
+  const char *name = "BlueNRG";
   uint8_t SERVER_BDADDR[] = {0x12, 0x34, 0x00, 0xE1, 0x80, 0x03};
   uint8_t bdaddr[BDADDR_SIZE];
   uint16_t service_handle, dev_name_char_handle, appearance_char_handle;
@@ -183,8 +183,8 @@ int main(void)
    */
   BlueNRG_RST();
   
-  PRINTF("HWver %d, FWver %d", hwVersion, fwVersion);
-	PRINTF("\n\n");
+  printf("HWver %d, FWver %d", hwVersion, fwVersion);
+	printf("\n\n");
   
   if (hwVersion > 0x30) { /* X-NUCLEO-IDB05A1 expansion board is used */
     bnrg_expansion_board = IDB05A1; 
@@ -203,12 +203,12 @@ int main(void)
                                   CONFIG_DATA_PUBADDR_LEN,
                                   bdaddr);
   if(ret){
-    PRINTF("Setting BD_ADDR failed.\n");
+    printf("Setting BD_ADDR failed.\n");
   }
   
   ret = aci_gatt_init();    
   if(ret){
-    PRINTF("GATT_Init failed.\n");
+    printf("GATT_Init failed.\n");
   }
 
   if (bnrg_expansion_board == IDB05A1) {
@@ -219,7 +219,7 @@ int main(void)
   }
 
   if(ret != BLE_STATUS_SUCCESS){
-    PRINTF("GAP_Init failed.\n");
+    printf("GAP_Init failed.\n");
   }
 
   ret = aci_gatt_update_char_value(service_handle, dev_name_char_handle, 0,
@@ -228,7 +228,7 @@ int main(void)
 	
 	
   if(ret){
-    PRINTF("aci_gatt_update_char_value failed.\n");            
+    printf("aci_gatt_update_char_value failed.\n");            
     while(1);
   }
   
@@ -241,26 +241,18 @@ int main(void)
                                      123456,
                                      BONDING);
   if (ret == BLE_STATUS_SUCCESS) {
-    PRINTF("BLE Stack Initialized.\n");
+    printf("BLE Stack Initialized.\n");
   }
   
-  PRINTF("SERVER: BLE Stack Initialized\n");
-//  
-//  ret = Add_Acc_Service();
-//  
-//  if(ret == BLE_STATUS_SUCCESS)
-//    PRINTF("Acc service added successfully.\n");
-//  else
-//    PRINTF("Error while adding Acc service.\n");
-//  
-	
+  printf("SERVER: BLE Stack Initialized\n");
+
 	// ------------ OUR CUSTOM SERVICE ----------------
 	ret = Add_Custom_Acc_Service();
   
   if(ret == BLE_STATUS_SUCCESS)
-    PRINTF("CUSTOM Acc service added successfully.\n");
+    printf("CUSTOM Acc service added successfully.\n");
   else
-    PRINTF("Error while adding CUSTOM Acc service.\n");
+    printf("Error while adding our Acc service!\n");
 	
 	// ------------------------------------------------
   
@@ -271,6 +263,12 @@ int main(void)
   {
     HCI_Process();
 //    User_Process(&axes_data);
+		
+		if(set_connectable){
+			setConnectable();
+			set_connectable = FALSE;
+		}  
+		
 		
 #if NEW_SERVICES
     Update_Time_Characteristics();
