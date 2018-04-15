@@ -9,3 +9,4 @@
 **/*.d
 **/Drivers
 **/.env/*._*
+**/__pycache__

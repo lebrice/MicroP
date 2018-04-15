@@ -1,6 +1,5 @@
-
 import flask
-from flask import Flask, request, make_response
+from flask import Flask, request, make_response, render_template
 from flask_restful import Resource, Api
 import matplotlib.pyplot as plt
 import json
@@ -30,6 +29,9 @@ except:
 
 saved_model_dir = f"{current_dir}/saved_model/"
 
+@app.route("/microp")
+def greetings():
+    return render_template('index.html')
 
 class Home(Resource):
     def get(self):
