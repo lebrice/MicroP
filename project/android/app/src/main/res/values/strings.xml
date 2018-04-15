@@ -1,7 +1,9 @@
 <resources>
-    <string name="app_name">BLE Scan and Connect</string>
+    <string name="app_name">MicroP</string>
     <string name="device_output">Device:</string>
     <string name="start_scan">Start Scan</string>
+    <string name="find_nucleo">Scan for Nucleo</string>
+    <string name="nucleo_found">Nucleo Connected</string>
     <string name="stop_scan">Stop Scan</string>
     <string name="results_found">Results Found:</string>
     <string name="connect">Connect</string>

@@ -29,15 +29,19 @@ void pipeline(void){
 	if(is_mic_data){
 		// Receive the Microphone data via UART.
 		HAL_UART_Receive(&huart2, (uint8_t*) &mic_buffer.data, MIC_TOTAL_BYTES, HAL_MAX_DELAY);
+		printf("Received Sample of  Microphone data!\n");
+		
 		uint16_t offset = 0;
 		for(int i = 0; i < MIC_BATCH_COUNT; ++i) {
 			offset = i * MIC_SAMPLES_PER_BATCH;
 			for(int j = 0; j < MIC_SAMPLES_PER_BATCH; ++j) {
 				mic_batch.data[j] = mic_buffer.data[j + offset];
 			}
-			
 			// Send the batch via BLE
+			printf("Sending Batch #%u / %u\n", i, MIC_BATCH_COUNT);
 			mic_update(&mic_batch);
+			
+			
 			
 			// wait for a bit
 			HAL_Delay(BLE_DELAY_BETWEEN_PACKETS_MS);
@@ -46,10 +50,10 @@ void pipeline(void){
 		// Receive pitch
 		uint16_t bytes_to_receive = ACC_SAMPLE_COUNT * ACC_SAMPLE_BYTES;
 		HAL_UART_Receive(&huart2, (uint8_t*) &acc_buffer.pitch, bytes_to_receive, HAL_MAX_DELAY);
-		
+		printf("Received PITCH!\n");
 		// Receive roll
 		HAL_UART_Receive(&huart2, (uint8_t*) &acc_buffer.roll, bytes_to_receive, HAL_MAX_DELAY);
-		
+		printf("Received ROLL!\n");
 		int offset = 0;
 		for (int i=0; i<ACC_BATCH_COUNT; i++, offset += ACC_SAMPLES_PER_BATCH){
 			// Copy over the data.
@@ -57,7 +61,7 @@ void pipeline(void){
 				acc_batch.pitch[j] = acc_buffer.pitch[offset + j];
 				acc_batch.roll[j] = acc_buffer.roll[offset + j];
 			}
-			
+			printf("Sending Batch #%u / %u\n", i, ACC_BATCH_COUNT);
 			// Send over a batch of data.
 			acc_update(&acc_batch);
 			

@@ -1,7 +1,6 @@
 package com.ecse426.project.app;
 
 import android.Manifest;
-import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -19,11 +18,11 @@ import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ParcelUuid;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -37,17 +36,14 @@ import android.widget.ToggleButton;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
-import com.ecse426.project.utils.batches.AccBatch;
-import com.ecse426.project.utils.batches.MicBatch;
 import com.ecse426.project.microp.R;
 import com.ecse426.project.utils.GattUtils;
+import com.ecse426.project.utils.batches.AccBatch;
+import com.ecse426.project.utils.batches.MicBatch;
 
-import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -57,8 +53,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.ecse426.project.app.AppController.ACC_BATCH_COUNT;
 import static com.ecse426.project.app.AppController.ACC_ENDPOINT_URL;
+import static com.ecse426.project.app.AppController.ACC_SAMPLE_COUNT;
 import static com.ecse426.project.app.AppController.MIC_ENDPOINT_URL;
+import static com.ecse426.project.app.AppController.MIC_SAMPLE_COUNT;
+import static com.ecse426.project.utils.GattUtils.CHAR_DIGIT_UUID;
 
 public class ClientActivity extends AppCompatActivity {
 
@@ -71,13 +71,13 @@ public class ClientActivity extends AppCompatActivity {
     private BluetoothGatt mGatt;
 
     private Handler mHandler;
-    private long SCAN_PERIOD = 10000;
+    private long SCAN_PERIOD = 30000;
     private boolean mConnected;
     private boolean mScanning;
     private boolean mInitialized;
     private boolean mDescriptorWritten;
     private boolean mCharacteristicWritten;
-    private List<String> listAddress = new ArrayList<String>();
+//    private List<String> listAddress = new ArrayList<>();
 
     private final UUID CUSTOM_SERVICE_UUID = GattUtils.CUSTOM_SERVICE_UUID;
     private final UUID CHAR_AUDIO_UUID = GattUtils.CHAR_AUDIO_UUID;
@@ -87,19 +87,25 @@ public class ClientActivity extends AppCompatActivity {
 
     private String selectedAddress;
     private BluetoothDevice selectedDevice;
-    private ProgressBar progressBar;
-    private ListView listView;
-    private ArrayAdapter<String> arrayAdapter;
-    private TextView textAddress;
-    private ToggleButton toggleConnection;
-    private Button startScanButton;
-    private Button stopScanButton;
-    private TextView textNucleoAddress;
-    private Button sendButton;
-    private Button uploadButton;
+    private ProgressBar accProgressBar;
+    private ProgressBar micProgressBar;
 
-    // Volley connectivity
-    private String url = "http://httpbin.org/post";
+
+    private ProgressBar scanProgressBar;
+    //    private ListView listView;
+
+    //    private ArrayAdapter<String> arrayAdapter;
+//    private TextView textAddress;
+    //    private ToggleButton toggleConnection;
+    private Button startScanButton;
+    //    private Button stopScanButton;
+    private TextView textNucleoAddress;
+    private TextView textBox;
+//    private Button sendButton;
+//    private Button uploadButton;
+
+//    // Volley connectivity
+//    private String url = "http://httpbin.org/post";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,22 +119,40 @@ public class ClientActivity extends AppCompatActivity {
         Log.d(TAG, "BLE Set up");
 
         // Getting Views from Layout
-        listView = findViewById(R.id.list_address);
-        progressBar = findViewById(R.id.progress_bar);
-        toggleConnection = findViewById(R.id.toggle_connection);
+//        listView = findViewById(R.id.list_address);
+        accProgressBar = findViewById(R.id.acc_progress_bar);
+        micProgressBar = findViewById(R.id.mic_progress_bar);
+        scanProgressBar = findViewById(R.id.scan_progress_bar);
+
+//        toggleConnection = findViewById(R.id.toggle_connection);
         startScanButton = findViewById(R.id.start_scan_button);
-        stopScanButton = findViewById(R.id.stop_scan_button);
-        textAddress = findViewById(R.id.device_address);
+//        stopScanButton = findViewById(R.id.stop_scan_button);
+//        textAddress = findViewById(R.id.device_address);
         textNucleoAddress = findViewById(R.id.nucleo_address);
-        sendButton = findViewById(R.id.send_button);
-        uploadButton = findViewById(R.id.upload_button);
+        textBox = findViewById(R.id.text_box);
+//        sendButton = findViewById(R.id.send_button);
+//        uploadButton = findViewById(R.id.upload_button);
 
         String textSet = "Nucleo MAC Address: " + NUCLEO_MAC_ADDRESS;
         textNucleoAddress.setText(textSet);
         textNucleoAddress.invalidate();
 
         // Hid progress bar by default
-        progressBar.setVisibility(View.INVISIBLE);
+        scanProgressBar.setVisibility(View.INVISIBLE);
+
+        accProgressBar.setMax(ACC_SAMPLE_COUNT);
+        micProgressBar.setMax(MIC_SAMPLE_COUNT);
+
+        accProgressBar.setProgress(0);
+//        accProgressBar.setBackgroundColor(Color.BLUE);
+
+        micProgressBar.setProgress(0);
+//        accProgressBar.setBackgroundColor(Color.GREEN);
+
+
+        textBox.setText("Waiting for Connection");
+
+        startScanButton.setText(R.string.find_nucleo);
 
         // Check for permissions
         hasPermissions();
@@ -137,56 +161,56 @@ public class ClientActivity extends AppCompatActivity {
         startScanButton.setOnClickListener(v -> {
             startScan();
             Log.d(TAG, "Start Scan button clicked");
+            scanProgressBar.setVisibility(View.VISIBLE);
         });
-        stopScanButton.setOnClickListener(v -> {
-            stopScan();
-            Log.d(TAG, "Stop Scan button clicked");
-        });
+//        stopScanButton.setOnClickListener(v -> {
+//            stopScan();
+//            Log.d(TAG, "Stop Scan button clicked");
+//        });
 
-        // Populate ListView
-        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, listAddress);
-        listView.setAdapter(arrayAdapter);
+//        // Populate ListView
+//        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, listAddress);
+//        listView.setAdapter(arrayAdapter);
+//
+//        // On Item Click Listener for list view
+//        listView.setOnItemClickListener((parent, view, position, id) -> {
+//            selectedAddress = listAddress.get(position);
+//            Toast.makeText(this, "Address " + selectedAddress + " selected", Toast.LENGTH_SHORT).show();
+//            String deviceText = "Device MAC Address: " + selectedAddress;
+//            textAddress.setText(deviceText);
+//            textAddress.invalidate();
+//            selectedDevice = mScanResults.get(selectedAddress);
+//        });
 
-        // On Item Click Listener for list view
-        listView.setOnItemClickListener((parent, view, position, id) -> {
-            selectedAddress = listAddress.get(position);
-            Toast.makeText(this, "Address " + selectedAddress + " selected", Toast.LENGTH_SHORT).show();
-            String deviceText = "Device MAC Address: " + selectedAddress;
-            textAddress.setText(deviceText);
-            textAddress.invalidate();
-            selectedDevice = mScanResults.get(selectedAddress);
-        });
+//        // On Checked Listener for toggle connection button
+//        toggleConnection.setOnCheckedChangeListener((compoundButton, isChecked) -> {
+//            // TODO: this might be a good place to ask for an image from the API ?
+//            if (selectedDevice != null && selectedAddress != null) {
+//                if (isChecked) {
+//                    String deviceText = "Device MAC Address: " + selectedAddress;
+//                    textAddress.setText(deviceText);
+//                    textAddress.invalidate();
+//                    connectDevice(selectedDevice);
+//                } else {
+//                    disconnectGattServer();
+//                }
+//            } else {
+//                Toast.makeText(this, "Need to select address", Toast.LENGTH_SHORT).show();
+//            }
+//        });
 
-        // On Checked Listener for toggle connection button
-        toggleConnection.setOnCheckedChangeListener((compoundButton, isChecked) -> {
-            if (selectedDevice != null && selectedAddress != null) {
-                if (isChecked) {
-                    String deviceText = "Device MAC Address: " + selectedAddress;
-                    textAddress.setText(deviceText);
-                    textAddress.invalidate();
-                    connectDevice(selectedDevice);
-                }
-                else {
-                    disconnectGattServer();
-                }
-            }
-            else {
-                Toast.makeText(this, "Need to select address", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        String testData = "no_data";
-        String key = "audio";
-        String filePath = "/mnt/sdcard/Documents/test.txt";
-        File testFile = new File(filePath);
-        uploadButton.setOnClickListener(view -> {
-            try {
-                uploadFile(url, key, testFile);
-                Log.d(TAG, "Sending to web server!");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
+//        String testData = "no_data";
+//        String key = "audio";
+//        String filePath = "/mnt/sdcard/Documents/test.txt";
+//        File testFile = new File(filePath);
+//        uploadButton.setOnClickListener(view -> {
+//            try {
+////                uploadFile(url, key, testFile);
+//                Log.d(TAG, "Sending to web server!");
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        });
     }
 
     protected void onResume() {
@@ -202,10 +226,11 @@ public class ClientActivity extends AppCompatActivity {
             return;
         }
         Log.d(TAG, "=====SCAN STARTED=====");
-        listAddress.clear();
+//        listAddress.clear();
         List<ScanFilter> filters = new ArrayList<>();
         ScanFilter filter = new ScanFilter.Builder()
                 .setServiceUuid(new ParcelUuid(CUSTOM_SERVICE_UUID))
+                .setDeviceAddress(GattUtils.NUCLEO_MAC_ADDRESS)
                 .build();
         ScanSettings settings = new ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
@@ -219,7 +244,9 @@ public class ClientActivity extends AppCompatActivity {
         mBluetoothLeScanner.startScan(filters, settings, mScanCallback);
         mScanning = true;
         Toast.makeText(this, "Scanning", Toast.LENGTH_SHORT).show();
-        progressBar.setVisibility(View.VISIBLE);
+
+        scanProgressBar.setVisibility(View.INVISIBLE);
+//        progressBar.setVisibility(View.VISIBLE);
 
         // Handler stops the scan after 10 seconds in order to save power
         mHandler = new Handler();
@@ -237,7 +264,7 @@ public class ClientActivity extends AppCompatActivity {
         mScanning = false;
         mHandler = null;
         Toast.makeText(this, "Scanning Stopped", Toast.LENGTH_SHORT).show();
-        progressBar.setVisibility(View.INVISIBLE);
+        scanProgressBar.setVisibility(View.INVISIBLE);
     }
 
     // Performs any actions using the results, for now simply logs
@@ -264,15 +291,18 @@ public class ClientActivity extends AppCompatActivity {
         }
         return true;
     }
+
     private void requestBluetoothEnable() {
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         int REQUEST_ENABLE_BT = 1;
         startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         Log.d(TAG, "Requested user enables Bluetooth. Try starting the scan again.");
     }
+
     private boolean hasLocationPermissions() {
         return checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
+
     private void requestLocationPermission() {
         int REQUEST_FINE_LOCATION = 1;
         requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_FINE_LOCATION);
@@ -296,10 +326,13 @@ public class ClientActivity extends AppCompatActivity {
             mGatt.disconnect();
             mGatt.close();
             Log.d(TAG, "=====GATT SERVER DISCONNECTED=====");
+
+
         }
     }
 
-    /** Returns the speech detection result back to the Nucleo Board using BLE.
+    /**
+     * Returns the speech detection result back to the Nucleo Board using BLE.
      * TODO: Figure out a way to send this back through BLE. ATM the BLE classes are in ClientActivity.
      *
      * @param digit
@@ -311,8 +344,7 @@ public class ClientActivity extends AppCompatActivity {
         }
         BluetoothGattService service = mGatt.getService(CUSTOM_SERVICE_UUID);
 
-        // TODO: Change this to the "Spoken Digit" characteristic UUID.
-        BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHAR_AUDIO_UUID);
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHAR_DIGIT_UUID);
         byte[] messageBytes = new byte[0];
         // convert message to byte array
         try {
@@ -325,92 +357,91 @@ public class ClientActivity extends AppCompatActivity {
         boolean messageSuccess = mGatt.writeCharacteristic(characteristic);
         if (messageSuccess) {
             Log.i(TAG, "=====Message sent successfully!=====");
-        }
-        else  {
+        } else {
             Log.i(TAG, "=====Message failed!=====");
         }
     }
 
-    // Sending raw string
-    private void httpPostStringWeb(String url, String key, String data) {
-        ProgressDialog pDialog = new ProgressDialog(this);
-        pDialog.setMessage("Sending...");
-        pDialog.show();
-        StringRequest stringRequest = new StringRequest(
-            Request.Method.POST,
-            url,
-            response -> {
-                // Log the first 500 characters of the response string
-                Log.i(TAG, response);
-                pDialog.hide();
-            },
-            error -> {
-            // Log error
-            Log.e(TAG, "Request failure!");
-            pDialog.hide();
-            }){
-            @Override
-            protected Map<String, String> getParams() {
-                Map<String, String> params = new HashMap<>();
-                params.put(key,data);
-                return params;
-            }
-        };
-        AppController.getInstance().addToRequestQueue(stringRequest, AppController.TAG);
-    }
+//    // Sending raw string
+//    private void httpPostStringWeb(String url, String key, String data) {
+//        ProgressDialog pDialog = new ProgressDialog(this);
+//        pDialog.setMessage("Sending...");
+//        pDialog.show();
+//        StringRequest stringRequest = new StringRequest(
+//            Request.Method.POST,
+//            url,
+//            response -> {
+//                // Log the first 500 characters of the response string
+//                Log.i(TAG, response);
+//                pDialog.hide();
+//            },
+//            error -> {
+//            // Log error
+//            Log.e(TAG, "Request failure!");
+//            pDialog.hide();
+//            }){
+//            @Override
+//            protected Map<String, String> getParams() {
+//                Map<String, String> params = new HashMap<>();
+//                params.put(key,data);
+//                return params;
+//            }
+//        };
+//        AppController.getInstance().addToRequestQueue(stringRequest, AppController.TAG);
+//    }
 
-    // Encodes data in file to Base64 string, creates an http post request to url, and performs the request
-    private void uploadFile(String url, String key, File file) throws IOException {
-        ProgressDialog pDialog = new ProgressDialog(this);
-        pDialog.setMessage("Sending...");
-        pDialog.show();
+//    // Encodes data in file to Base64 string, creates an http post request to url, and performs the request
+//    private void uploadFile(String url, String key, File file) throws IOException {
+//        ProgressDialog pDialog = new ProgressDialog(this);
+//        pDialog.setMessage("Sending...");
+//        pDialog.show();
+//
+//        byte[] data = IOUtils.toByteArray(file.getAbsolutePath());
+//        String dataEncoding = Base64.encodeToString(data, Base64.DEFAULT);
+//
+//        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, response -> {
+//            Log.i(TAG, response);
+//            pDialog.hide();
+//        }, error -> {
+//            // Log error
+//            Log.e(TAG, "Request failure!");
+//            pDialog.hide();
+//        }) {
+//            @Override
+//            protected Map<String, String> getParams() {
+//                Map<String, String> params = new HashMap<>();
+//                params.put(key, dataEncoding);
+//                return params;
+//            }
+//        };
+//
+//        // Add request to queue to perform it
+//        AppController.getInstance().addToRequestQueue(stringRequest, AppController.TAG);
+//    }
 
-        byte[] data = IOUtils.toByteArray(file.getAbsolutePath());
-        String dataEncoding = Base64.encodeToString(data, Base64.DEFAULT);
 
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url, response -> {
-            Log.i(TAG, response);
-            pDialog.hide();
-        }, error -> {
-            // Log error
-            Log.e(TAG, "Request failure!");
-            pDialog.hide();
-        }) {
-            @Override
-            protected Map<String, String> getParams() {
-                Map<String, String> params = new HashMap<>();
-                params.put(key, dataEncoding);
-                return params;
-            }
-        };
-
-        // Add request to queue to perform it
-        AppController.getInstance().addToRequestQueue(stringRequest, AppController.TAG);
-    }
-
-
-    // Sending Json Object
-    private void httpPostJsonWeb(String url, String key, String data){
-        ProgressDialog pDialog = new ProgressDialog(this);
-        pDialog.setMessage("Sending...");
-                pDialog.show();
-        JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.POST, url, null,
-                response -> {
-                    Log.d(TAG, response.toString());
-                    pDialog.hide();
-                }, error -> {
-            Log.e(TAG, error.getMessage());
-            pDialog.hide();
-        }){
-            @Override
-            protected Map<String, String> getParams() {
-                Map<String, String> params = new HashMap<>();
-                params.put(key, data);
-                return params;
-            }
-        };
-        AppController.getInstance().addToRequestQueue(jsonObjReq, AppController.TAG);
-    }
+//    // Sending Json Object
+//    private void httpPostJsonWeb(String url, String key, String data){
+//        ProgressDialog pDialog = new ProgressDialog(this);
+//        pDialog.setMessage("Sending...");
+//                pDialog.show();
+//        JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.POST, url, null,
+//                response -> {
+//                    Log.d(TAG, response.toString());
+//                    pDialog.hide();
+//                }, error -> {
+//            Log.e(TAG, error.getMessage());
+//            pDialog.hide();
+//        }){
+//            @Override
+//            protected Map<String, String> getParams() {
+//                Map<String, String> params = new HashMap<>();
+//                params.put(key, data);
+//                return params;
+//            }
+//        };
+//        AppController.getInstance().addToRequestQueue(jsonObjReq, AppController.TAG);
+//    }
 
 
     private void sendFileToWebsite(boolean isMicRequest) throws JSONException, IOException {
@@ -430,7 +461,7 @@ public class ClientActivity extends AppCompatActivity {
                     if (isMicRequest) {
                         int digit = response.optInt("result", 0);
                         Log.i(TAG, "The API Returned the value '" + digit + "'");
-
+                        textBox.setText("The API Returned the value '" + digit + "'");
                         controller.closeMicFile();
                         this.sendMessage(digit);
 
@@ -455,8 +486,6 @@ public class ClientActivity extends AppCompatActivity {
         controller.addToRequestQueue(jsonObjReq, AppController.TAG);
     }
 
-
-
     /**
      * Handles BLE scanning callbacks
      * When scanning for devices
@@ -471,13 +500,25 @@ public class ClientActivity extends AppCompatActivity {
         public void onScanResult(int callbackType, ScanResult result) {
             BluetoothDevice device = result.getDevice();
             String deviceAddress = device.getAddress();
+
             if (deviceAddress.equals(NUCLEO_MAC_ADDRESS)) {
                 Log.i(TAG, "=====FOUND NUCLEO DEVICE=====");
                 Log.i(TAG, "Connecting automatically to nucleo device");
                 stopScan();
                 selectedAddress = deviceAddress;
                 selectedDevice = device;
-                toggleConnection.setChecked(true);
+
+                startScanButton.setText(R.string.nucleo_found);
+//                startScanButton.setPressed(true);
+//                startScanButton.setEnabled(false);
+
+                scanProgressBar.setVisibility(View.INVISIBLE);
+                textBox.setText("Awaiting a new batch of data");
+
+//                toggleConnection.setChecked(true);
+
+            } else {
+//                Log.i(TAG, "Found device with address: " + deviceAddress);
             }
             addScanResult(result);
         }
@@ -500,12 +541,12 @@ public class ClientActivity extends AppCompatActivity {
             BluetoothDevice device = result.getDevice();
             String deviceAddress = device.getAddress();
             mScanResults.put(deviceAddress, device);
-            if (!listAddress.contains(deviceAddress)) {
-                listAddress.add(deviceAddress);
-                arrayAdapter.notifyDataSetChanged();
-            }
-            Log.i(TAG, "=====RESULT ADDED=====");
-            Log.i(TAG, "Device Address: " + deviceAddress);
+//            if (!listAddress.contains(deviceAddress)) {
+//                listAddress.add(deviceAddress);
+//                arrayAdapter.notifyDataSetChanged();
+//            }
+//            Log.v(TAG, "=====RESULT ADDED=====");
+            Log.d(TAG, "Found Device at Address: " + deviceAddress);
         }
     }
 
@@ -517,6 +558,7 @@ public class ClientActivity extends AppCompatActivity {
      */
     private class GattClientCallback extends BluetoothGattCallback {
         private String key = "audio"; //audio be default
+
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
@@ -539,7 +581,8 @@ public class ClientActivity extends AppCompatActivity {
 
         /**
          * Handler for discovered services
-         * @param gatt Gatt session
+         *
+         * @param gatt   Gatt session
          * @param status Status
          */
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
@@ -564,17 +607,14 @@ public class ClientActivity extends AppCompatActivity {
                     int property = mCharacteristic.getProperties();
                     if ((property | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
                         setCharacteristicNotification(mCharacteristic, true);
-                    }
-                    else {
+                    } else {
                         Log.e(TAG, "Characteristic does not support notify!");
                     }
-                }
-                else if (mCharacteristic.getUuid().equals(CHAR_ACCEL_UUID)) {
+                } else if (mCharacteristic.getUuid().equals(CHAR_ACCEL_UUID)) {
                     int property = mCharacteristic.getProperties();
                     if ((property | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
                         setCharacteristicNotification(mCharacteristic, true);
-                    }
-                    else {
+                    } else {
                         Log.e(TAG, "Characteristic does not support notify!");
                     }
                 }
@@ -611,7 +651,7 @@ public class ClientActivity extends AppCompatActivity {
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
             descriptor.setValue(enabled ?
                     BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                    :BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+                    : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
             mDescriptorWritten = mGatt.writeDescriptor(descriptor);
 
             if (mDescriptorWritten) Log.i(TAG, "Descriptor write success!");
@@ -620,16 +660,17 @@ public class ClientActivity extends AppCompatActivity {
 
         /**
          * Writing to descriptor of characteristic.
-         *  Not sure about this: Need to write to Characteristic to tell the sensor to start
+         * Not sure about this: Need to write to Characteristic to tell the sensor to start
          * streaming data. Write a simple byte array that contains {1,1} that serves as a data streaming command.
          * Can also write to the device within this method. So if we want to write to the LED
          * service, can do so here.
-         * @param gatt Gatt session
+         *
+         * @param gatt       Gatt session
          * @param descriptor Descriptor written to
-         * @param status Status
+         * @param status     Status
          */
         @Override
-        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status){
+        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
 
             BluetoothGattService service = gatt.getService(CUSTOM_SERVICE_UUID);
             BluetoothGattCharacteristic audioCharacteristic = service.getCharacteristic(CHAR_AUDIO_UUID);
@@ -655,7 +696,8 @@ public class ClientActivity extends AppCompatActivity {
         /**
          * Reading notification from server
          * All updates from the sensor on characteristic value changes will be posted on this next callback
-         * @param gatt Gatt session
+         *
+         * @param gatt           Gatt session
          * @param characteristic Characteristic of service
          */
         @Override
@@ -675,11 +717,18 @@ public class ClientActivity extends AppCompatActivity {
 
 
                     MicBatch batch = MicBatch.fromBytes(bytes);
+                    controllerInstance.addMicBatch(batch);
 
-                    boolean done = controllerInstance.addMicBatch(batch);
+                    int count = controllerInstance.getMicSampleCount();
+                    boolean done = (count == MIC_SAMPLE_COUNT);
 
-                    if(done){
+
+                    micProgressBar.setProgress(count);
+
+                    if (done) {
                         sendFileToWebsite(true);
+                    } else {
+                        textBox.setText("Audio data:" + Arrays.toString(bytes));
                     }
 
                 } else if (characteristic.getUuid().equals(CHAR_ACCEL_UUID)) {
@@ -687,13 +736,21 @@ public class ClientActivity extends AppCompatActivity {
                     Log.d(TAG, "Received bytes: " + Arrays.toString(bytes));
 
                     AccBatch batch = AccBatch.fromBytes(bytes);
+                    controllerInstance.addAccBatch(batch);
 
-                    boolean done = controllerInstance.addAccBatch(batch);
+                    int count = controllerInstance.getAccSampleCount();
+                    boolean done = (count == ACC_SAMPLE_COUNT);
 
-                    if(done){
+                    accProgressBar.setProgress(count);
+
+                    if (done) {
                         // If we have one full file.
                         sendFileToWebsite(false);
+                    } else {
+                        textBox.setText("Pitch: " + Arrays.toString(batch.pitch) +
+                                "\n" + "Roll: " + Arrays.toString(batch.roll));
                     }
+
                 } else {
                     Log.e(TAG, "Unrecognized characteristic!");
                     Log.d(TAG, "Received bytes: " + Arrays.toString(bytes));

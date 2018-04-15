@@ -1,5 +1,5 @@
 #include "custom_service.h"
-
+#include "main.h"
 uint8_t sample_char_value;
 volatile int connected = FALSE;
 volatile uint8_t set_connectable = 1;
@@ -58,7 +58,14 @@ tBleStatus Add_Custom_Acc_Service(void)
   uint8_t uuid[16];
   
 	
-
+	/** List of all the return codes for ac_gatt_add_serv
+	*0x00: Success
+	*0x47: Error
+	*0x1F: Out of memory
+	*0x61: Invalid parameter
+	*0x62: Out of handle
+	*0x64: Insufficient resources
+	*/
 	
 	// ----------- Adding the service.
   COPY_CUSTOM_SERVICE_UUID(uuid);
@@ -71,7 +78,7 @@ tBleStatus Add_Custom_Acc_Service(void)
 		&custom_service_handle
 	);
   if (ret != BLE_STATUS_SUCCESS){
-		printf("Error while adding the Custom Service.\n");
+		printf("Error while adding the Custom Service. (Errorcode %X)\n", ret);
 		goto fail;    
 	}  
 	
@@ -265,14 +272,14 @@ tBleStatus mic_update(MicBatch* mic_batch){
  *
  */
 void setConnectable(void)
-{  
+{
   tBleStatus ret;
   // (0x09) 'G', 'X', 'X'
-  const char local_name[] = {AD_TYPE_COMPLETE_LOCAL_NAME,'B','l','u','e','N','R','G'};
+  const char local_name[] = {AD_TYPE_COMPLETE_LOCAL_NAME, NAME};
   
   /* disable scan response */
   hci_le_set_scan_resp_data(0,NULL);
-  PRINTF("General Discoverable Mode.\n");
+  printf("General Discoverable Mode. Local name:\t'%s\n", local_name);
   
   ret = aci_gap_set_discoverable(ADV_IND, 0, 0, PUBLIC_ADDR, NO_WHITE_LIST_USE,
                                  sizeof(local_name), local_name, 0, NULL, 0, 0);

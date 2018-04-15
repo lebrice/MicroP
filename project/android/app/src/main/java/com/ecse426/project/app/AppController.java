@@ -53,6 +53,10 @@ public class AppController extends Application {
     public static final String ACC_FILE_PATH = Environment.getExternalStorageDirectory().getPath() + "/Documents/acc.csv";
 
     private int accSampleCount = 0;
+    public int getAccSampleCount(){
+        return accSampleCount;
+    }
+
 
     private File accFile = null;
     private FileOutputStream accFileOutputStream;
@@ -69,6 +73,9 @@ public class AppController extends Application {
     public static final String MIC_FILE_PATH = Environment.getExternalStorageDirectory().getPath() + "Documents/audio.wav";
 
     private static int micSampleCount = 0;
+    public int getMicSampleCount(){
+        return micSampleCount;
+    }
 
     private static File micFile = null;
     private static FileOutputStream micFileOutputStream;

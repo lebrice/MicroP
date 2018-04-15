@@ -5,7 +5,7 @@ android {
     compileSdkVersion 26
     defaultConfig {
         applicationId "com.ecse426.project"
-        minSdkVersion 26
+        minSdkVersion 23
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
@@ -29,14 +29,14 @@ android {
     }
     productFlavors {
     }
-    splits {
-        abi {
-            enable true
-            reset()
-            include 'x86', 'armeabi-v7a'
-            universalApk true
-        }
-    }
+//    splits {
+//        abi {
+//            enable true
+//            reset()
+//            include 'x86', 'armeabi-v7a'
+//            universalApk true
+//        }
+//    }
 
 }
 
@@ -44,12 +44,12 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
-    testImplementation 'junit:junit:4.12'
+    //testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    //androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     implementation 'com.android.volley:volley:1.0.0'
-    implementation 'org.apache.httpcomponents:httpcore:4.4.1'
-    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
-    implementation 'org.apache.httpcomponents:httpmime:4.4.1'
-    implementation 'org.apache.directory.studio:org.apache.commons.io:2.4'
+    //implementation 'org.apache.httpcomponents:httpcore:4.4.1'
+    //implementation 'com.squareup.okhttp3:okhttp:3.10.0'
+    //implementation 'org.apache.httpcomponents:httpmime:4.4.1'
+    //implementation 'org.apache.directory.studio:org.apache.commons.io:2.4'
 }

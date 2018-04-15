@@ -81,6 +81,10 @@ void UART_Init(void);
 void GPIO_Init(void);
 UART_HandleTypeDef huart2;
 
+const char name[] = {NAME};
+
+
+
 /**
  * @}
  */
@@ -119,8 +123,8 @@ UART_HandleTypeDef huart2;
  */
 int main(void)
 {	
-  const char *name = "BlueNRG";
-  uint8_t SERVER_BDADDR[] = {0x12, 0x34, 0x00, 0xE1, 0x80, 0x03};
+  
+  uint8_t SERVER_BDADDR[] = {0x66, 0x55, 0x44, 0x33, 0x22, 0x11};
   uint8_t bdaddr[BDADDR_SIZE];
   uint16_t service_handle, dev_name_char_handle, appearance_char_handle;
   

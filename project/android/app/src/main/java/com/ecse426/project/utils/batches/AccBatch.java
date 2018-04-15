@@ -1,12 +1,17 @@
 package com.ecse426.project.utils.batches;
 
+import android.util.Log;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import static com.ecse426.project.app.AppController.ACC_BYTES_PER_BATCH;
 import static com.ecse426.project.app.AppController.ACC_SAMPLES_PER_BATCH;
+import static com.ecse426.project.app.AppController.BLE_MAX_DATA_BYTES;
 
 public class AccBatch extends Object {
+
+    private static final String TAG = "AccBatch";
     public static boolean BIG_ENDIAN = true;
 
     public float[] pitch;
@@ -20,9 +25,12 @@ public class AccBatch extends Object {
 
 
     public static AccBatch fromBytes(byte[] bytes) {
-        ByteBuffer buffer = ByteBuffer.allocate(ACC_BYTES_PER_BATCH);
+        ByteBuffer buffer = ByteBuffer.allocate(BLE_MAX_DATA_BYTES);
         buffer.order(BIG_ENDIAN ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
 
+        if(bytes.length >= BLE_MAX_DATA_BYTES){
+            Log.e(TAG, "Too many bytes to buffer!");
+        }
         // add all the bytes in source.
         buffer.put(bytes);
 
