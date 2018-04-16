@@ -33,6 +33,8 @@ saved_model_dir = f"{current_dir}/saved_model/"
 
 message = "Newman"
 
+starttime = ""
+
 @app.route("/microp")
 def greetings():
     return render_template('index.html', message=message)
@@ -42,7 +44,7 @@ def acc():
     with open("data.csv", 'r') as f:
         dataset = tablib.Dataset()
         dataset.csv = f.read()
-    return render_template('accelerometer.html', data=dataset.html)
+    return render_template('accelerometer.html', data=dataset.html, starttime=starttime)
 
 class Home(Resource):
     def get(self):
@@ -128,11 +130,14 @@ class Speech(Resource):
 
 class Accelerometer(Resource):
     def post(self):
+        global starttime
         print("GOT POST FOR ACC DATA")
           # Read the image file from the request
+        os.remove("data.csv")
         csv = open("data.csv", 'w')
         csv.write("Pitch, Roll\n")
         numbers = request.form["accelerometer"][1:-2]
+        starttime = request.form["starttime"]
         count = 0
         pitches = []
         rolls = []
@@ -154,6 +159,7 @@ class Accelerometer(Resource):
 
         xs = range(len(pitches))
         os.remove("static/graph.png")
+        plt.clf()
         plt.plot(xs, pitches)
         plt.plot(xs, rolls)
         plt.legend(["Pitch", "Roll"])
