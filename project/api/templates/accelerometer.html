@@ -1,8 +1,35 @@
 <html>
 	<head>
+		<style>
+			.csv {
+				border-style: solid;
+				border-width: 2px;
+				border-color: red;
+				display: inline-block;
+				min-width: 240px;
+				height: 486px;
+				overflow: auto;
+			}
+			img {
+				border-style: solid;
+				border-width: 5px;
+			}
+			tr:nth-of-type(odd) {
+				background-color: #bbbbbb;
+			}
+			body {
+				margin: 100px;
+				text-align: center;
+			}
+		</style>
 	</head>
 	<body>
 		<h1>Here's your graph of Pitch and Roll</h1><br>
 		<img src="static/graph.png"></img>
+		<div class="csv">
+			<div class="table">
+				{{data | safe}}
+			</div>
+		</div>
 	</body>
 </html>

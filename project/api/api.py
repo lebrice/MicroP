@@ -5,6 +5,7 @@ from flask_restful import Resource, Api
 import matplotlib.pyplot as plt
 import json
 import tensorflow as tf
+import tablib
 from typing import List, Dict, Tuple
 import numpy as np
 app = Flask(__name__)
@@ -38,7 +39,10 @@ def greetings():
 
 @app.route("/accelerometer")
 def acc():
-    return render_template('accelerometer.html')
+    with open("data.csv", 'r') as f:
+        dataset = tablib.Dataset()
+        dataset.csv = f.read()
+    return render_template('accelerometer.html', data=dataset.html)
 
 class Home(Resource):
     def get(self):
@@ -127,6 +131,7 @@ class Accelerometer(Resource):
         print("GOT POST FOR ACC DATA")
           # Read the image file from the request
         csv = open("data.csv", 'w')
+        csv.write("Pitch, Roll\n")
         numbers = request.form["accelerometer"][1:-2]
         count = 0
         pitches = []
@@ -146,6 +151,7 @@ class Accelerometer(Resource):
             csv.write("0.0\n")
             rolls.append(float(val))
         csv.close()
+
         xs = range(len(pitches))
         os.remove("static/graph.png")
         plt.plot(xs, pitches)
