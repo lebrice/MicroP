@@ -32,12 +32,15 @@ void pipeline(void){
 		printf("Received Sample of  Microphone data!\n");
 		
 		uint16_t offset = 0;
-		for(int i = 0; i < MIC_BATCH_COUNT; i++, offset += MIC_SAMPLES_PER_BATCH) {
+		int k = 0;
+		for(int i = 0; i < MIC_BATCH_COUNT; i++) {
 			for(int j = 0; j < MIC_SAMPLES_PER_BATCH; j++) {
 				mic_batch.data[j] = mic_buffer.data[j + offset];
 			}
+			offset += MIC_SAMPLES_PER_BATCH;
 			// Send the batch via BLE
-			printf("i : %d\n",i);
+			k++;
+			printf("k : %d\n",k);
 			printf("Sending MIC Batch #%d / %d\n", i, MIC_BATCH_COUNT);
 			mic_update(&mic_batch);
 			

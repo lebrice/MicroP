@@ -475,6 +475,16 @@
               <FileType>5</FileType>
               <FilePath>..\Src\LIS3DSH.h</FilePath>
             </File>
+            <File>
+              <FileName>blinker.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\blinker.c</FilePath>
+            </File>
+            <File>
+              <FileName>blinker.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Src\blinker.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

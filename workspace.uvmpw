@@ -31,6 +31,7 @@
 
   <project>
     <PathAndName>.\project\discovery_new\MDK-ARM\discovery.uvprojx</PathAndName>
+    <NodeIsExpanded>1</NodeIsExpanded>
   </project>
 
 </ProjectWorkspace>
