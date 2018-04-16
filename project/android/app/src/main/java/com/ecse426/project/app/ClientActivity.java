@@ -36,7 +36,10 @@ import android.widget.ViewAnimator;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.ecse426.project.microp.R;
 import com.ecse426.project.utils.GattUtils;
 import com.ecse426.project.utils.batches.AccBatch;
@@ -46,6 +49,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -91,6 +96,9 @@ public class ClientActivity extends AppCompatActivity {
     private ProgressBar accProgressBar;
     private ProgressBar micProgressBar;
 
+	private int accCount;
+	private float accs[];
+
 
     private ProgressBar scanProgressBar;
     //    private ListView listView;
@@ -112,13 +120,17 @@ public class ClientActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.client_activity);
-
         // Setup BLE in Activity
         Log.d(TAG, "BLE Setting up");
         bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager != null ? bluetoothManager.getAdapter() : null;
         Log.d(TAG, "BLE Set up");
 
+		accs = new float[10000];
+		for(int c = 0; c < 10000; c++) {
+			accs[c] = 0.0f;
+		}
+		accCount = 0;
         // Getting Views from Layout
 //        listView = findViewById(R.id.list_address);
         accProgressBar = findViewById(R.id.acc_progress_bar);
@@ -161,7 +173,7 @@ public class ClientActivity extends AppCompatActivity {
         // Click Listeners for start and stop scan buttons
         startScanButton.setOnClickListener(v -> {
             startScan();
-            Log.d(TAG, "Start Scan button clicked");
+            Log.d(TAG, "[BLE] Start Scan button clicked");
             scanProgressBar.setVisibility(View.VISIBLE);
             startScanButton.setText(R.string.find_nucleo);
             textAddress.setText("");
@@ -228,7 +240,7 @@ public class ClientActivity extends AppCompatActivity {
         if (!hasPermissions() || mScanning) {
             return;
         }
-        Log.d(TAG, "=====SCAN STARTED=====");
+        Log.d(TAG, "[BLE] =====SCAN STARTED=====");
 //        listAddress.clear();
         List<ScanFilter> filters = new ArrayList<>();
         ScanFilter filter = new ScanFilter.Builder()
@@ -261,7 +273,7 @@ public class ClientActivity extends AppCompatActivity {
             mBluetoothLeScanner.stopScan(mScanCallback);
             scanComplete();
         }
-        Log.d(TAG, "=====SCAN STOPPED=====");
+        Log.d(TAG, "[BLE] =====SCAN STOPPED=====");
         Log.d(TAG, "Scan Stopped!");
         mScanCallback = null;
         mScanning = false;
@@ -276,19 +288,19 @@ public class ClientActivity extends AppCompatActivity {
             return;
         }
         for (String deviceAddress : mScanResults.keySet()) {
-            Log.v(TAG, "Found device: " + deviceAddress);
+            Log.v(TAG, "[BLE] Found device: " + deviceAddress);
         }
-        Log.d(TAG, "=====SCAN COMPLETE=====");
+        Log.d(TAG, "[BLE] =====SCAN COMPLETE=====");
     }
 
     // To check for permissions, and ask to enable them if disabled
     private boolean hasPermissions() {
         if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
-            Log.d(TAG, "=====PERMISSIONS REQUIRED=====");
+            Log.d(TAG, "[BLE] =====PERMISSIONS REQUIRED=====");
             requestBluetoothEnable();
             return false;
         } else if (!hasLocationPermissions()) {
-            Log.d(TAG, "=====PERMISSIONS REQUIRED=====");
+            Log.d(TAG, "[BLE] =====PERMISSIONS REQUIRED=====");
             requestLocationPermission();
             return false;
         }
@@ -299,7 +311,7 @@ public class ClientActivity extends AppCompatActivity {
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         int REQUEST_ENABLE_BT = 1;
         startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-        Log.d(TAG, "Requested user enables Bluetooth. Try starting the scan again.");
+        Log.d(TAG, "[BLE] Requested user enables Bluetooth. Try starting the scan again.");
     }
 
     private boolean hasLocationPermissions() {
@@ -318,7 +330,7 @@ public class ClientActivity extends AppCompatActivity {
     private void connectDevice(BluetoothDevice device) {
         GattClientCallback gattClientCallback = new GattClientCallback();
         mGatt = device.connectGatt(this, false, gattClientCallback);
-        Log.d(TAG, "=====GATT SERVER CONNECTED=====");
+        Log.d(TAG, "[BLE] =====GATT SERVER CONNECTED=====");
         Toast.makeText(this, "Connecting to " + selectedAddress, Toast.LENGTH_SHORT).show();
     }
 
@@ -328,7 +340,7 @@ public class ClientActivity extends AppCompatActivity {
         if (mGatt != null) {
             mGatt.disconnect();
             mGatt.close();
-            Log.d(TAG, "=====GATT SERVER DISCONNECTED=====");
+            Log.d(TAG, "[BLE] =====GATT SERVER DISCONNECTED=====");
 
 
         }
@@ -342,7 +354,7 @@ public class ClientActivity extends AppCompatActivity {
      */
     private void sendMessage(int digit) {
         if (!mConnected && !mInitialized) {
-            Log.e(TAG, "Trying to send a message, but there is not BLE connection!.");
+            Log.e(TAG, "[BLE] Trying to send a message, but there is not BLE connection!.");
             return;
         }
         BluetoothGattService service = mGatt.getService(CUSTOM_SERVICE_UUID);
@@ -353,15 +365,15 @@ public class ClientActivity extends AppCompatActivity {
         try {
             messageBytes = Integer.toString(digit).getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
-            Log.e(TAG, "Failed to convert message string to byte array");
+            Log.e(TAG, "[BLE] Failed to convert message string to byte array");
         }
         // Send message by writing to the characteristic
         characteristic.setValue(messageBytes);
         boolean messageSuccess = mGatt.writeCharacteristic(characteristic);
         if (messageSuccess) {
-            Log.i(TAG, "=====Message sent successfully!=====");
+            Log.i(TAG, "[BLE] =====Message sent successfully!=====");
         } else {
-            Log.i(TAG, "=====Message failed!=====");
+            Log.i(TAG, "[BLE] =====Message failed!=====");
         }
     }
 
@@ -450,41 +462,86 @@ public class ClientActivity extends AppCompatActivity {
     private void sendFileToWebsite(boolean isMicRequest) throws JSONException, IOException {
         AppController controller = AppController.getInstance();
 
+//		JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, "http://142.157.82.160:5000/microp",null, 
+//				new Response.Listener<JSONObject>() {
+//					@Override
+//					public void onResponse(JSONObject response) {
+//						Log.d(TAG, "[BLE] GOT RESPONSE!!!");
+//					}
+//				},
+//				new Response.ErrorListener() {
+//					@Override
+//					public void onErrorResponse(VolleyError error) {
+//						Log.d(TAG, "[BLE] GOT ERROR: " + error);
+//					}
+//				}
+//		);
+//		controller.addToRequestQueue(getRequest);
 
         JSONObject requestJson = new JSONObject();
-        String encodedFile = controller.getEncodedFile(isMicRequest);
-        requestJson.put("accelerometer", encodedFile);
+//        String encodedFile = controller.getEncodedFile(isMicRequest);
+//        requestJson.put("accelerometer", encodedFile);
+        requestJson.put("accelerometer", accs);
         // Create the request.
-        JsonObjectRequest jsonObjReq = new JsonObjectRequest(
-                Request.Method.POST,
-                isMicRequest ? MIC_ENDPOINT_URL : ACC_ENDPOINT_URL,
-                requestJson,
-                response -> {
-                    Log.d(TAG, "SUCCESS: " + response.toString());
-                    if (isMicRequest) {
-                        int digit = response.optInt("result", 0);
-                        Log.i(TAG, "The API Returned the value '" + digit + "'");
-                        textBox.setText("The API Returned the value '" + digit + "'");
-                        controller.closeMicFile();
-                        this.sendMessage(digit);
+//        JsonObjectRequest jsonObjReq = new JsonObjectRequest(
+//                Request.Method.POST,
+//                isMicRequest ? "http://" + MIC_ENDPOINT_URL : "http://" + ACC_ENDPOINT_URL,
+//                requestJson,
+//                response -> {
+//                    Log.d(TAG, "SUCCESS: " + response.toString());
+//                    if (isMicRequest) {
+//                        int digit = response.optInt("result", 0);
+//                        Log.i(TAG, "The API Returned the value '" + digit + "'");
+//                        textBox.setText("The API Returned the value '" + digit + "'");
+//                        controller.closeMicFile();
+//                        this.sendMessage(digit);
+//
+//                    } else {
+//                        controller.closeAccFile();
+//                    }
+//
+//                },
+//                error -> {
+//                    Log.e(TAG, "ERROR: " + error.getMessage());
+//                    if (isMicRequest) {
+//                        this.sendMessage(0);
+//                    }
+//                });
+//
+////         Change the default timeout.
+//        jsonObjReq.setRetryPolicy(new DefaultRetryPolicy(
+//                30 * 1000, // 30 secs.
+//                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+//                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
-                    } else {
-                        controller.closeAccFile();
-                    }
+		StringRequest jsonObjReq = new StringRequest(Request.Method.POST, "http://" + ACC_ENDPOINT_URL,
+				new Response.Listener<String>() {
+					@Override
+					public void onResponse(String response) {
+						Log.d(TAG, "[BLE] got response");
+					}
+				},
+				new Response.ErrorListener() {
+					@Override
+					public void onErrorResponse(VolleyError error) {
+						Log.d(TAG, "[BLE] got error: " + error);
+					}
+				}
+		){
+			@Override
+			protected Map<String, String> getParams() {
+				Map<String, String> params = new HashMap<String, String>();
+				params.put("accelerometer", Arrays.toString(accs));
+				return params;
+			}
 
-                },
-                error -> {
-                    Log.e(TAG, "ERROR: " + error.getMessage());
-                    if (isMicRequest) {
-                        this.sendMessage(0);
-                    }
-                });
-
-        // Change the default timeout.
-        jsonObjReq.setRetryPolicy(new DefaultRetryPolicy(
-                30 * 1000, // 30 secs.
-                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+			@Override
+			public Map<String, String> getHeaders() {
+				Map<String, String> headers = new HashMap<String, String>();
+				headers.put("Content-Type", "multipart/form-data");
+				return headers;
+			}
+		};
 
         controller.addToRequestQueue(jsonObjReq, AppController.TAG);
     }
@@ -505,8 +562,8 @@ public class ClientActivity extends AppCompatActivity {
             String deviceAddress = device.getAddress();
 
             if (deviceAddress.equals(NUCLEO_MAC_ADDRESS)) {
-                Log.i(TAG, "=====FOUND NUCLEO DEVICE=====");
-                Log.i(TAG, "Connecting automatically to nucleo device");
+                Log.i(TAG, "[BLE] =====FOUND NUCLEO DEVICE=====");
+                Log.i(TAG, "[BLE] Connecting automatically to nucleo device");
                 stopScan();
                 selectedAddress = deviceAddress;
                 selectedDevice = device;
@@ -514,7 +571,7 @@ public class ClientActivity extends AppCompatActivity {
                 String deviceText = "Device MAC Address: " + selectedAddress;
                 textAddress.setText(deviceText);
                 textAddress.invalidate();
-
+				connectDevice(device);
                 startScanButton.setText(R.string.nucleo_found);
 //                startScanButton.setPressed(true);
 //                startScanButton.setEnabled(false);
@@ -532,7 +589,7 @@ public class ClientActivity extends AppCompatActivity {
 
         @Override
         public void onBatchScanResults(List<ScanResult> results) {
-            Log.i(TAG, "=====MULTIPLE DEVICES FOUND=====");
+            Log.i(TAG, "[BLE] =====MULTIPLE DEVICES FOUND=====");
             for (ScanResult result : results) {
                 addScanResult(result);
             }
@@ -540,8 +597,8 @@ public class ClientActivity extends AppCompatActivity {
 
         @Override
         public void onScanFailed(int errorCode) {
-            Log.e(TAG, "=====SCAN FAILED=====");
-            Log.e(TAG, "BLE Scan Failed with code " + errorCode);
+            Log.e(TAG, "[BLE] =====SCAN FAILED=====");
+            Log.e(TAG, "[BLE] BLE Scan Failed with code " + errorCode);
         }
 
         private void addScanResult(ScanResult result) {
@@ -553,7 +610,7 @@ public class ClientActivity extends AppCompatActivity {
 //                arrayAdapter.notifyDataSetChanged();
 //            }
 //            Log.v(TAG, "=====RESULT ADDED=====");
-            Log.v(TAG, "Found Device at Address: " + deviceAddress);
+            Log.v(TAG, "[BLE] Found Device at Address: " + deviceAddress);
         }
     }
 
@@ -571,17 +628,20 @@ public class ClientActivity extends AppCompatActivity {
             super.onConnectionStateChange(gatt, status, newState);
             // Any other status than Success should be handled as an error and the client should be disconnected.
             if (status == BluetoothGatt.GATT_FAILURE) {
+				Log.d(TAG, "[BLE] [ConnectionStateChange] GATT_FAILURE");
                 disconnectGattServer();
                 return;
             } else if (status != BluetoothGatt.GATT_SUCCESS) {
+				Log.d(TAG, "[BLE] [ConnectionStateChange] GATT didn't succeed");
                 disconnectGattServer();
                 return;
             }
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 mConnected = true;
                 gatt.discoverServices();
-                Log.i(TAG, "=====Connected to Bluetooth Device=====");
+                Log.i(TAG, "[BLE] =====Connected to Bluetooth Device=====");
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+				Log.d(TAG, "[BLE] [ConnectionStateChange] STATE_DISCONNECTED");
                 disconnectGattServer();
             }
         }
@@ -595,7 +655,7 @@ public class ClientActivity extends AppCompatActivity {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             super.onServicesDiscovered(gatt, status);
             if (status != BluetoothGatt.GATT_SUCCESS) {
-                Log.d(TAG, "=====Bluetooth discover services failed=====");
+                Log.d(TAG, "[BLE] =====Bluetooth discover services failed=====");
                 return;
             }
 
@@ -605,7 +665,7 @@ public class ClientActivity extends AppCompatActivity {
              */
             BluetoothGattService service = gatt.getService(CUSTOM_SERVICE_UUID);
             List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
-            Log.i(TAG, "=====Bluetooth service discovered! Successfully connected!=====");
+            Log.i(TAG, "[BLE] =====Bluetooth service discovered! Successfully connected!=====");
 
             // Enable notification property for audio and accel characteristics. Will seem as a constant stream of data.
             for (BluetoothGattCharacteristic mCharacteristic : characteristics) {
@@ -614,15 +674,17 @@ public class ClientActivity extends AppCompatActivity {
                     int property = mCharacteristic.getProperties();
                     if ((property | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
                         setCharacteristicNotification(mCharacteristic, true);
+						Log.d(TAG, "[BLE] Found microphone characteristic");
                     } else {
-                        Log.e(TAG, "Characteristic does not support notify!");
+                        Log.e(TAG, "[BLE] Characteristic does not support notify!");
                     }
                 } else if (mCharacteristic.getUuid().equals(CHAR_ACCEL_UUID)) {
                     int property = mCharacteristic.getProperties();
                     if ((property | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
                         setCharacteristicNotification(mCharacteristic, true);
+						Log.d(TAG, "[BLE] Found accelerometer characteristic");
                     } else {
-                        Log.e(TAG, "Characteristic does not support notify!");
+                        Log.e(TAG, "[BLE] Characteristic does not support notify!");
                     }
                 }
             }
@@ -646,14 +708,14 @@ public class ClientActivity extends AppCompatActivity {
         // Enable notify characteristic and write to descriptor
         private void setCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enabled) {
             if (mBluetoothAdapter == null || mGatt == null) {
-                Log.w(TAG, "BluetoothAdapter not initialized");
+                Log.w(TAG, "[BLE] BluetoothAdapter not initialized");
                 return;
             }
 
             // Signifies that our characteristic is fully ready to use
             mInitialized = mGatt.setCharacteristicNotification(characteristic, enabled);
-            if (mInitialized) Log.i(TAG, "Characteristic notify success!");
-            else Log.e(TAG, "Characteristic notify failure!");
+            if (mInitialized) Log.i(TAG, "[BLE] Characteristic notify success!");
+            else Log.e(TAG, "[BLE] Characteristic notify failure!");
 
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
             descriptor.setValue(enabled ?
@@ -661,8 +723,8 @@ public class ClientActivity extends AppCompatActivity {
                     : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
             mDescriptorWritten = mGatt.writeDescriptor(descriptor);
 
-            if (mDescriptorWritten) Log.i(TAG, "Descriptor write success!");
-            else Log.e(TAG, "Descriptor write failure!");
+            if (mDescriptorWritten) Log.i(TAG, "[BLE] Descriptor write success!");
+            else Log.e(TAG, "[BLE] Descriptor write failure!");
         }
 
         /**
@@ -678,7 +740,7 @@ public class ClientActivity extends AppCompatActivity {
          */
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-
+			Log.d(TAG, "[BLE] onDescriptorWrite ----------------");
             BluetoothGattService service = gatt.getService(CUSTOM_SERVICE_UUID);
             BluetoothGattCharacteristic audioCharacteristic = service.getCharacteristic(CHAR_AUDIO_UUID);
             BluetoothGattCharacteristic accelCharacteristic = service.getCharacteristic(CHAR_ACCEL_UUID);
@@ -693,8 +755,8 @@ public class ClientActivity extends AppCompatActivity {
 
             for (BluetoothGattCharacteristic characteristic : characteristics) {
                 mCharacteristicWritten = gatt.writeCharacteristic(characteristic);
-                if (mCharacteristicWritten) Log.i(TAG, "Write to characteristic success!");
-                else Log.e(TAG, "Characteristic write failure!");
+                if (mCharacteristicWritten) Log.i(TAG, "[BLE] Write to characteristic success!");
+                else Log.e(TAG, "[BLE] Characteristic write failure!");
             }
 
 
@@ -719,8 +781,8 @@ public class ClientActivity extends AppCompatActivity {
 
             try {
                 if (characteristic.getUuid().equals(CHAR_AUDIO_UUID)) {
-                    Log.i(TAG, "Received Mic Batch!");
-                    Log.d(TAG, "Received bytes: " + Arrays.toString(bytes));
+                    Log.i(TAG, "[BLE] Received Mic Batch!");
+                    Log.d(TAG, "[BLE] Received bytes: " + Arrays.toString(bytes));
 
 
                     MicBatch batch = MicBatch.fromBytes(bytes);
@@ -739,32 +801,47 @@ public class ClientActivity extends AppCompatActivity {
                     }
 
                 } else if (characteristic.getUuid().equals(CHAR_ACCEL_UUID)) {
-                    Log.i(TAG, "Received Acc Batch");
-                    Log.d(TAG, "Received bytes: " + Arrays.toString(bytes));
+                    Log.i(TAG, "[BLE] Received Acc Batch");
+                    Log.d(TAG, "[BLE] Received the following bytes: " + Arrays.toString(bytes));
+					
+					byte newf[] = new byte[4];
+					for(int c = 0; c < bytes.length/4; c++) {
+						for(int i = 0; i < 4; i++) {
+							if(4 * c + i < bytes.length) newf[i] = bytes[4*c+i];
+							else newf[i] = 0;
+						}
+						accs[accCount++] = ByteBuffer.wrap(newf).order(ByteOrder.BIG_ENDIAN).getFloat();
+					}
 
-                    AccBatch batch = AccBatch.fromBytes(bytes);
-                    controllerInstance.addAccBatch(batch);
-
-                    int count = controllerInstance.getAccSampleCount();
-                    boolean done = (count == ACC_SAMPLE_COUNT);
+//                    AccBatch batch = AccBatch.fromBytes(bytes);
+//                    controllerInstance.addAccBatch(batch);
+//                    controllerInstance.addAccBatch(null);
+//					Log.d(TAG, "[BLE] Adding batch...");
+//
+//                    int count = controllerInstance.getAccSampleCount();
+                    boolean done = (accCount >= 1000);
+//                    boolean done = (accCount == ACC_SAMPLE_COUNT);
 
 //                    accProgressBar.setProgress(count);
 
                     if (done) {
                         // If we have one full file.
+						Log.d(TAG, "[BLE] Sending to website");
                         sendFileToWebsite(false);
+						accCount = 0;
                     } else {
+						Log.d(TAG, "[BLE] Didn't receive all batches (" + accCount + "/" + ACC_SAMPLE_COUNT + ")");
 //                        textBox.setText("Pitch: " + Arrays.toString(batch.pitch) +
 //                                "\n" + "Roll: " + Arrays.toString(batch.roll));
                     }
 
                 } else {
-                    Log.e(TAG, "Unrecognized characteristic!");
-                    Log.d(TAG, "Received bytes: " + Arrays.toString(bytes));
+                    Log.e(TAG, "[BLE] Unrecognized characteristic!");
+                    Log.d(TAG, "[BLE] Received bytes: " + Arrays.toString(bytes));
                 }
             } catch (IOException | JSONException e) {
                 e.printStackTrace();
-                Log.e(TAG, "Exception occured while trying to add a batch\n");
+                Log.e(TAG, "[BLE] Exception occured while trying to add a batch\n");
             }
         }
     }

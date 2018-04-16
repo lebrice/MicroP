@@ -31,7 +31,7 @@ import java.nio.file.Paths;
 
 public class AppController extends Application {
     // TODO: CHANGE ME.
-    public static final String WEBSITE_ADDRESS = "12.34.56.78:5000";
+    public static final String WEBSITE_ADDRESS = "142.157.82.160:5000";
 
     public static final String ACC_ENDPOINT_URL = WEBSITE_ADDRESS + "/accelerometer/";
     public static final String MIC_ENDPOINT_URL = WEBSITE_ADDRESS + "/speech/";
@@ -137,7 +137,11 @@ public class AppController extends Application {
     }
 
     public boolean addAccBatch(AccBatch batch) throws IOException {
-        Log.i(TAG, "Received ACC Batch!  (Sample count: " + this.accSampleCount + "/" + ACC_SAMPLE_COUNT + ").");
+		if(batch == null) {
+			this.accSampleCount += ACC_SAMPLE_COUNT;
+			return true;
+		}
+        Log.i(TAG, "[BLE] Received ACC Batch!  (Sample count: " + this.accSampleCount + "/" + ACC_SAMPLE_COUNT + ").");
 
         if (this.accSampleCount == 0) {
             this.createAccFile();
@@ -168,7 +172,7 @@ public class AppController extends Application {
      * @return
      */
     public boolean addMicBatch(MicBatch batch) throws IOException {
-        Log.i(TAG, "Received ACC Batch!  (Sample count: " + this.accSampleCount + "/" + ACC_SAMPLE_COUNT + ").");
+        Log.i(TAG, "[BLE] Received MIC Batch!  (Sample count: " + this.accSampleCount + "/" + ACC_SAMPLE_COUNT + ").");
 
         if (micSampleCount == 0) {
             // if this is the first sample, create a new file for holding microphone data.
@@ -215,11 +219,13 @@ public class AppController extends Application {
     public <T> void addToRequestQueue(Request<T> req, String tag) {
         // set the default tag if tag is empty
         req.setTag(TextUtils.isEmpty(tag) ? TAG : tag);
+		Log.d(TAG, "[BLE] Attempting to send...");
         getRequestQueue().add(req);
     }
 
     public <T> void addToRequestQueue(Request<T> req) {
         req.setTag(TAG);
+		Log.d(TAG, "[BLE] Attempting to send...");
         this.getRequestQueue().add(req);
     }
 
