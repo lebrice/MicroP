@@ -10,3 +10,11 @@
 **/Drivers
 **/.env/*._*
 **/__pycache__
+**/*.aux
+**/*.log
+**/*.toc
+**/*.bbl
+**/*.blg
+**/*.lot
+**/*.lof
+**/*.out
