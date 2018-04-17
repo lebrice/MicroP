@@ -1,0 +1,49 @@
+%notfulltexdoc
+\section{Problem Statement}
+This text presents the design of a system whose ultimate goal is to gather data using the
+peripherals of a microcontroller and publish this data to a webserver via a chain of different
+communication media. From the user's perspective, the only setup required involves installing an
+Android application (designed for the purposes of this project) and launching a web server to
+collect the recorded data. After the Android device has paired with the Nucleo microcontroller, the
+data recorded from the accelerometer or microphone attached to the STM32F407 Discovery board will be
+transmitted automatically to the webserver, where the data may be visualized numerically and with
+pictorial support. If the data being sent is a microphone recording, the web server will perform
+\textit{speech recognition} to parse a number $n$ from the recorded audio, which will be communicated
+all the way back to the Discovery board, causing an LED to blink $n$ times.\\\\
+Given the reduced amount of resources usually present in microcontrollers, several devices were
+required to work in tandem in order to create a pipline from the Discovery board to the Internet.
+The Discovery board, while having access to an accelerometer and an ADC for reading microphone data,
+has no resources for communicating over Bluetooth or HTTP. Instead, it may communicated via a wired
+connection to the Nucleo board that is fitted with a Bluetooth Low Energy (BLE) transmitter. Given
+that the Nucleo has no WiFi capabilities, it communicates data over BLE to an Android application,
+which may then tunnel the data over HTTP to the web server.
+Thus, in order to communicate sensor data from the Discovery board all the way to the web server, three
+distinct communication protocols are used (UART, BLE, HTTP), each having their own unique quirks and
+\textit{impedimentum}. A major challenge of the design of this system revolved around the design of
+how to encapsulate data to be sent, and how to ensure the timing between transmitters and receivers
+was appropriate.\\\\
+Furthermore, given the plethora of devices responsible for the transmission of data in this system,
+it was necessary to implement four distinct software components across three different technologies.
+As will be described further in this report, both the Discovery and Nucleo board required
+independent embedded-C programs. Furthermore, to bridge the gap between the microcontrollers and the
+web application, an Android app was devised and implemented in Java. Finally, the web application
+prompted the design of a RESTful API as well as a fancy interface for displaying the data it
+received. This was achieved mainly with the Python language and some of its excellent libraries.\\\\
+Finally, another design challenge was that of speech recognition. Although a custom Convolutional
+Neural Network was initially designed for this task, the amount of time that would have been
+required to train it properly would have severely hindered progress on the rest of the project.
+Therefore, the speech recognition feature was outsourced to a Google Speech API.\\\\
+The remainder of this text will describe how the system was designed, and will discuss the various
+challenges were experienced as well as how they were resolved. Ultimately, the system proposed in
+this paper is meant to show how embedded systems can communicate with each other, as well as how
+they may communicate over the vast Internet. Thus, the proposed system exhibits the
+\textit{Internet of Things}, a field and concept that has been growing tremendously and is projected
+to grow into a market worth \$7.1 trillion by the year 2020\cite{iot}.\\\\
+The legendary philosopher John Milton once said ``give me the liberty to know, to utter, and to
+argue freely according to conscience, above all liberties''\cite{ethics}. The Internet of Things and
+the design proposed in this paper ultimately recognize microcontrollers as entities capable of
+knowing, uttering, and arguing, which was, above all else, demonstrated by the proposed system. The
+Internet of Things revolution, therefore, shall eventually bring the ``Inter-computational Covenant
+on Civil and Political Rights'', allowing all devices to communicate equally to advance society. The
+authors hope that the results demonstrated in this text show promise in the evolution and
+advancements in the freedom of device-expression.
