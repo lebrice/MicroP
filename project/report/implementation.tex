@@ -1,0 +1,21 @@
+%notfulltexdoc
+\section{Implementation}
+
+%%Written by Matthew, April 20
+\subsection{Smart Phone Android Application}
+
+Given that the Nucleo board has no WiFi/Internet capabilities, data must be communicated over BLE to an Android application, that then forwards the data to the web server over HTTP. For convention, this report may use "Android app" to signify the smart phone BLE mobile application. The report also assumes that the reader has basic knowledge of telecommunication protocols, and Android applications. This portion of the report details the implementation and the rationale behind the design of the smart phone application that acts as the intermediary component between the Nucleo board and the web server.\\
+With that being said, the requirements for the Android application are the following:
+
+\begin{itemize}
+    \item Scan for and connect to BLE peripheral devices;
+    \item Enable the user the ability to start, or stop scanning for devices, and connect or disconnect from one peripheral device;
+    \item Discover BLE services and characteristics from the peripheral device;
+    \item Read voice and accelerometer data batches over BLE from the Nucleo board;
+    \item Save the received data to its appropriate file;
+    \item Once the accelerometer file contains 10 seconds worth of data, transmit the file to the web server over HTTP;
+    \item Once the voice file contains 1 second worth of data, transmit the file to the web server over HTTP;
+    \item Handle HTTP responses from the web server and send data to the Nucleo board.
+\end{itemize}
+
+Each of the Android application's business-logic features are implemented in the Java programming language, and the user interface is designed in XML. The implementation of the Android application is facilitated by using the Android Studio IDE.\\
