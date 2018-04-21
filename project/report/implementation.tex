@@ -37,3 +37,67 @@ The last phase for the BLE handsaking is the connection phase, which is facilita
 The GATT Client Callback handles any connection events, and outputs statuses such as \textit{Connection Success} and \textit{Connection Failure}. Since there isn't any authentication procedure between client and server devices, the GATT Client Callback simply notifies the server that it wishes to connect to it and once the server, by the help of a GATT Server Callback, receives the notification, and responds with a connection success. If somehow the connection is a failure, the Android application simply logs the result to the Android Studio debug console. Although, on a connection success, the Android application now starts to search for \textit{Services} that the server may be transmitting. If the service used to package voice and accelerometer data is discovered, and contains their appropriate \textit{Characteristics}, the Android application is ready to read and be notified by any updates to the voice and accelerometer data.\\
 
 At this point, the smart phone is connected to the Nucleo board over a BLE session and can now start to transmit data to one another! Exciting, if I do say so myself.
+
+\subsubsection{Handling Data}
+
+The Android app receives data in a byte array which is packaged under a characteristic assigned for either voice or accelerometer data. The batch of data is then written to its appropriate file with the help of the \texttt{AppController.java} class.\\
+
+To send files over HTTP, the Android app makes use of the \href{https://developer.android.com/training/volley/index.html}{Volley Library} to create and configure HTTP requests, while also handling any HTTP responses. This is useful if the developers wish to send files conveniently over HTTP as well as receive data from the web server over HTTP. The developers wished to keep data uploading simple. By encoding the file-to-be-sent into a base-64 string and adding the encoding to the HTTP request's form, the web server can easily retrieve the file from the request by reading and decoding the form body.
+
+\subsection{Summary of Project, Structure and Classes}
+
+One can see a visualization of the Android app project structure in the illustration below. Of course there are many files related to the application that couldn't be referenced under this report due to sizing constraints, any three dots represents that.\\
+
+\usetikzlibrary{trees}
+\tikzstyle{every node}=[draw=black,thick,anchor=west,inner sep=2pt,minimum size=1pt]
+\tikzstyle{selected}=[draw=cyan,fill=cyan!30]
+\begin{tikzpicture}[
+  grow via three points={one child at (0.5,-0.7) and
+  two children at (0.5,-0.7) and (0.5,-1.4)},   
+  edge from parent path={(\tikzparentnode.south) |- (\tikzchildnode.west)}]
+  \node {main}
+    child { node [draw=none] {\ldots}}
+    child { node [draw=none] {AndroidManifest.xml} }
+    child { node [draw=none] {build.gradle} }
+    child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {res}
+        child { node [draw=none] {\ldots}}
+    }
+    child [missing] {}
+    child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {java}
+        child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {com}
+            child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {ecse426}
+                child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {project}
+                    child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {app}
+                        child { node [draw=none] {ClientActivity.java} }
+                        child { node [draw=none] {AppController.java} }
+                    }
+                    child [missing] {}
+                    child [missing] {}
+                    child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {utils}
+                        child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {batches}
+                           child { node [draw=none] {AccBatch.java} } 
+                           child { node [draw=none] {MicBatch.java} }
+                        }
+                        child [missing] {}
+                        child [missing] {}
+                        child { node [draw=none] {GattUtils.java} }
+                        child { node [draw=none] {LRUBitmapCache.java} }
+                        child { node [draw=none] {WaveFileTools.java} }
+                    }
+                }
+            }
+        }
+    };
+\end{tikzpicture}
+\tikzstyle{every node}=[] % resets borders of tables
+\tikzstyle{selected}=[] % resets selected
+\\
+The \texttt{AndroidManifest.xml} is the manifest file specific to this application which contains dependencies. The \texttt{build.gradle} file is the gradle build script, Android Studio automatically runs its build configurations whenever the developer runs or builds the application.\\
+
+The \texttt{ClientActivity.java} class is the main activity that runs on start up. It is the core of the application, every other class is written around it and is used to help it. This class contains the BLE Scan Callback and GATT Client Callback logic implemented under inner classes. It handles user input and contains function calls from other classes that receive and save data over BLE and HTTP.\\
+
+The \texttt{AppController.java} handles HTTP requests by facilitating the Client Activity with a queue for requests. It also handles reading and writing voice and accelerometer data to their appropriate files. It is important to note that the \texttt{AppController.java} class extends the Application class, making it able to run simultaneously with the \texttt{ClientActivity.java} class and have data persist when the application is closed.\\
+
+The \texttt{AccBatch.java} and \texttt{MicBatch.java} classes are helper classes that contain functions to convert accelerometer or voice data respectively from bytes to a data type instructed by the function. The \texttt{GattUtils.java} class contains GATT Service, Characteristic, and Configuration UUIDs, as well as the Nucleo board's MAC address. The \texttt{WaveFileTools.java} class handles reading and writing data from and to files of Wave format. The \texttt{LRUBitmapCache.java} class is supposed to send and receive files, unfortunately it is not used.\\
+
+Under the \texttt{res} directory, one can find all the user interface layouts and images. Any user interface design or image is found under that directory. 
