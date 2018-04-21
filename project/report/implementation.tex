@@ -19,3 +19,9 @@ With that being said, the requirements for the Android application are the follo
 \end{itemize}
 
 Each of the Android application's business-logic features are implemented in the Java programming language, and the user interface is designed in XML. The implementation of the Android application is facilitated by using the Android Studio IDE.\\
+
+\subsection{Brief Summary on Android}
+
+The report doesn't go into detail about the code written for the project, if the reader desires to see the source code themselves, they can see it \href{https://github.com/lebrice/MicroP/tree/master/project}{here}. There is documentation written within the code so that the reader may understand the basics of the code written. This report goes into detail about the high level designs and concepts used.\\
+
+Android applications perform in a way such that all user interface and business-logic is performed within an \textit{Activity}. Even if a developer doesn't need a user interface for their application, a main activity must instantiate and start once the user opens the application. Android developers must also declare any build dependencies such as programming libraries and hardware capabilities (such as Bluetooth and Internets) within the \textit{manifest.xml} file. The activity, since there can be multiple activities, which runs on application start up is also declared in the manifest file.\\
