@@ -1,7 +1,0 @@
-%notfulltexdoc
-\section*{Appendices}
-\addcontentsline{toc}{section}{Appendices}
-\subsection*{Appendix A - Setting up the Web Server}
-\addcontentsline{toc}{subsection}{Setting up the Web Server}
-Some minor setup is necessary in order to run the web server, however the process is drastically
-simplified when taking advantage of some serendipitous Python tools.
