@@ -327,3 +327,25 @@ from the web server, which will be passed all the way back to the Discovery boar
 		\end{tabular}
 	\end{center}
 \end{table}
+
+\subsubsection{User Interface}
+A user interface was implemented in order to have a convenient way of visualizing the accelerometer
+data. This was designed as a web page hosted by the Flask server described above. To realize this
+web page, a simple HTML layout was created that exploits Flask's \textit{template} functionality.
+Templates allow developers to dynamically pass parameters to HTML files -- in this scenario, this
+was used to dynamically update the accelerometer data and recording time shown on the page.\\\\
+To access the web page, whilst assuming the web server is running on \texttt{151.155.209.95:48080},
+one would navigate to \texttt{151.155.209.95:48080/accelerometer} in their favorite web browser. The
+interface then displays the graph of the pitch and roll data, and shows the time at which the data
+was sent directly underneath the graph. Furthermore, the UI presents a scrolling table of the CSV
+data saved in \texttt{data.csv} for the user to peruse comfortably. A screenshot of this user
+interface is shown in \hyperref[fig:uiscreenshot]{Figure \ref{fig:uiscreenshot}}.\\\\
+\begin{figure}[h]
+	\caption{Screenshot of the web server's User Interface}\label{fig:uiscreenshot}
+	\begin{center}
+		\includegraphics[width=\textwidth]{uiscreenshot}
+	\end{center}
+\end{figure}
+In order to view the latest data, one must just refresh the web page. The graph displayed on the
+user interface as well as the data used to generate the graph and the table shown are persisted on
+the server, so they can be viewed offline as well.
