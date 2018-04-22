@@ -1,6 +1,10 @@
 %notfulltexdoc
 \section{Implementation}
 
+\subsection{The Beginning of the Pipeline: Handling the STM32 Discovery Board}
+The STM32F407 Discovery Board is the microcontroller that the user interacts with. As discussed
+previously, this board is responsible for gathering accelerometer and microphone data to send
+through the pipeline. 
 %%Written by Matthew, April 20
 \subsection{Smart Phone Android Application}
 
@@ -46,52 +50,55 @@ To send files over HTTP, the Android app makes use of the \href{https://develope
 
 \subsubsection{Summary of Project, Structure and Classes}
 
-One can see a visualization of the Android app project structure in the illustration below. Of course there are many files related to the application that couldn't be referenced under this report due to sizing constraints, any three dots represents that.\\
+One can see a visualization of the Android app project structure in
+\hyperref[fig:androidstructure]{Figure \ref{fig:androidstructure}}. Of course there are many files related to the application that couldn't be referenced under this report due to sizing constraints, any three dots represents that.\\
 
 \usetikzlibrary{trees}
 \tikzstyle{every node}=[draw=black,thick,anchor=west,inner sep=2pt,minimum size=1pt]
 \tikzstyle{selected}=[draw=cyan,fill=cyan!30]
-\begin{tikzpicture}[
-  grow via three points={one child at (0.5,-0.7) and
-  two children at (0.5,-0.7) and (0.5,-1.4)},   
-  edge from parent path={(\tikzparentnode.south) |- (\tikzchildnode.west)}]
-  \node {main}
-    child { node [draw=none] {\ldots}}
-    child { node [draw=none] {AndroidManifest.xml} }
-    child { node [draw=none] {build.gradle} }
-    child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {res}
-        child { node [draw=none] {\ldots}}
-    }
-    child [missing] {}
-    child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {java}
-        child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {com}
-            child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {ecse426}
-                child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {project}
-                    child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {app}
-                        child { node [draw=none] {ClientActivity.java} }
-                        child { node [draw=none] {AppController.java} }
-                    }
-                    child [missing] {}
-                    child [missing] {}
-                    child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {utils}
-                        child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {batches}
-                           child { node [draw=none] {AccBatch.java} } 
-                           child { node [draw=none] {MicBatch.java} }
-                        }
-                        child [missing] {}
-                        child [missing] {}
-                        child { node [draw=none] {GattUtils.java} }
-                        child { node [draw=none] {LRUBitmapCache.java} }
-                        child { node [draw=none] {WaveFileTools.java} }
-                    }
-                }
-            }
-        }
-    };
-\end{tikzpicture}
+\begin{figure}[h]
+	\caption{Overview of the Android File Hierarchy}\label{fig:androidstructure}
+	\begin{tikzpicture}[
+	  grow via three points={one child at (0.5,-0.7) and
+	  two children at (0.5,-0.7) and (0.5,-1.4)},   
+	  edge from parent path={(\tikzparentnode.south) |- (\tikzchildnode.west)}]
+	  \node {main}
+		child { node [draw=none] {\ldots}}
+		child { node [draw=none] {AndroidManifest.xml} }
+		child { node [draw=none] {build.gradle} }
+		child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {res}
+			child { node [draw=none] {\ldots}}
+		}
+		child [missing] {}
+		child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {java}
+			child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {com}
+				child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {ecse426}
+					child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {project}
+						child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {app}
+							child { node [draw=none] {ClientActivity.java} }
+							child { node [draw=none] {AppController.java} }
+						}
+						child [missing] {}
+						child [missing] {}
+						child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {utils}
+							child { node [label={[xshift=6.0cm, yshift=-0.58cm, color=gray]}] {batches}
+							   child { node [draw=none] {AccBatch.java} } 
+							   child { node [draw=none] {MicBatch.java} }
+							}
+							child [missing] {}
+							child [missing] {}
+							child { node [draw=none] {GattUtils.java} }
+							child { node [draw=none] {LRUBitmapCache.java} }
+							child { node [draw=none] {WaveFileTools.java} }
+						}
+					}
+				}
+			}
+		};
+	\end{tikzpicture}
+\end{figure}
 \tikzstyle{every node}=[] % resets borders of tables
 \tikzstyle{selected}=[] % resets selected
-\\
 The \texttt{AndroidManifest.xml} is the manifest file specific to this application which contains dependencies. The \texttt{build.gradle} file is the gradle build script, Android Studio automatically runs its build configurations whenever the developer runs or builds the application.\\
 
 The \texttt{ClientActivity.java} class is the main activity that runs on start up. It is the core of the application, every other class is written around it and is used to help it. This class contains the BLE Scan Callback and GATT Client Callback logic implemented under inner classes. It handles user input and contains function calls from other classes that receive and save data over BLE and HTTP.\\
