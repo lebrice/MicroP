@@ -30,3 +30,13 @@ of the machine running this server. In order to do this, navigate to the file at
 In this file, edit the string \texttt{WEBSITE\_ADDRESS} to contain the IP address of the machine
 running the server. For the changes to take effect, the Android app must be rebuilt and reinstalled
 on an Android device.
+
+\subsection*{Appendix B - Setting up the Android Application}
+\addcontentsline{toc}{subsection}{Setting up the Android Application}
+Some setup is required to run the Android application since it is not available on the Google Play Store.\\
+The user has to download and install the latest version of \href{https://developer.android.com/studio/index.html}{Android Studio}.
+Once the IDE has been installed, the user must clone the source code from this \href{https://github.com/lebrice/MicroP}{repository}.\\ 
+Once the source code has been downloaded and the IDE installed, the user must \texttt{Import} the Android project by starting Android Studio and selecting the \texttt{Open existing Android project} within the Project Menu. 
+From there, Android Studio prompts you with a File Explorer. Within the File Explorer, navigate to the source code that has just been dowloaded and under MicroP/project/android, select the \texttt{build.gradle} file. Android Studio will import the project and automatically start downloading any dependencies required for the project.\\
+Once that is complete, connect your Android phone via USB to your computer. Now within Android Studio, click on either \texttt{Run > Run} to install the application on your phone or on \texttt{Run > Debug} to install and launch a debug session for the application, allowing the user to view any logs within the console.\\
+With either choice, the Android application is now installed and ready to use!
