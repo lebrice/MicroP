@@ -210,7 +210,9 @@ At this point, the smart phone is connected to the Nucleo board over a BLE sessi
 
 The Android app receives data in a byte array which is packaged under a characteristic assigned for either voice or accelerometer data. The batch of data is then written to its appropriate file with the help of the \texttt{AppController.java} class.\\
 
-To send files over HTTP, the Android app makes use of the \href{https://developer.android.com/training/volley/index.html}{Volley Library} to create and configure HTTP requests, while also handling any HTTP responses. This is useful if the developers wish to send files conveniently over HTTP as well as receive data from the web server over HTTP. The developers wished to keep data uploading simple. By encoding the file-to-be-sent into a base-64 string and adding the encoding to the HTTP request's form, the web server can easily retrieve the file from the request by reading and decoding the form body.
+To send files over HTTP, the Android app makes use of the \href{https://developer.android.com/training/volley/index.html}{Volley Library} to create and configure HTTP requests, while also handling any HTTP responses. This is useful if the developers wish to send files conveniently over HTTP as well as receive data from the web server over HTTP. The developers wished to keep data uploading simple. By encoding the file-to-be-sent into a base-64 string and adding the encoding to the HTTP request's form, the web server can easily retrieve the file from the request by reading and decoding the form body.\\
+
+If the web server reads the voice data file, then the Android application receives a response containing the output from the Google Speech API, under the parameter ''reading''. This contains the number that the Google Speech API was able to identify given the voice data. The Android application sends this data to the Nucleo board over BLE by writing the value to its appropriate Characteristic. At this point, the data is now handled by the Nucleo server.
 
 \subsubsection{Summary of Project, Structure and Classes}
 
