@@ -1,0 +1,32 @@
+%notfulltexdoc
+\section*{Appendices}
+\addcontentsline{toc}{section}{Appendices}
+\subsection*{Appendix A - Setting up the Web Server}
+\addcontentsline{toc}{subsection}{Setting up the Web Server}
+Some minor setup is necessary in order to run the web server, however the process is drastically
+simplified when taking advantage of some serendipitous Python tools. Firstly, Python 3 will be
+required. Furthermore, it is recommended to use
+\href{https://pypi.org/project/virtualenv/}{\texttt{virtualenv}} to keep dependencies managed.
+Finally, this tutorial will be assuming the user has access to the free open-source Python package
+manager, \href{https://pypi.org/project/pip}{\texttt{pip}}.\\\\
+Firstly, navigate to the \texttt{api/} directory in this project's root. It is strongly recommended
+to create a \texttt{virtualenv} here, but it is not necessary. Next, execute the following command:
+\begin{lstlisting}[language=bash,basicstyle=\ttfamily]
+$ pip install -r requirements.txt
+\end{lstlisting}
+This will install all Python package dependencies required for the project. With these dependencies
+installed, the server is ready to run! Execute the following command, still within the \texttt{api/}
+directory:
+\begin{lstlisting}[language=bash,basicstyle=\ttfamily]
+$ python api.py
+\end{lstlisting}
+The command above launches the web server on port 5000. The server will run indefinitely. When it is
+desired to kill the server, navigate to the shell through which the server is being run and press
+\texttt{CTRL + C}.\\\\
+Note that for the end-to-end pipeline
+described in this paper, the Android application must be configured to send HTTP packets to the IP
+of the machine running this server. In order to do this, navigate to the file at:\\
+\texttt{<project root>/android/app/src/main/java/com/ecse426/project/app/AppController.java}\\\\
+In this file, edit the string \texttt{WEBSITE\_ADDRESS} to contain the IP address of the machine
+running the server. For the changes to take effect, the Android app must be rebuilt and reinstalled
+on an Android device.
