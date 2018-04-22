@@ -235,3 +235,95 @@ The \texttt{AppController.java} handles HTTP requests by facilitating the Client
 The \texttt{AccBatch.java} and \texttt{MicBatch.java} classes are helper classes that contain functions to convert accelerometer or voice data respectively from bytes to a data type instructed by the function. The \texttt{GattUtils.java} class contains GATT Service, Characteristic, and Configuration UUIDs, as well as the Nucleo board's MAC address. The \texttt{WaveFileTools.java} class handles reading and writing data from and to files of Wave format. The \texttt{LRUBitmapCache.java} class is supposed to send and receive files, unfortunately it is not used.\\
 
 Under the \texttt{res} directory, one can find all the user interface layouts and images. Any user interface design or image is found under that directory. 
+\subsection{The End of the Pipeline: A Convenient Web Server}
+In order to perform more complex data processing and to have somewhere convenient to store the
+recorded data, the web server was implemented. This was achieved with the use of Python's Flask
+library for creating a minimal HTTP server with a REST API and a nice, simple interface to visualize
+the data that it receives.\\\\
+The server has two main API endpoints, one for each of accelerometer and microphone data. Thus, if
+the server is running on \texttt{151.155.209.95:48080}, the accelerometer endpoint is accessed via a
+\texttt{POST} request to \texttt{151.155.209.95:48080/accelerometer}, and the microphone endpoint is
+accessed via a \texttt{POST} request to \texttt{151.155.209.95:48080/speech}.\\\\
+Flask manages API endpoints with a \texttt{Resource} interface. This interface provides
+\texttt{get()}, \texttt{post()}, and \texttt{put()} methods, which are called when the endpoint
+receives the corresponding HTTP packet. Thus, in the design of the web server, the
+\texttt{Accelerometer} and \texttt{Speech} classes were created that inherit from the
+\texttt{Resource} class.
+\subsubsection{The Accelerometer Endpoint}
+The \texttt{/accelerometer} endpoint accepts \texttt{POST} requests and is responsible for
+preprocessing accelerometer data, storing the data on the server, and plotting a graph of the data
+it receives. \texttt{POST} requests to this endpoint should have JSON bodies as described in
+\hyperref[tab:accjson]{Table \ref{tab:accjson}}.
+\begin{table}[h]
+	\caption{JSON format for \texttt{POST} requests to the \texttt{/accelerometer}
+	endpoint}\label{tab:accjson}
+	\begin{center}
+		\begin{tabular}{|c|c|c|}
+			\hline
+			\textbf{Parameter Name} & \textbf{Parameter Type} & \textbf{Description}\\\hline
+			``accelerometer" & \texttt{[float]} & \shortstack[c]{List of accelerometer readings.\\Pitch values at
+			even indices.} \\\hline
+			``starttime" & \texttt{String} & \shortstack{String indicating the time\\at which the
+			recordings were sent to the API.}\\\hline
+		\end{tabular}
+	\end{center}
+\end{table}
+The API system is configured bind the \texttt{Accelerometer Resource} to the \texttt{/accelerometer}
+endpoint. As such, this \texttt{Resource} implements the \texttt{post()} method to handle the
+accelerometer data that it is sent via \texttt{HTTP POST}.\\\\
+Since the ``accelerometer" member of the \texttt{POST} request accepts an array of interleaved pitch and
+roll values, the data needs to be processed such that the pitch and roll could be stored in a more
+convenient format for plotting. The first task of this method is to parse the ``accelerometer"
+member of the \texttt{POST} request to split up the pitch and roll data into their own respective
+lists. During this procedure, the data is written to the \texttt{data.csv} file on the server in
+comma-separated value (CSV) format. Each row of the CSV file contains a pitch reading and the
+corresponding roll reading. Furthermore, the ``starttime" member of the \texttt{POST} is extracted
+and stored in a global variable so it can later be inscribed on the user interface.\\\\
+With the pitch and roll values split into their own lists, they can be graphed with relative ease.
+The powerful Matplotlib\cite{matplotlib} library is used to plot the graph, and the pitch and roll
+data are both plotted in the same plane. The plot is saved to the \texttt{static/graph.png} file,
+and is then available to be rendered on the user interface.\\\\
+Since the accelerometer communication is a one-way procedure, the \texttt{Accelerometer Resource}
+has nothing interesting to return to the device that sent the \texttt{POST} request. Thus, its
+response contains only an acknowledgement string.
+\subsubsection{The Speech Endpoint}
+Similarly to the accelerometer endpoint, implementation of the speech functionality on the web
+server required the construction of a \texttt{Speech Resource}, which was bound to the
+\texttt{/speech} endpoint. The files portion of the body of the \texttt{POST} requests that this
+endpoint expects is shown in \hyperref[tab:micjson]{Table \ref{tab:micjson}}.\\\\
+\begin{table}[h]
+	\caption{Format for \texttt{POST} request files sent to the \texttt{/speech}
+	endpoint}\label{tab:micjson}
+	\begin{center}
+		\begin{tabular}{|c|c|c|}
+			\hline
+			\textbf{Parameter Name} & \textbf{Parameter Type} & \textbf{Description}\\\hline
+			``audio" & WAV File & \shortstack[c]{File containing audio recording in WAV format.} \\\hline
+		\end{tabular}
+	\end{center}
+\end{table}
+With the WAV file extracted from the \texttt{POST} request, the task of the speech endpoint is to
+perform speech recognition. This is accomplished with the help of Google Cloud's Speech API.
+Fortunately, Google Cloud provides a Python interface for their fabulous speech recognition
+algorithms. The API's \texttt{transcribe\_audio()} method is called on the WAV file, and a string is
+produced, containing the transcription of the audio recording. We try to cast this transcription to
+an integer, and if that fails we deduce that no number could be understood from the audio recording.
+In this scenario, we report a value of 0 in the \texttt{result} variable. Otherwise, \texttt{result}
+is assigned the number yielded by casting the transcription to \texttt{int}.\\\\
+Contrarily to the case of the accelerometer endpoint, the microphone data communication process in
+this system is actually bidirectional. Thus, the sender of the microphone data expects a response
+from the web server, which will be passed all the way back to the Discovery board. The
+\texttt{Speech Resource}'s \texttt{post()} method returns a JSON object, which is illustrated in
+\hyperref[tab:responsejson]{Table \ref{tab:responsejson}}.
+\begin{table}[h]
+	\caption{JSON format for the response returned by the speech endpoint to \texttt{POST}
+	requests}\label{tab:responsejson}
+	\begin{center}
+		\begin{tabular}{|c|c|c|}
+			\hline
+			\textbf{Parameter Name} & \textbf{Parameter Type} & \textbf{Description}\\\hline
+			``reading" & \texttt{int} & \shortstack{Byte containing the number transcribed from
+			the\\input audio file. If no number is detected, 0 is returned}.\\\hline
+		\end{tabular}
+	\end{center}
+\end{table}
