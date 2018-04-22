@@ -1,6 +1,43 @@
 %notfulltexdoc
 \section{Implementation}
 
+\subsection{An Overview of the System Architecture}
+\hyperref[fig:arch]{Figure \ref{fig:arch}} shows the high-level architecture involving all parts of
+the system described in this paper. The pipeline begins at the Discovery board, where the user
+tapping the board prompts data to be recorded. This data is then transmitted over UART to the Nucleo
+board, which has the ability to transmit data via Bluetooth Low Energy. The Discovery and Nucleo
+blocks in \hyperref[fig:arch]{Figure \ref{fig:arch}} explicitly demonstrate how to connect the two
+for proper UART communication.\\\\
+\begin{figure}[h]
+	\caption{Architecture and Connectivity of the Overall System}\label{fig:arch}
+	\begin{center}
+		\includegraphics[scale=0.6]{systemarchitecture}
+	\end{center}
+\end{figure}
+The Android application discussed in this paper automatically connects to the Nucleo Board when the
+``\textsc{Scan for Nucleo}" button is pressed. Then, the app should receive the GATT services and
+characteristics broadcast by the Nucleo, allowing for BLE communication to proceed.\\\\
+With the Android app configured to send to the appropriate IP address where the Flask web server is
+hosted (that is, at \texttt{http://x.y.z.w:5000} in the example in \hyperref[fig:arch]{Figure \ref{fig:arch}}),
+it will automatically send the data it receives over BLE to the right endpoint of the web server. In
+the event that the Android app communicates microphone data, it will then wait for an HTTP response
+for the web server containing the perceived digit recognized from the audio samples, and the
+response will be sent backward through the pipeline until it eventually reaches the Discovery
+Board.\\\\
+Upon receiving an \texttt{HTTP POST} at the \texttt{/accelerometer} endpoint, the web server will
+parse the accelerometer data from the body of the request, save the data in a CSV file on the
+server, and generate a graph of the data. Then, when the user interface is requested via
+\texttt{HTTP GET}, the graph and the CSV data are presented on a web page.\\\\
+Upon receiving an \texttt{HTTP POST} at the \texttt{/speech} endpoint, the web server will extract
+the WAV file from the request and use Google Cloud's Speech API to decipher a digit from the audio
+file. The digit that it perceives is then sent back to the sender of the audio data via an HTTP
+response.\\\\
+When the digit response containing some integer $n$ finds its way back to the Discovery board, the
+Discovery's blue LED blinks $n$ times. At this stage, the process starts over, where the Discovery
+waits for user input.\\\\
+The remainder of this section discusses the implementation and functionality of all parts of the
+system in more detail.
+
 \subsection{The Beginning of the Pipeline: Handling the STM32 Discovery Board}
 The STM32F407 Discovery Board is the microcontroller that the user interacts with. As discussed
 previously, this board is responsible for gathering accelerometer and microphone data to send
