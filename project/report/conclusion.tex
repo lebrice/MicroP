@@ -1,0 +1,44 @@
+%notfulltexdoc
+\section{Conclusion}
+To conclude, the authors wish to point out that their quest for providing the Discovery Board with
+the opportunity to communicate data over the vast Internet was successful. Despite having no ability
+to communicate wirelessly at all, given the design of the other components of the system, such as
+the Nucleo Board Middleman and the Android Application Prophet, it was possible to create a pipeline
+from the Discovery's UART pins all the way to the Flask Web Server's HTTP endpoints.\\\\
+This result has a considerable impact on wireless technology and the state of microcontrollers. Due
+to the relatively low cost of microcontrollers such as the STM32F407 Discovery and the STM32F401RE
+Nucleo, creating application-specific systems for wireless communication is both affordable and
+feasible. Furthermore, when designed properly, the Discovery and Nucleo boards should be
+particularly energy-efficient, which is yet another attractive feature. Moreover, the small form
+factor of these boards allows them to be particularly portable and mobile.\\\\
+The authors wish to pose the lessons learned in the design of this system as an allegory to the tale
+of the four sons in the \textit{Haggadah}. The four sons are described as follows:
+\begin{enumerate}
+	\item The wise son
+	\item The wicked son
+	\item The simple son
+	\item The son who does not know how to ask a question
+\end{enumerate}
+Part of the fascination of the story stems from the idea that these sons are characterized this way.
+Is everything so black and white? Is the wise son smart, or is he just a smart aleck? In relation to
+this system, it is not necessarily easy to determine which component is ``the wise son". It may seem
+as though it's the web server, as it has likely the most powerful computational resources. But does
+being given resources make one wise? One may consider the wicked son to be the Nucleo Board, due to
+the sheer frustration caused by configuring BLE and UART simultaneously on it. But by causing
+frustration, does that make one wicked? Let's not forget the good that the Nucleo brought, that
+being the ability to bridge the gap between the Discovery and the Android Application. The Android
+Application may seem like the simple son, due to its ease of use relative to its immense power,
+though is it not possible that it's ease of use is a byproduct of very challenging development
+behind the scenes? And finally, one may assume the Discovery Board to correspond to the son that
+does not know how to ask a question. However, there is a very important difference between
+\textit{not knowing} how to ask a question, and being \textit{unwilling} to ask a question.\\\\
+As in the case of the famous story from the \textit{Haggadah}, it becomes difficult to characterize
+the four components in such a way. The ultimate conclusion from the story is that, in fact, this
+task is impossible. Each son can be wise, each son can be wicked, each son can be simple, and each
+son may refrain from asking questions -- these characteristics are not mutually exclusive. And this,
+the authors believe, is the most profound concept that was demonstrated over the course of this
+project. The Discovery Board, with so few resources, is literally incapable of communicating over
+WiFi. However, it was shown that this \textit{does not prohibit it from doing so}. Ninety-nine
+people out of a hundred likely would have classified the Discovery Board as ``the son who could not
+ask a question", and yet in reality, with a little bit of clever design, this notion was clearly
+refuted.
