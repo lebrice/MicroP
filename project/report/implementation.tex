@@ -123,7 +123,7 @@ before sending the microphone data to the Nucleo board, it is desired to \textit
 returned by the DMA process. Since DMA buffers contain 32-bit words and ADC samples are only 12 bits
 wide, it is desirable to \textit{squash} the data in the DMA buffer into 16-bit integers. This was
 done by an elegant \texttt{squash} function, that performs this operation in place. This function can be seen in \autoref{fig:squash}. This halves the
-amount of bytes required to send to the Nucleo board over UART.\\\\
+amount of bytes required to be sent to the Nucleo board over UART.\\\\
 
 \begin{figure}[h]
 \begin{lstlisting}[
@@ -177,8 +177,8 @@ case of the microphone recording session, the red LED will blink for the duratio
 accelerometer recording. In order to reduce the
 amount of data that will be sent over UART (and later, over BLE), the Discovery Board converts each
 accelerometer reading $(x_i,y_i,z_i)$ into pairs $(p_i,r_i)$, where $p_i$ and $r_i$ are the
-corresponding pitch and roll measurements, respectively. Then, rather than sending $3*10000=30000$
-floating point numbers, only $2*10000=20000$ floats must be sent.\\\\
+corresponding pitch and roll measurements, respectively. Then, rather than sending $3*1000=3000$
+floating point numbers, only $2*1000=2000$ floats must be sent.\\\\
 Note that in contrast to the case of the microphone data, where it was desired to compress the
 readings into 16-bit integers, the accelerometer data should be kept at pairs of 32-bit floats to
 retain enough precision. However, before transmitting the data it is passed through an exponential
@@ -197,6 +197,109 @@ After transmitting the accelerometer data, it will eventually be uploaded to the
 implemented for this project. However, in the case of accelerometer data transmission, the Discovery
 Board \textit{does not} get a response. Thus, it returns immediately to the Idle state, where the
 system is ready to start all over again. At this point, no LED's should be illuminated.
+
+\subsection{The Nucleo Board}
+
+\tikzset{
+    %Define standard arrow tip
+    >=stealth',
+    %Define style for boxes
+    punkt/.style={
+           rectangle,
+           rounded corners,
+           draw=black, very thick,
+           text width=6.5em,
+           minimum height=2em,
+           text centered},
+    % Define arrow style
+    pil/.style={
+           ->,
+           thick,
+           shorten <=2pt,
+           shorten >=2pt,}
+}
+\begin{tikzpicture}[node distance=5cm,on grid,auto] 
+ \node[punkt] (discovery) {Discovery Board};
+ \node[punkt, color=blue, right=of discovery] (nucleo) {Nucleo Board};
+ \node[punkt, right=of nucleo] (phone) {Phone \\ Android};
+ \node[punkt, right=of phone] (server) {Flask Server};
+   \path[<->] 
+   		(discovery) edge[below] node {UART} 	(nucleo)
+        (nucleo) 	edge[below] node {BLE} 		(phone)
+        (phone) 	edge[below] node {HTTP} 	(server)
+    ;
+\end{tikzpicture}
+
+The Nucleo board acts as an intermediate between the Discovery board and the Phone. Its main role is to relay information between these two devices, using the appropriate communication protocols, and by correctly serializing and de-serializing data.
+
+\subsubsection{UART Communication with the Discovery Board}
+As described previously, the sampled data is sent over UART after each data collection period. In order to differentiate between accelerometer and microphone samples, a GPIO pin (with the alias \verb|IS_MIC_DATA|) is used. When set, the data received via UART represents microphone samples, and vice versa for accelerometer samples. Additionally, another GPIO pin, \verb|DATA_INTERRUPT|, was configured in rising-edge triggered interrupt mode, and was used to coordinate data transfers between the Discovery and Nucleo boards.
+
+The GPIO Interrupt-Service-Routine, when triggered from the \verb|DATA_INTERRUPT| GPIO pin, sets a conditional flag, which is then read inside the main loop of the program body, and allows one execution of the \verb|pipeline()| function before being reset. This \verb|pipeline()| function contains the main logic of the Nucleo program. Its logic is fairly straightforward, and can be viewed in the diagram of \autoref{fig:nucleo_pipeline}.
+
+\begin{figure}[h]
+\centering
+
+\tikzstyle{decision} = [diamond, draw, text badly centered, text width=2.5cm, node
+distance=3cm]
+\tikzstyle{block} = [rectangle, draw, text centered, rounded corners, minimum
+height=4em, text width=4cm, node distance=4cm]
+\tikzstyle{goal} = [rectangle, draw, fill=yellow!20, text centered, rounded corners, minimum
+height=4em, text width=3cm, node distance=3cm]
+
+\begin{tikzpicture}[shorten >=1pt,node distance=3cm,on grid,auto] 
+   \node[block, initial] (wait)  {$Wait for Interrupt$}; 
+   \node[decision] (mic_data)	[below=4cm of wait]	{\verb|IS_MIC_DATA|};
+   \node[block] (send_acc)	[left=5cm of mic_data]	{Send Acc. Batch}; 
+   \node[block] (send_mic)	[right=5cm of mic_data]	{Send Mic. Batch};
+   \node[block] (wait_1) 	[below=of send_acc] {wait 10 ms};
+   \node[block] (wait_2) 	[below=of send_mic] {wait 10 ms};
+   \path[->]
+   		(wait) edge [loop above] node {flag==0} ()
+   		(wait) edge node {flag==1} (mic_data)
+   		(mic_data) edge node {} (send_mic)
+   		(mic_data) edge node {} (send_acc)
+   		(send_mic) edge[bend left] node {$sent < 100$} (wait_2)
+   		(send_mic) edge[above right, bend right] node {$sent==100$} (wait)
+   		(send_acc) edge[left, bend right] node {$sent<500$} (wait_1)
+   		(wait_1) edge[bend right] node {} (send_acc)
+   		(send_acc) edge[bend left] node {$sent==500$} (wait)
+   		(wait_2) edge[bend left] node {} (send_mic)
+   ;
+\end{tikzpicture}
+\caption{Conceptual State-Diagram of the Nucleo board's \texttt{pipeline()} function.}
+\label{fig:nucleo_pipeline}
+\end{figure}
+
+\subsubsection{Bluetooth Low Energy Communication with Phone}
+
+In order to reliably transmit data over BLE, we have to be mindful of the throughput limitations associated with this protocol. Following some quick research, it was determined that the maximum application data that could be transmitted for a given attribute was 20 bytes\cite{blethroughput}. Given this constraint, we devised a serialization scheme for both accelerometer and microphone samples. In the case of accelerometer data, the 1000 samples of pitch and roll are interleaved, and then split into groups of two. This effectively creates packets containing
+%
+%\begin{figure}[h]
+%\begin{tikzpicture}
+%    [%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%        box/.style={rectangle,draw=black, ultra thick, minimum size=1cm},
+%    ]%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%\node[box]
+%
+%%%pitch
+%%\foreach \x/\y in {0/$p_1$, 1/$p_1$,2/$p_3$,3/$p_4$,4/(...),5/$p_1000$}
+%%	\node[box] at (\x,3){\y+3};
+%
+%
+%\foreach \x/\y in {0/$p_1$, 1/$r_1$,2/$p_2$,3/$r_2$,4/-,5/8,6/7,7/4,8/21,9/2,10/6,11/11}
+%        \node[box] at (\x+3,0){\y};
+%
+%\draw[decorate,decoration={brace,mirror},thick] (-.5,-.7) -- node[below]{abc} (3.5,-.7);
+%\draw[decorate,decoration={brace,mirror},thick] (3.5,-.7) -- node[below]{def} (7.5,-.7);
+%\draw[->,very thick] (3,1.2) --  node[above,yshift=2mm]{i} (3,.7);
+%\draw[->,very thick] (7,1.2) --  node[above,yshift=2mm]{j} (7,.7);
+%
+%\end{tikzpicture}
+%\end{figure} 
+
+
 %%Written by Matthew, April 20
 \subsection{Smart Phone Android Application}
 
