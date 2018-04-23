@@ -54,7 +54,9 @@ timeout period, and fills the buffer with the data read serially from the \textt
 function call is \textit{blocking}, meaning the program waits for all $n$ bytes to be received before
 proceeding. Moreover, the \texttt{HAL\_UART\_Receive\_IT} function was used, which accomplishes the
 same task as \texttt{HAL\_UART\_Receive}. However, this function is not blocking, and instead
-triggers an interrupt when the $n$ bytes have been received.
+triggers an interrupt when the $n$ bytes have been received.\\\\
+An example of how to connect the Discovery and Nucleo boards for proper UART communication is given
+in \hyperref[fig:systemarch]{Figure \ref{fig:arch}}.
 \subsection{Bluetooth Low Energy}
 
 Bluetooth low energy (or BLE for short) is a wireless personal area network technology aimed at applications in health care, fitness, security, and home entertainment. 
