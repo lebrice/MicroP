@@ -21,3 +21,14 @@ resolved through extensive debugging and testing.\\\\
 Finally, Harley completed the implementation of the WiFi communication between the Android
 Application and the web server, after older implementations had been made obsolete due to major
 changes in the system's design.
+
+\subsection*{Matthew Lesko-Krleza}
+Matthew's major contributions were towards the smart phone android application's implementation, testing and integration. 
+He implemented the core features of the application which involved: scanning for BLE peripheral devices, enabling
+a GATT connection between client and server devices, the initial code for reading/writing data from/to the Nucleo
+board, the initial code for saving data to a file on the smartphone, WiFi communication with the web server, as well as
+the user interface for the application. Since the smart phone is an intermediary component, this required him to test and 
+debug, and modify the android application such that it integrates properly with the Nucleo board and the web server.\\
+Moreover, he wrote code for custom BLE services and characteristics on the Nucleo board, but were later removed due to 
+system design changes.\\
+Overall he had to learn about the BLE stack, smartphone WiFi communication, and how the Nucleo board sends data over BLE.
