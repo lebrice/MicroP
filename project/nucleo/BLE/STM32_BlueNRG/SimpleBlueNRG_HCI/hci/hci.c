@@ -212,6 +212,8 @@ int hci_send_req(struct hci_request *r, BOOL async)
   struct timer t;
   tHciDataPacket * hciReadPacket = NULL;
   tListNode hciTempQueue;
+	
+	uint32_t counter = 0;
   
   list_init_head(&hciTempQueue);
   
@@ -249,6 +251,8 @@ int hci_send_req(struct hci_request *r, BOOL async)
     }
 #else
     while(1){
+
+			//printf("%d, %d\n", t.start, Clock_Time());
       if(Timer_Expired(&t)){
         goto failed;
       }

@@ -15,6 +15,7 @@
 "discovery\fput_debug.o"
 "discovery\fsm.o"
 "discovery\lis3dsh.o"
+"discovery\blinker.o"
 "discovery\heap_4.o"
 "discovery\croutine.o"
 "discovery\cmsis_os.o"

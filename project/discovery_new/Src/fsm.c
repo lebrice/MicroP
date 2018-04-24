@@ -153,7 +153,7 @@ void single_tap(){
 	
 	// Set the GPIO pin to let the nucleo board known that we want to transmit some Microphone data.
 	//SET_PIN(IS_MIC_DATA);
-	
+	squash(mic_buffer,MIC_RECORDING_SAMPLE_COUNT);
 	// Send the mic data over UART to the Nucleo board.
 	int bytes_to_send = MIC_RECORDING_SAMPLE_COUNT * sizeof(mic_buffer[0]) / sizeof(uint8_t);
 	HAL_UART_Transmit(&huart4, (uint8_t*) mic_buffer, bytes_to_send, HAL_MAX_DELAY);	
