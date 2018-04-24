@@ -9,10 +9,10 @@ board, which has the ability to transmit data via Bluetooth Low Energy. The Disc
 blocks in \hyperref[fig:arch]{Figure \ref{fig:arch}} explicitly demonstrate how to connect the two
 for proper UART communication.\\\\
 \begin{figure}[h]
-	\caption{Architecture and Connectivity of the Overall System}\label{fig:arch}
 	\begin{center}
 		\includegraphics[scale=0.6]{systemarchitecture}
 	\end{center}
+	\caption{Architecture and Connectivity of the Overall System}\label{fig:arch}
 \end{figure}
 The Android application discussed in this paper automatically connects to the Nucleo Board when the
 ``\textsc{Scan for Nucleo}" button is pressed. Then, the app should receive the GATT services and
@@ -86,7 +86,6 @@ height=4em, text width=3cm, node distance=5cm]
 \tikzstyle{cloud} = [draw, ellipse, fill=red!20, node distance=7cm, text centered, text width=2cm]
 \tikzstyle{label} = [draw, rectangle, text centered, text width = 3cm]
 \begin{figure}[h]
-	\caption{FSM on the Discovery Board}\label{fig:discoveryfsm}
 	\begin{center}
 		\begin{tikzpicture}[node distance = 2cm, auto, scale=0.65, transform shape]
 			\node [block] (idle) {Idle};
@@ -121,6 +120,7 @@ height=4em, text width=3cm, node distance=5cm]
 			\draw [->] (response) to [out=90, in=180] (idle);
 		\end{tikzpicture}
 	\end{center}
+	\caption{FSM on the Discovery Board}\label{fig:discoveryfsm}
 \end{figure}
 The system starts in the Idle state, where it waits for user input in the form of taps on the board
 itself. The taps are detected by accelerometer readings polled at 100Hz over 500ms intervals, when
@@ -287,6 +287,7 @@ height=2cm, text width=3cm, node distance=3cm]
 In order to reliably transmit data over BLE, we have to be mindful of the throughput limitations associated with this protocol. Following some quick research, it was determined that the maximum application data that could be transmitted for a given attribute was 20 bytes\cite{blethroughput}. Given this constraint, we devised a serialization scheme for both accelerometer and microphone samples. In the case of accelerometer data, the 1000 samples of pitch and roll are interleaved, and then split into batches of two pairs of samples. This effectively creates packets containing 4 float values, or 16 bytes of usable data in total. We decided to opt for an even number of samples, even though another float value (4 bytes) could also have been added, in order to simplify the code. An illustration of the serialized samples can be seen in \autoref{fig:serialized_samples}.
 
 \begin{figure}[h]
+	\begin{center}
 \begin{tikzpicture}
     [%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         float/.style={rectangle,draw=black, ultra thick, minimum size=1cm, minimum width=2cm},
@@ -305,7 +306,6 @@ In order to reliably transmit data over BLE, we have to be mindful of the throug
 %\draw[->,very thick] (7,1.2) --  node[above,yshift=2mm]{j} (7,.7);
 
 \end{tikzpicture}
-
 \begin{tikzpicture}
     [%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         short/.style={rectangle,draw=black, ultra thick, minimum size=1cm, minimum width=1cm},
@@ -316,6 +316,7 @@ In order to reliably transmit data over BLE, we have to be mindful of the throug
         \node[short] (m\x) at (\x,0){$m_{\x}$};
         
 \end{tikzpicture}
+	\end{center}
 \caption{\label{fig:serialized_samples}Accelerometer and Microphone data packets structure.}
 \end{figure} 
 
@@ -387,7 +388,6 @@ One can see a visualization of the Android app project structure in
 \tikzstyle{every node}=[draw=black,thick,anchor=west,inner sep=2pt,minimum size=1pt]
 \tikzstyle{selected}=[draw=cyan,fill=cyan!30]
 \begin{figure}[h]
-	\caption{Overview of the Android File Hierarchy}\label{fig:androidstructure}
 	\begin{tikzpicture}[
 	  grow via three points={one child at (0.5,-0.7) and
 	  two children at (0.5,-0.7) and (0.5,-1.4)},   
@@ -426,6 +426,7 @@ One can see a visualization of the Android app project structure in
 			}
 		};
 	\end{tikzpicture}
+	\caption{Overview of the Android File Hierarchy}\label{fig:androidstructure}
 \end{figure}
 \tikzstyle{every node}=[] % resets borders of tables
 \tikzstyle{selected}=[] % resets selected
@@ -555,10 +556,10 @@ was sent directly underneath the graph. Furthermore, the UI presents a scrolling
 data saved in \texttt{data.csv} for the user to peruse comfortably. A screenshot of this user
 interface is shown in \hyperref[fig:uiscreenshot]{Figure \ref{fig:uiscreenshot}}.\\\\
 \begin{figure}[h]
-	\caption{Screenshot of the web server's User Interface}\label{fig:uiscreenshot}
 	\begin{center}
 		\includegraphics[width=\textwidth]{uiscreenshot}
 	\end{center}
+	\caption{Screenshot of the web server's User Interface}\label{fig:uiscreenshot}
 \end{figure}
 In order to view the latest data, one must just refresh the web page. The graph displayed on the
 user interface as well as the data used to generate the graph and the table shown are persisted on

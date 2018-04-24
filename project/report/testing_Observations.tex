@@ -1,13 +1,14 @@
+%notfulltexdoc
 \section{Testing and Observations}
 
 \subsection{Microphone/ADC}
 Regarding microphone data, there were two aspects of this component that needed to be tested. The first was the polling rate and making sure that we were in fact sampling at the correct frequency when starting DMA. Due to our sampling rate being 10kHz, and to our buffer having 10000 entries, our total time between HAL\_ADC\_Start\_DMA and the callback of the HAL\_ConvCmplCallback needed to be exactly one second. This was confirmed via the blinking red LED on board which indicates that the ADC is sampling, and more accurately with the Keil timer in the debugger to accurately time the period between the two functions mentioned above. The second aspect that needed to be tested was the actual microphone data and see if the values recorded can be trusted and used. Our first test was to connect the ADC input pin to the 5V pin of the Discovery board. The values expected to be read would be the maximum 12 bit value that our ADC could convert, $2^{12} = 4095$. Once confirmed that the ADC value would change we connected the microphone and captured some test measurements of 1 second samples of sound. The following figure shows the captured sample of the spoken number .
 
 \begin{figure}[h]
-	\caption{Captured 10kHz sample of the spoken digit seven}\label{fig:speechseven}
 	\begin{center}
 		\includegraphics[scale=0.5]{speech_seven}
 	\end{center}
+	\caption{Captured 10kHz sample of the spoken digit seven}\label{fig:speechseven}
 \end{figure}
 
 With testing at different sampling rates, we decided that 10kHz was the lowest we would be willing to go so that the speech API on the hosted web page end of the pipeline would be able to accurately recognize what the spoken digit was. We also noted that most captured samples varied greatly in the amount of noise they produced, and were we to have more time, a digital or analog low pass filter prior to running our speech through the speech API would be needed to increase the accuracy of our number recognition.
