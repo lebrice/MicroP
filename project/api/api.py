@@ -5,6 +5,7 @@ from flask_restful import Resource, Api
 import matplotlib.pyplot as plt
 import json
 import tensorflow as tf
+import tablib
 from typing import List, Dict, Tuple
 import numpy as np
 app = Flask(__name__)
@@ -32,13 +33,18 @@ saved_model_dir = f"{current_dir}/saved_model/"
 
 message = "Newman"
 
+starttime = ""
+
 @app.route("/microp")
 def greetings():
     return render_template('index.html', message=message)
 
 @app.route("/accelerometer")
 def acc():
-    return render_template('accelerometer.html')
+    with open("data.csv", 'r') as f:
+        dataset = tablib.Dataset()
+        dataset.csv = f.read()
+    return render_template('accelerometer.html', data=dataset.html, starttime=starttime)
 
 class Home(Resource):
     def get(self):
@@ -124,10 +130,14 @@ class Speech(Resource):
 
 class Accelerometer(Resource):
     def post(self):
+        global starttime
         print("GOT POST FOR ACC DATA")
           # Read the image file from the request
+        os.remove("data.csv")
         csv = open("data.csv", 'w')
+        csv.write("Pitch, Roll\n")
         numbers = request.form["accelerometer"][1:-2]
+        starttime = request.form["starttime"]
         count = 0
         pitches = []
         rolls = []
@@ -146,8 +156,10 @@ class Accelerometer(Resource):
             csv.write("0.0\n")
             rolls.append(float(val))
         csv.close()
+
         xs = range(len(pitches))
         os.remove("static/graph.png")
+        plt.clf()
         plt.plot(xs, pitches)
         plt.plot(xs, rolls)
         plt.legend(["Pitch", "Roll"])

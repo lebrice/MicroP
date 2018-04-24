@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.io.UnsupportedEncodingException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -110,6 +111,7 @@ public class ClientActivity extends AppCompatActivity {
     //    private Button stopScanButton;
     private TextView textNucleoAddress;
     private TextView textBox;
+	private String recordingStartTime;
 //    private Button sendButton;
 //    private Button uploadButton;
 
@@ -126,8 +128,10 @@ public class ClientActivity extends AppCompatActivity {
         mBluetoothAdapter = bluetoothManager != null ? bluetoothManager.getAdapter() : null;
         Log.d(TAG, "BLE Set up");
 
-		accs = new float[10000];
-		for(int c = 0; c < 10000; c++) {
+		recordingStartTime = "";
+
+		accs = new float[1000];
+		for(int c = 0; c < 1000; c++) {
 			accs[c] = 0.0f;
 		}
 		accCount = 0;
@@ -532,6 +536,7 @@ public class ClientActivity extends AppCompatActivity {
 			protected Map<String, String> getParams() {
 				Map<String, String> params = new HashMap<String, String>();
 				params.put("accelerometer", Arrays.toString(accs));
+				params.put("starttime", recordingStartTime);
 				return params;
 			}
 
@@ -801,6 +806,10 @@ public class ClientActivity extends AppCompatActivity {
                     }
 
                 } else if (characteristic.getUuid().equals(CHAR_ACCEL_UUID)) {
+					if(accCount == 0) {
+						recordingStartTime = java.text.DateFormat.getDateTimeInstance().format(java.util.Calendar.getInstance().getTime());
+//						recordingStartTime = LocalDateTime.now().toString();
+					}
                     Log.i(TAG, "[BLE] Received Acc Batch");
                     Log.d(TAG, "[BLE] Received the following bytes: " + Arrays.toString(bytes));
 					
