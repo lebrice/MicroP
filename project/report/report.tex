@@ -3,6 +3,8 @@
 \usepackage{graphicx}
 \usepackage{listings}
 \usepackage{tikz}
+\usepackage{tikz}
+\usetikzlibrary{automata,positioning, arrows, backgrounds, fit, shapes.geometric, decorations.pathreplacing}
 \usepackage{color}
 \usepackage{hyperref}
 \usetikzlibrary{shapes,arrows, automata}
@@ -12,13 +14,16 @@
 \author{Matthew Lesko\\260692352 \and Marcel Morin\\ 260605670 \and Fabrice Normandin\\ 260636800 \and Harley Wiltzer \\ 260690006}
 \date{\today}
 
-\definecolor{dblue}{rgb}{0.4,0.4,0.6}
-\definecolor{dgreen}{rgb}{0.4,0.6,0.4}
+%\definecolor{dblue}{rgb}{0.5,0.5,0.8}%
+%\definecolor{dgreen}{rgb}{0.5,0.8,0.5}
+\colorlet{dblue}{blue!40!black}
+\colorlet{dgreen}{green!40!black}
 
 \hypersetup {
 	colorlinks = true,
 	linkcolor = dblue,
 	citecolor = dgreen,
+	urlcolor=blue  
 }
 
 \begin{document}
@@ -34,6 +39,7 @@
 \include{problem_statement}
 \include{theory}
 \include{implementation}
+\include{testing_Observations}
 \include{conclusion}
 \newpage
 \bibliographystyle{ieeetr}

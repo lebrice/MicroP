@@ -38,7 +38,40 @@ waits for user input.\\\\
 The remainder of this section discusses the implementation and functionality of all parts of the
 system in more detail.
 
-\subsection{The Beginning of the Pipeline: Handling the STM32 Discovery Board}
+\subsection{The Beginning of the Pipeline: The STM32 Discovery Board}
+
+
+\tikzset{
+    %Define standard arrow tip
+    >=stealth',
+    %Define style for boxes
+    punkt/.style={
+           rectangle,
+           rounded corners,
+           draw=black, very thick,
+           text width=6.5em,
+           minimum height=2em,
+           text centered},
+    % Define arrow style
+    pil/.style={
+           ->,
+           thick,
+           shorten <=2pt,
+           shorten >=2pt,}
+}
+\begin{tikzpicture}[node distance=5cm,on grid,auto] 
+ \node[punkt, color=blue] (discovery) {Discovery};
+ \node[punkt, right=of discovery] (nucleo) {Nucleo};
+ \node[punkt, right=of nucleo] (phone) {Phone};
+ \node[punkt, right=of phone] (server) {Flask Server};
+   \path[<->] 
+   		(discovery) edge[below] node {UART} 	(nucleo)
+        (nucleo) 	edge[below] node {BLE} 		(phone)
+        (phone) 	edge[below] node {HTTP} 	(server)
+    ;
+\end{tikzpicture}
+
+
 The STM32F407 Discovery Board is the microcontroller that the user interacts with. As discussed
 previously, this board is responsible for gathering accelerometer and microphone data to send
 through the pipeline. \hyperref[fig:discoveryfsm]{Figure \ref{fig:discoveryfsm}} demonstrates the
@@ -123,7 +156,7 @@ before sending the microphone data to the Nucleo board, it is desired to \textit
 returned by the DMA process. Since DMA buffers contain 32-bit words and ADC samples are only 12 bits
 wide, it is desirable to \textit{squash} the data in the DMA buffer into 16-bit integers. This was
 done by an elegant \texttt{squash} function, that performs this operation in place. This function can be seen in \autoref{fig:squash}. This halves the
-amount of bytes required to send to the Nucleo board over UART.\\\\
+amount of bytes required to be sent to the Nucleo board over UART.\\\\
 
 \begin{figure}[h]
 \begin{lstlisting}[
@@ -177,8 +210,8 @@ case of the microphone recording session, the red LED will blink for the duratio
 accelerometer recording. In order to reduce the
 amount of data that will be sent over UART (and later, over BLE), the Discovery Board converts each
 accelerometer reading $(x_i,y_i,z_i)$ into pairs $(p_i,r_i)$, where $p_i$ and $r_i$ are the
-corresponding pitch and roll measurements, respectively. Then, rather than sending $3*10000=30000$
-floating point numbers, only $2*10000=20000$ floats must be sent.\\\\
+corresponding pitch and roll measurements, respectively. Then, rather than sending $3*1000=3000$
+floating point numbers, only $2*1000=2000$ floats must be sent.\\\\
 Note that in contrast to the case of the microphone data, where it was desired to compress the
 readings into 16-bit integers, the accelerometer data should be kept at pairs of 32-bit floats to
 retain enough precision. However, before transmitting the data it is passed through an exponential
@@ -197,9 +230,112 @@ After transmitting the accelerometer data, it will eventually be uploaded to the
 implemented for this project. However, in the case of accelerometer data transmission, the Discovery
 Board \textit{does not} get a response. Thus, it returns immediately to the Idle state, where the
 system is ready to start all over again. At this point, no LED's should be illuminated.
+
+\subsection{The Nucleo Board}
+\begin{tikzpicture}[node distance=5cm,on grid,auto] 
+ \node[punkt] (discovery) {Discovery};
+ \node[punkt, color=blue, right=of discovery] (nucleo) {Nucleo};
+ \node[punkt, right=of nucleo] (phone) {Phone};
+ \node[punkt, right=of phone] (server) {Flask Server};
+   \path[<->] 
+   		(discovery) edge[below] node {UART} 	(nucleo)
+        (nucleo) 	edge[below] node {BLE} 		(phone)
+        (phone) 	edge[below] node {HTTP} 	(server)
+    ;
+\end{tikzpicture}
+The Nucleo board acts as an intermediate between the Discovery board and the Phone. Its main role is to relay information between these two devices, using the appropriate communication protocols, and by correctly serializing and de-serializing data.
+
+\subsubsection{UART Communication with the Discovery Board}
+As described previously, the sampled data is sent over UART after each data collection period. In order to differentiate between accelerometer and microphone samples, a GPIO pin (with the alias \verb|IS_MIC_DATA|) is used. When set, the data received via UART represents microphone samples, and vice versa for accelerometer samples. Additionally, another GPIO pin, \verb|DATA_INTERRUPT|, was configured in rising-edge triggered interrupt mode, and was used to coordinate data transfers between the Discovery and Nucleo boards.
+
+The GPIO Interrupt-Service-Routine, when triggered from the \verb|DATA_INTERRUPT| GPIO pin, sets a conditional flag, which is then read inside the main loop of the program body, and allows one execution of the \verb|pipeline()| function before being reset. This \verb|pipeline()| function contains the main logic of the Nucleo program. Its logic is fairly straightforward, and can be viewed in the diagram of \autoref{fig:nucleo_pipeline}.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[shorten >=1pt,node distance=3cm,on grid,auto] 
+
+
+\tikzstyle{decision} = [diamond, draw, text badly centered, text width=2.5cm, node
+distance=3cm]
+\tikzstyle{block} = [rectangle, draw, text centered, rounded corners, minimum
+height=2cm, text width=3cm, node distance=3cm]
+   \node[block, initial] (wait)  {Wait for Interrupt}; 
+   \node[decision] (mic_data)	[below=4cm of wait]	{\verb|IS_MIC_DATA|};
+   \node[block] (send_acc)	[left=5cm of mic_data]	{Send Acc. Batch}; 
+   \node[block] (send_mic)	[right=5cm of mic_data]	{Send Mic. Batch};
+   \node[block] (wait_1) 	[below=of send_acc] {wait 10 ms};
+   \node[block] (wait_2) 	[below=of send_mic] {wait 10 ms};
+   \path[->]
+   		(wait) edge [loop above] node {flag==0} ()
+   		(wait) edge node {flag==1} (mic_data)
+   		(mic_data) edge node {} (send_mic)
+   		(mic_data) edge node {} (send_acc)
+   		(send_mic) edge[bend left] node {$sent < 1000$} (wait_2)
+   		(send_mic) edge[above right, bend right] node {$sent==1000$} (wait)
+   		(send_acc) edge[left, bend right] node {$sent<500$} (wait_1)
+   		(wait_1) edge[bend right] node {} (send_acc)
+   		(send_acc) edge[bend left] node {$sent==500$} (wait)
+   		(wait_2) edge[bend left] node {} (send_mic)
+   ;
+\end{tikzpicture}
+\caption{Conceptual State-Diagram of the Nucleo board's \texttt{pipeline()} function.}
+\label{fig:nucleo_pipeline}
+\end{figure}
+
+\subsubsection{Bluetooth Low Energy Communication with Phone}
+
+In order to reliably transmit data over BLE, we have to be mindful of the throughput limitations associated with this protocol. Following some quick research, it was determined that the maximum application data that could be transmitted for a given attribute was 20 bytes\cite{blethroughput}. Given this constraint, we devised a serialization scheme for both accelerometer and microphone samples. In the case of accelerometer data, the 1000 samples of pitch and roll are interleaved, and then split into batches of two pairs of samples. This effectively creates packets containing 4 float values, or 16 bytes of usable data in total. We decided to opt for an even number of samples, even though another float value (4 bytes) could also have been added, in order to simplify the code. An illustration of the serialized samples can be seen in \autoref{fig:serialized_samples}.
+
+\begin{figure}[h]
+\begin{tikzpicture}
+    [%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        float/.style={rectangle,draw=black, ultra thick, minimum size=1cm, minimum width=2cm},
+        byte/.style={rectangle,draw=black, thin, minimum size=0.25cm, minimum width=0.5cm},
+    ]%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\foreach \x/\y in {0/$p_1$, 2/$r_1$,4/$p_2$,6/$r_2$,8/-}
+        \node[float] at (\x,0){\y};
+
+\draw[decorate,decoration={brace,mirror},thick] (-1,-.7) -- node[below]{Sample 1} (2.8,-.7);
+\draw[decorate,decoration={brace,mirror},thick] (3.2,-.7) -- node[below]{Sample 2} (6.8,-.7);
+\draw[decorate,decoration={brace,mirror},thick] (7.2,-.7) -- node[below]{Unused} (9,-.7);
+
+
+%\draw[->,very thick] (3,1.2) --  node[above,yshift=2mm]{i} (3,.7);
+%\draw[->,very thick] (7,1.2) --  node[above,yshift=2mm]{j} (7,.7);
+
+\end{tikzpicture}
+
+\begin{tikzpicture}
+    [%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        short/.style={rectangle,draw=black, ultra thick, minimum size=1cm, minimum width=1cm},
+        byte/.style={rectangle,draw=black, thin, minimum size=0.25cm, minimum width=0.5cm},
+    ]%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\foreach \x in {0, 1, ..., 9}
+        \node[short] (m\x) at (\x,0){$m_{\x}$};
+        
+\end{tikzpicture}
+\caption{\label{fig:serialized_samples}Accelerometer and Microphone data packets structure.}
+\end{figure} 
+
+
+As will be further discussed later in \nameref{section:ble_interface}, the Nucleo board and android application communicate using the event broadcasted when a GATT attribute changes. As such, we chose to opt for simplicity and reuse most of the infrastructure of the BLE Sample Project, which was provided on \textit{MyCourses}, and implemented a \texttt{CustomService}, containing our own implementations of methods for adding the custom service, the three characteristics (Microphone, Accelerometer, Digit), as well as the \verb|GATT_attribute_changed()| callback. The serialization and deserialization logic in both the Android application and Nucleo boards behaves identically, with Big-Endian representation used in each case to facilitate encoding and decoding, as well as debugging.
+
+
 %%Written by Matthew, April 20
 \subsection{Smart Phone Android Application}
-
+\begin{tikzpicture}[node distance=5cm,on grid,auto] 
+ \node[punkt] (discovery) {Discovery};
+ \node[punkt, right=of discovery] (nucleo) {Nucleo};
+ \node[punkt, color=blue, right=of nucleo] (phone) {Phone};
+ \node[punkt, right=of phone] (server) {Flask Server};
+   \path[<->] 
+   		(discovery) edge[below] node {UART} 	(nucleo)
+        (nucleo) 	edge[below] node {BLE} 		(phone)
+        (phone) 	edge[below] node {HTTP} 	(server)
+    ;
+\end{tikzpicture}
 Given that the Nucleo board has no WiFi/Internet capabilities, data must be communicated over BLE to an Android application, that then forwards the data to the web server over HTTP. For convention, this report may use "Android app" to signify the smart phone BLE mobile application. The report also assumes that the reader has basic knowledge of telecommunication protocols, and Android applications. This portion of the report details the implementation and the rationale behind the design of the smart phone application that acts as the intermediary component between the Nucleo board and the web server.\\
 With that being said, the requirements for the Android application are the following:
 
@@ -223,7 +359,7 @@ The report doesn't go into detail about the code written for the project, if the
 Android applications perform in a way such that all user interface and business-logic is performed within an \textit{Activity}. Even if a developer doesn't need a user interface for their application, a main activity must instantiate and start once the user opens the application. Android developers must also declare any build dependencies such as programming libraries and hardware capabilities (such as Bluetooth and Internets) within the \textit{manifest.xml} file. The activity, since there can be multiple activities, which runs on application start up is also declared in the manifest file.\\
 
 \subsubsection{BLE Interface}
-
+\label{section:ble_interface}
 With regards to BLE, the smart phone is recognized as the \textit{client device}, and the Nucleo board as the \textit{server device}.\\ 
 
 The first step for any BLE handshaking, is the \textit{Scanning Phase}, which is facilitated by a \textit{BLE Scan Callback}. For the client device to recognize BLE servers, the server must advertise itself and the client must scan for these advertisements. With the push of a \textit{SCAN} button on the Android app user interface, the application enters a scanning mode which, by the help of a \textit{Scan Callback} Java class, saves scanning results as MAC addresses that the Android application could try to connect to. Since scanning is cumbersome on the smart phone's battery, the scanning automatically stops after 10 seconds to save battery life. To facilitate full automation, the Android app automatically stops scanning once it finds the Nucleo board's MAC address and tries to connect to the board. This improves the time required to enable a connection between the client and server since the user doesn't have to look through a list of MAC addresses to find the Nucleo board's address and have to select that specific address.\\
@@ -303,6 +439,17 @@ The \texttt{AccBatch.java} and \texttt{MicBatch.java} classes are helper classes
 
 Under the \texttt{res} directory, one can find all the user interface layouts and images. Any user interface design or image is found under that directory. 
 \subsection{The End of the Pipeline: A Convenient Web Server}
+\begin{tikzpicture}[node distance=5cm,on grid,auto] 
+ \node[punkt] (discovery) {Discovery};
+ \node[punkt, right=of discovery] (nucleo) {Nucleo};
+ \node[punkt, right=of nucleo] (phone) {Phone};
+ \node[punkt, color=blue, right=of phone] (server) {Flask Server};
+   \path[<->] 
+   		(discovery) edge[below] node {UART} 	(nucleo)
+        (nucleo) 	edge[below] node {BLE} 		(phone)
+        (phone) 	edge[below] node {HTTP} 	(server)
+    ;
+\end{tikzpicture}
 In order to perform more complex data processing and to have somewhere convenient to store the
 recorded data, the web server was implemented. This was achieved with the use of Python's Flask
 library for creating a minimal HTTP server with a REST API and a nice, simple interface to visualize
